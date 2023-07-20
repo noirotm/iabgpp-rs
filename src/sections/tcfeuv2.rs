@@ -16,6 +16,47 @@ pub struct TcfEuV2 {
     publisher_purposes: Option<PublisherPurposes>,
 }
 
+impl FromStr for TcfEuV2 {
+    type Err = SectionDecodeError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut sections_iter = s.split('.');
+
+        // first mandatory section is the core segment
+        let core = sections_iter
+            .next()
+            .ok_or_else(|| SectionDecodeError::UnexpectedEndOfString(s.to_string()))?;
+        let core = Core::from_str(core)?;
+
+        let mut tcfeuv2 = Self {
+            core,
+            disclosed_vendors: None,
+            publisher_purposes: None,
+        };
+
+        // next sections are optional and type depend on first int(3) value
+        for s in sections_iter {
+            let s = s.decode_base64_url()?;
+            let mut r = DataReader::new(&s);
+
+            let section_type = r.read_fixed_integer::<u8>(3)?;
+            match section_type {
+                TCFEUV2_DISCLOSED_VENDORS_SEGMENT_TYPE => {
+                    tcfeuv2.disclosed_vendors = Some(r.read_optimized_integer_range()?);
+                }
+                TCFEUV2_PUBLISHER_PURPOSES_SEGMENT_TYPE => {
+                    tcfeuv2.publisher_purposes = Some(PublisherPurposes::parse(&mut r)?);
+                }
+                n => {
+                    return Err(SectionDecodeError::UnknownSegmentType { segment_type: n });
+                }
+            }
+        }
+
+        Ok(tcfeuv2)
+    }
+}
+
 pub struct Core {
     version: u8,
     created: i64,
@@ -38,70 +79,10 @@ pub struct Core {
     publisher_restrictions: Vec<PublisherRestriction>,
 }
 
-pub struct PublisherRestriction {
-    purpose_id: u8,
-    restriction_type: RestrictionType,
-    restricted_vendor_ids: Vec<u64>,
-}
-
-pub enum RestrictionType {
-    NotAllowed,
-    RequireConsent,
-    RequireLegitimateInterest,
-    Undefined,
-}
-
-pub struct PublisherPurposes {
-    consents: Vec<bool>,
-    legitimate_interests: Vec<bool>,
-    custom_purposes_num: u8,
-    custom_consents: Vec<bool>,
-    custom_legitimate_interests: Vec<bool>,
-}
-
-impl FromStr for TcfEuV2 {
+impl FromStr for Core {
     type Err = SectionDecodeError;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut sections_iter = s.split('.');
-
-        // first mandatory section is the core segment
-        let core = sections_iter
-            .next()
-            .ok_or_else(|| SectionDecodeError::UnexpectedEndOfString(s.to_string()))?;
-        let core = TcfEuV2::parse_core_segment(core)?;
-
-        let mut tcfeuv2 = Self {
-            core,
-            disclosed_vendors: None,
-            publisher_purposes: None,
-        };
-
-        // next sections are optional and type depend on first int(3) value
-        for s in sections_iter {
-            let s = s.decode_base64_url()?;
-            let mut r = DataReader::new(&s);
-
-            let section_type = r.read_fixed_integer::<u8>(3)?;
-            match section_type {
-                TCFEUV2_DISCLOSED_VENDORS_SEGMENT_TYPE => {
-                    tcfeuv2.disclosed_vendors = Some(r.read_optimized_integer_range()?);
-                }
-                TCFEUV2_PUBLISHER_PURPOSES_SEGMENT_TYPE => {
-                    tcfeuv2.publisher_purposes = Some(TcfEuV2::parse_publisher_purposes(&mut r)?);
-                }
-                n => {
-                    return Err(SectionDecodeError::UnknownSegmentType { segment_type: n });
-                }
-            }
-        }
-
-        Ok(tcfeuv2)
-    }
-}
-
-impl TcfEuV2 {
-    fn parse_core_segment(core: &str) -> Result<Core, SectionDecodeError> {
+    fn from_str(core: &str) -> Result<Core, SectionDecodeError> {
         let core = core.decode_base64_url()?;
         let mut r = DataReader::new(&core);
 
@@ -132,11 +113,11 @@ impl TcfEuV2 {
         let vendor_legitimate_interests = r.read_optimized_integer_range()?;
 
         let publisher_restrictions_num = r.read_fixed_integer::<u8>(6)?;
-        let publisher_restrictions = repeat_with(|| Self::parse_publisher_restriction(&mut r))
+        let publisher_restrictions = repeat_with(|| PublisherRestriction::parse(&mut r))
             .take(publisher_restrictions_num as usize)
             .collect::<Result<_, _>>()?;
 
-        Ok(Core {
+        Ok(Self {
             version,
             created,
             last_updated,
@@ -158,10 +139,16 @@ impl TcfEuV2 {
             publisher_restrictions,
         })
     }
+}
 
-    fn parse_publisher_restriction(
-        r: &mut DataReader,
-    ) -> Result<PublisherRestriction, SectionDecodeError> {
+pub struct PublisherRestriction {
+    purpose_id: u8,
+    restriction_type: RestrictionType,
+    restricted_vendor_ids: Vec<u64>,
+}
+
+impl PublisherRestriction {
+    fn parse(r: &mut DataReader) -> Result<Self, SectionDecodeError> {
         let purpose_id = r.read_fixed_integer(6)?;
         let restriction_type = match r.read_fixed_integer::<u8>(2)? {
             0 => RestrictionType::NotAllowed,
@@ -172,23 +159,38 @@ impl TcfEuV2 {
         };
         let restricted_vendor_ids = r.read_optimized_integer_range()?;
 
-        Ok(PublisherRestriction {
+        Ok(Self {
             purpose_id,
             restriction_type,
             restricted_vendor_ids,
         })
     }
+}
 
-    fn parse_publisher_purposes(
-        r: &mut DataReader,
-    ) -> Result<PublisherPurposes, SectionDecodeError> {
+pub enum RestrictionType {
+    NotAllowed,
+    RequireConsent,
+    RequireLegitimateInterest,
+    Undefined,
+}
+
+pub struct PublisherPurposes {
+    consents: Vec<bool>,
+    legitimate_interests: Vec<bool>,
+    custom_purposes_num: u8,
+    custom_consents: Vec<bool>,
+    custom_legitimate_interests: Vec<bool>,
+}
+
+impl PublisherPurposes {
+    fn parse(r: &mut DataReader) -> Result<Self, SectionDecodeError> {
         let consents = r.read_fixed_bitfield(24)?;
         let legitimate_interests = r.read_fixed_bitfield(24)?;
         let custom_purposes_num = r.read_fixed_integer::<u8>(6)?;
         let custom_consents = r.read_fixed_bitfield(custom_purposes_num as usize)?;
         let custom_legitimate_interests = r.read_fixed_bitfield(custom_purposes_num as usize)?;
 
-        Ok(PublisherPurposes {
+        Ok(Self {
             consents,
             legitimate_interests,
             custom_purposes_num,
