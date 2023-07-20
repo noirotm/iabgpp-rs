@@ -4,6 +4,7 @@ use std::io;
 use std::str::FromStr;
 use thiserror::Error;
 
+mod tcfeuv1;
 mod tcfeuv2;
 mod uspv1;
 

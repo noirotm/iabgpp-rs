@@ -78,7 +78,7 @@ mod tests {
     use crate::sections::id::{TCF_EU_V2, USP_V1};
 
     #[test]
-    fn test_parse_str() {
+    fn parse_str() {
         let r = GPPModel::from_str("DBABMA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA").unwrap();
 
         assert_eq!(r.section_ids, vec![TCF_EU_V2]);
@@ -86,7 +86,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_str_multiple_sections1() {
+    fn parse_str_multiple_sections1() {
         let r = GPPModel::from_str("DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN")
             .unwrap();
 
@@ -96,7 +96,7 @@ mod tests {
     }
 
     /*#[test]
-    fn test_parse_str_multiple_sections2() {
+    fn parse_str_multiple_sections2() {
         let r = GPPPayload::try_from("DBABjw~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN")
             .unwrap();
 

@@ -81,7 +81,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_ok() {
+    fn parse() {
         let test_cases = [
             (
                 "1YN-",
@@ -109,7 +109,7 @@ mod tests {
     }
 
     #[test]
-    fn test_error() {
+    fn error() {
         assert!(matches!(
             UspV1::from_str("ZYN-").unwrap_err(),
             SectionDecodeError::InvalidCharacter { character: 'Z', .. }

@@ -177,7 +177,7 @@ mod tests {
     }
 
     #[test]
-    fn test_bytes() {
+    fn bytes() {
         assert_eq!(b("00000001 00000010 00000011"), vec![1, 2, 3]);
         assert_eq!(b("000000 010000 001000 000011"), vec![1, 2, 3]);
         assert_eq!(b("000000 010000 001000 000011 1000"), vec![1, 2, 3, 128]);
@@ -185,7 +185,7 @@ mod tests {
     }
 
     #[test]
-    fn test_read_int() {
+    fn read_int() {
         let test_cases = [(b("000101"), 6, 5), (b("101010"), 6, 42)];
 
         for (buf, bits, expected_value) in test_cases {
@@ -199,7 +199,7 @@ mod tests {
     }
 
     #[test]
-    fn test_read_fibonacci() {
+    fn read_fibonacci() {
         let test_cases = [
             (b("11"), 1),
             (b("011"), 2),
@@ -218,7 +218,7 @@ mod tests {
     }
 
     #[test]
-    fn test_read_string() {
+    fn read_string() {
         let test_cases = [(b("101010"), 1, "k"), (b("101010 101011"), 2, "kl")];
 
         for (buf, chars, expected_value) in test_cases {
@@ -229,7 +229,7 @@ mod tests {
     }
 
     #[test]
-    fn test_read_datetime_as_unix_timestamp() {
+    fn read_datetime_as_unix_timestamp() {
         let test_cases = [(b("001111101100100110001110010001011101"), 1685434479)];
 
         for (buf, expected_value) in test_cases {
@@ -243,7 +243,7 @@ mod tests {
     }
 
     #[test]
-    fn test_read_fixed_bitfield() {
+    fn read_fixed_bitfield() {
         let test_cases = [(b("10101"), 5, vec![true, false, true, false, true])];
 
         for (buf, bits, expected_value) in test_cases {
@@ -254,7 +254,7 @@ mod tests {
     }
 
     #[test]
-    fn test_read_variable_bitfield() {
+    fn read_variable_bitfield() {
         let test_cases = [(
             b("0000000000000101 10101"),
             vec![true, false, true, false, true],
@@ -268,7 +268,7 @@ mod tests {
     }
 
     #[test]
-    fn test_read_integer_range() {
+    fn read_integer_range() {
         let test_cases = [(
             b("000000000010 0 0000000000000011 1 0000000000000101 0000000000001000"),
             vec![3, 5, 6, 7, 8],
@@ -282,7 +282,7 @@ mod tests {
     }
 
     #[test]
-    fn test_read_fibonacci_range() {
+    fn read_fibonacci_range() {
         let test_cases = [
             (b("000000000010 0 0011 1 011 0011"), vec![3, 5, 6, 7, 8]),
             (b("000000000010 0 011 0 1011"), vec![2, 6]),
@@ -296,7 +296,7 @@ mod tests {
     }
 
     #[test]
-    fn test_read_optimized_range() {
+    fn read_optimized_range() {
         let test_cases = [
             (b("1 000000000010 0 0011 1 011 0011"), vec![3, 5, 6, 7, 8]),
             (b("0 0000000000000101 10101"), vec![1, 0, 1, 0, 1]),
@@ -310,7 +310,7 @@ mod tests {
     }
 
     #[test]
-    fn test_read_optimized_int_range() {
+    fn read_optimized_int_range() {
         let test_cases = [
             (b("0000000000000000 1 000000000010 0 0000000000000011 1 0000000000000101 0000000000001000"), vec![3, 5, 6, 7, 8]),
             (b("0000000000000101 0 10101"), vec![1, 0, 1, 0, 1]),

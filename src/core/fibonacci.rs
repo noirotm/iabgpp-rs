@@ -27,7 +27,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_fibonacci() {
+    fn fibonacci_sequence() {
         assert_eq!(
             fibonacci_iterator().take(12).collect::<Vec<_>>(),
             vec![1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233]

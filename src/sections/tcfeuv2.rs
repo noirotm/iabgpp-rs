@@ -229,7 +229,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_parse_tcfeuv2() {
+    fn parse_tcfeuv2() {
         let t = TcfEuV2::from_str("CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA").unwrap();
 
         assert_eq!(t.core.version, TCFEUV2_CORE_SEGMENT_VERSION);
@@ -256,7 +256,7 @@ mod tests {
     }
 
     #[test]
-    fn test_decode_error() {
+    fn decode_error() {
         let e = TcfEuV2::from_str("CPX");
         assert!(matches!(e, Err(SectionDecodeError::DecodeSegment(_))));
     }
