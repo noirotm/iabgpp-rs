@@ -75,7 +75,7 @@ impl FromStr for GPPModel {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::sections::id::{TCF_EU_V2, USP_V1};
+    use crate::sections::id::{TCF_CA, TCF_EU_V2, USP_V1};
 
     #[test]
     fn parse_str() {
@@ -86,7 +86,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_str_multiple_sections1() {
+    fn parse_str_multiple_sections() {
         let r = GPPModel::from_str("DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN")
             .unwrap();
 
@@ -95,17 +95,16 @@ mod tests {
         assert!(matches!(r.sections[1], Section::UspV1(_)));
     }
 
-    /*#[test]
-    fn parse_str_multiple_sections2() {
-        let r = GPPPayload::try_from("DBABjw~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN")
-            .unwrap();
+    #[test]
+    fn parse_str_multiple_sections_unsupported() {
+        let r =
+            GPPModel::from_str("DBABjw~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN").unwrap();
 
-        assert_eq!(r.sections[0].id, SectionId::TCFCA);
-        assert_eq!(
-            r.sections[0].encoded_payload,
-            "CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA"
-        );
-        assert_eq!(r.sections[1].id, SectionId::USPV1);
-        assert_eq!(r.sections[1].encoded_payload, "1YNN");
-    }*/
+        assert_eq!(r.section_ids, vec![TCF_CA, USP_V1]);
+        assert!(matches!(
+            &r.sections[0],
+            Section::Unsupported(x) if x == "CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA"
+        ));
+        assert!(matches!(r.sections[1], Section::UspV1(_)));
+    }
 }
