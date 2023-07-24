@@ -1,5 +1,6 @@
 use crate::sections::tcfeuv2::TcfEuV2;
 use crate::sections::uspv1::UspV1;
+use std::collections::BTreeSet;
 use std::io;
 use std::str::FromStr;
 use thiserror::Error;
@@ -20,6 +21,8 @@ pub mod id {
     pub const US_UT: u64 = 11;
     pub const US_CT: u64 = 12;
 }
+
+pub type VendorList = BTreeSet<u16>;
 
 #[derive(Error, Debug)]
 pub enum SectionDecodeError {

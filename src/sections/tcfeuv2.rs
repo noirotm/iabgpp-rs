@@ -1,9 +1,6 @@
 use crate::core::{DataReader, DecodeExt};
-use crate::sections::SectionDecodeError;
-use std::array::TryFromSliceError;
+use crate::sections::{SectionDecodeError, VendorList};
 use std::iter::repeat_with;
-use std::num::NonZeroUsize;
-use std::ops::Index;
 use std::str::FromStr;
 
 const TCFEUV2_CORE_SEGMENT_VERSION: u8 = 2;
@@ -11,9 +8,9 @@ const TCFEUV2_DISCLOSED_VENDORS_SEGMENT_TYPE: u8 = 1;
 const TCFEUV2_PUBLISHER_PURPOSES_SEGMENT_TYPE: u8 = 3;
 
 pub struct TcfEuV2 {
-    core: Core,
-    disclosed_vendors: Option<Vec<u64>>,
-    publisher_purposes: Option<PublisherPurposes>,
+    pub core: Core,
+    pub disclosed_vendors: Option<VendorList>,
+    pub publisher_purposes: Option<PublisherPurposes>,
 }
 
 impl FromStr for TcfEuV2 {
@@ -58,25 +55,25 @@ impl FromStr for TcfEuV2 {
 }
 
 pub struct Core {
-    version: u8,
-    created: i64,
-    last_updated: i64,
-    cmp_id: u16,
-    cmp_version: u16,
-    consent_screen: u8,
-    consent_language: String,
-    vendor_list_version: u16,
-    policy_version: u8,
-    is_service_specific: bool,
-    use_non_standard_stacks: bool,
-    special_feature_optins: Vec<bool>,
-    purpose_consents: Vec<bool>,
-    purpose_legitimate_interests: Vec<bool>,
-    purpose_one_treatment: bool,
-    publisher_country_code: String,
-    vendor_consents: Vec<u64>,
-    vendor_legitimate_interests: Vec<u64>,
-    publisher_restrictions: Vec<PublisherRestriction>,
+    pub version: u8,
+    pub created: i64,
+    pub last_updated: i64,
+    pub cmp_id: u16,
+    pub cmp_version: u16,
+    pub consent_screen: u8,
+    pub consent_language: String,
+    pub vendor_list_version: u16,
+    pub policy_version: u8,
+    pub is_service_specific: bool,
+    pub use_non_standard_stacks: bool,
+    pub special_feature_optins: Vec<bool>,
+    pub purpose_consents: Vec<bool>,
+    pub purpose_legitimate_interests: Vec<bool>,
+    pub purpose_one_treatment: bool,
+    pub publisher_country_code: String,
+    pub vendor_consents: VendorList,
+    pub vendor_legitimate_interests: VendorList,
+    pub publisher_restrictions: Vec<PublisherRestriction>,
 }
 
 impl FromStr for Core {
@@ -142,9 +139,9 @@ impl FromStr for Core {
 }
 
 pub struct PublisherRestriction {
-    purpose_id: u8,
-    restriction_type: RestrictionType,
-    restricted_vendor_ids: Vec<u64>,
+    pub purpose_id: u8,
+    pub restriction_type: RestrictionType,
+    pub restricted_vendor_ids: VendorList,
 }
 
 impl PublisherRestriction {
@@ -175,11 +172,11 @@ pub enum RestrictionType {
 }
 
 pub struct PublisherPurposes {
-    consents: Vec<bool>,
-    legitimate_interests: Vec<bool>,
-    custom_purposes_num: u8,
-    custom_consents: Vec<bool>,
-    custom_legitimate_interests: Vec<bool>,
+    pub consents: Vec<bool>,
+    pub legitimate_interests: Vec<bool>,
+    pub custom_purposes_num: u8,
+    pub custom_consents: Vec<bool>,
+    pub custom_legitimate_interests: Vec<bool>,
 }
 
 impl PublisherPurposes {
@@ -200,7 +197,7 @@ impl PublisherPurposes {
     }
 }
 
-pub struct BitField<const N: usize> {
+/*pub struct BitField<const N: usize> {
     bits: [bool; N],
 }
 
@@ -214,15 +211,11 @@ impl<const N: usize> BitField<N> {
     fn iter(&self) -> impl Iterator<Item = (usize, &bool)> {
         self.bits.iter().enumerate().map(|(i, b)| (i + 1, b))
     }
-}
 
-impl<const N: usize> Index<NonZeroUsize> for BitField<N> {
-    type Output = bool;
-
-    fn index(&self, index: NonZeroUsize) -> &Self::Output {
-        &self.bits[index.get()]
+    fn get_by_id(&self, id: usize) -> Option<bool> {
+        self.bits.get(id.checked_sub(1)?).cloned()
     }
-}
+}*/
 
 #[cfg(test)]
 mod tests {
