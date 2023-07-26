@@ -1,25 +1,38 @@
-/// Iterative fibonacci implementation
-pub struct Fibonacci {
-    curr: u64,
-    next: u64,
+use num_traits::ops::checked::CheckedAdd;
+use num_traits::One;
+
+/// Iterative generic fibonacci implementation
+pub struct Fibonacci<T> {
+    curr: Option<T>,
+    next: Option<T>,
 }
 
-impl Iterator for Fibonacci {
-    type Item = u64;
+impl<T> Iterator for Fibonacci<T>
+where
+    T: CheckedAdd + Copy,
+{
+    type Item = T;
 
-    fn next(&mut self) -> Option<u64> {
-        let next = self.curr + self.next;
+    fn next(&mut self) -> Option<T> {
+        let next = self.curr?.checked_add(&self.next?);
 
         self.curr = self.next;
         self.next = next;
 
-        Some(self.curr)
+        self.curr
     }
 }
 
 /// Create a new Iterative fibonacci.
-pub fn fibonacci_iterator() -> Fibonacci {
-    Fibonacci { curr: 1, next: 1 }
+pub fn fibonacci_iterator<T>() -> Fibonacci<T>
+where
+    T: One + Copy,
+{
+    let init = T::one();
+    Fibonacci {
+        curr: Some(init),
+        next: Some(init),
+    }
 }
 
 #[cfg(test)]
@@ -27,9 +40,17 @@ mod tests {
     use super::*;
 
     #[test]
-    fn fibonacci_sequence() {
+    fn test_fibonacci() {
         assert_eq!(
-            fibonacci_iterator().take(12).collect::<Vec<_>>(),
+            fibonacci_iterator::<u16>().take(16).collect::<Vec<_>>(),
+            vec![1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597]
+        );
+    }
+
+    #[test]
+    fn test_fibonacci_u8_overflow() {
+        assert_eq!(
+            fibonacci_iterator::<u8>().collect::<Vec<_>>(),
             vec![1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233]
         );
     }

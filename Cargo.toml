@@ -6,4 +6,6 @@ edition = "2021"
 [dependencies]
 base64 = "0.21.0"
 bitstream-io = "1.6.0"
+num-iter = "0.1.43"
+num-traits = "0.2.15"
 thiserror = "1.0.40"

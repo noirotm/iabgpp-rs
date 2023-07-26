@@ -10,16 +10,18 @@ mod tcfeuv2;
 mod uspv1;
 
 pub mod id {
-    pub const TCF_EU_V1: u64 = 1;
-    pub const TCF_EU_V2: u64 = 2;
-    pub const TCF_CA: u64 = 5;
-    pub const USP_V1: u64 = 6;
-    pub const US_NAT: u64 = 7;
-    pub const US_CA: u64 = 8;
-    pub const US_VA: u64 = 9;
-    pub const US_CO: u64 = 10;
-    pub const US_UT: u64 = 11;
-    pub const US_CT: u64 = 12;
+    pub const TCF_EU_V1: u8 = 1;
+    pub const TCF_EU_V2: u8 = 2;
+    pub const GPP_HEADER: u8 = 3;
+    pub const GPP_SIGNAL_INTEGRITY: u8 = 4;
+    pub const TCF_CA: u8 = 5;
+    pub const USP_V1: u8 = 6;
+    pub const US_NAT: u8 = 7;
+    pub const US_CA: u8 = 8;
+    pub const US_VA: u8 = 9;
+    pub const US_CO: u8 = 10;
+    pub const US_UT: u8 = 11;
+    pub const US_CT: u8 = 12;
 }
 
 pub type VendorList = BTreeSet<u16>;
@@ -36,6 +38,8 @@ pub enum SectionDecodeError {
         kind: &'static str,
         s: String,
     },
+    #[error("invalid section version (expected {expected}, found {found})")]
+    InvalidSectionVersion { expected: u8, found: u8 },
     #[error("unable to decode segment")]
     DecodeSegment(#[from] base64::DecodeError),
     #[error("invalid segment version (expected {expected}, found {found})")]
@@ -58,7 +62,7 @@ pub enum Section {
     Unsupported(String),
 }
 
-pub(crate) fn decode_section(id: u64, s: &str) -> Result<Section, SectionDecodeError> {
+pub(crate) fn decode_section(id: u8, s: &str) -> Result<Section, SectionDecodeError> {
     match id {
         id::TCF_EU_V2 => TcfEuV2::from_str(s).map(Section::TcfEuV2),
         id::USP_V1 => UspV1::from_str(s).map(Section::UspV1),

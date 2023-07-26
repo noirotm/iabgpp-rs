@@ -1,6 +1,8 @@
 use crate::core::fibonacci::fibonacci_iterator;
 use base64::{DecodeError, Engine};
 use bitstream_io::{BigEndian, BitRead, BitReader, Numeric};
+use num_iter::range_inclusive;
+use num_traits::{CheckedAdd, Num, NumAssignOps, ToPrimitive};
 use std::collections::BTreeSet;
 use std::io;
 use std::iter::repeat_with;
@@ -36,9 +38,12 @@ impl<'a> DataReader<'a> {
         self.bit_reader.read(bits)
     }
 
-    pub fn read_fibonacci_integer(&mut self) -> io::Result<u64> {
-        let mut fib = fibonacci_iterator();
-        let mut total = 0;
+    pub fn read_fibonacci_integer<T>(&mut self) -> io::Result<T>
+    where
+        T: CheckedAdd + Copy + Num + NumAssignOps,
+    {
+        let mut fib = fibonacci_iterator::<T>();
+        let mut total = T::zero();
         let mut last_bit = false;
 
         loop {
@@ -49,7 +54,7 @@ impl<'a> DataReader<'a> {
                 break;
             }
 
-            let fib_value = fib.next().expect("next fibonacci number");
+            let fib_value = fib.next().unwrap_or(T::zero());
             if bit {
                 total += fib_value;
             }
@@ -105,10 +110,13 @@ impl<'a> DataReader<'a> {
         Ok(range)
     }
 
-    pub fn read_fibonacci_range(&mut self) -> io::Result<Vec<u64>> {
+    pub fn read_fibonacci_range<T>(&mut self) -> io::Result<Vec<T>>
+    where
+        T: CheckedAdd + Copy + Num + NumAssignOps + PartialOrd + ToPrimitive,
+    {
         let n = self.bit_reader.read::<u16>(12)? as usize;
         let mut range = vec![];
-        let mut last_id = 0u64;
+        let mut last_id = T::zero();
 
         for _ in 0..n {
             let is_group = self.read_bool()?;
@@ -116,12 +124,12 @@ impl<'a> DataReader<'a> {
                 let offset = self.read_fibonacci_integer()?;
                 let count = self.read_fibonacci_integer()?;
 
-                for id in (last_id + offset)..=(last_id + offset + count) {
+                for id in range_inclusive(last_id + offset, last_id + offset + count) {
                     range.push(id);
                     last_id = id;
                 }
             } else {
-                let id = self.read_fibonacci_integer()?;
+                let id = self.read_fibonacci_integer::<T>()?;
                 range.push(last_id + id);
                 last_id = id;
             }
@@ -210,12 +218,16 @@ mod tests {
             (b("00011"), 5),
             (b("10011"), 6),
             (b("01011"), 7),
+            (b("0100000000001011"), 2), // overflow for u8, we ignore bits we can't encode
         ];
 
         for (buf, expected_value) in test_cases {
             let mut reader = DataReader::new(&buf);
 
-            assert_eq!(reader.read_fibonacci_integer().unwrap(), expected_value);
+            assert_eq!(
+                reader.read_fibonacci_integer::<u8>().unwrap(),
+                expected_value
+            );
         }
     }
 
@@ -293,7 +305,7 @@ mod tests {
         for (buf, expected_value) in test_cases {
             let mut reader = DataReader::new(&buf);
 
-            assert_eq!(reader.read_fibonacci_range().unwrap(), expected_value);
+            assert_eq!(reader.read_fibonacci_range::<u8>().unwrap(), expected_value);
         }
     }
 

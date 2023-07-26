@@ -1,10 +1,10 @@
 use crate::core::{DataReader, DecodeExt};
+use crate::sections::id::GPP_HEADER;
 use crate::sections::{decode_section, Section, SectionDecodeError};
 use std::io;
 use std::str::FromStr;
 use thiserror::Error;
 
-const GPP_HEADER_TYPE: u8 = 3;
 const GPP_VERSION: u8 = 1;
 
 #[derive(Error, Debug)]
@@ -13,7 +13,7 @@ pub enum GPPDecodeError {
     NoHeaderFound,
     #[error("unable to decode header")]
     DecodeHeader(#[from] base64::DecodeError),
-    #[error("invalid header type (expected {GPP_HEADER_TYPE}, found {found})")]
+    #[error("invalid header type (expected {GPP_HEADER}, found {found})")]
     InvalidHeaderType { found: u8 },
     #[error("invalid GPP version (expected {GPP_VERSION}, found {found})")]
     InvalidGPPVersion { found: u8 },
@@ -26,7 +26,7 @@ pub enum GPPDecodeError {
 }
 
 pub struct GPPModel {
-    pub section_ids: Vec<u64>,
+    pub section_ids: Vec<u8>,
     pub sections: Vec<Section>,
 }
 
@@ -41,7 +41,7 @@ impl FromStr for GPPModel {
         let mut reader = DataReader::new(&header);
 
         let header_type = reader.read_fixed_integer::<u8>(6)?;
-        if header_type != GPP_HEADER_TYPE {
+        if header_type != GPP_HEADER {
             return Err(GPPDecodeError::InvalidHeaderType { found: header_type });
         }
 

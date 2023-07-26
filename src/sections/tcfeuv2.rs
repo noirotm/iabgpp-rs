@@ -1,9 +1,9 @@
 use crate::core::{DataReader, DecodeExt};
+use crate::sections::id::TCF_EU_V2;
 use crate::sections::{SectionDecodeError, VendorList};
 use std::iter::repeat_with;
 use std::str::FromStr;
 
-const TCFEUV2_CORE_SEGMENT_VERSION: u8 = 2;
 const TCFEUV2_DISCLOSED_VENDORS_SEGMENT_TYPE: u8 = 1;
 const TCFEUV2_PUBLISHER_PURPOSES_SEGMENT_TYPE: u8 = 3;
 
@@ -84,9 +84,9 @@ impl FromStr for Core {
         let mut r = DataReader::new(&core);
 
         let version = r.read_fixed_integer::<u8>(6)?;
-        if version != TCFEUV2_CORE_SEGMENT_VERSION {
+        if version != TCF_EU_V2 {
             return Err(SectionDecodeError::InvalidSegmentVersion {
-                expected: TCFEUV2_CORE_SEGMENT_VERSION,
+                expected: TCF_EU_V2,
                 found: version,
             });
         }
@@ -225,7 +225,7 @@ mod tests {
     fn parse_tcfeuv2() {
         let t = TcfEuV2::from_str("CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA").unwrap();
 
-        assert_eq!(t.core.version, TCFEUV2_CORE_SEGMENT_VERSION);
+        assert_eq!(t.core.version, TCF_EU_V2);
         assert_eq!(t.core.created, 1650492000);
         assert_eq!(t.core.last_updated, 1650492000);
         assert_eq!(t.core.cmp_id, 31);

@@ -1,6 +1,9 @@
 use crate::sections::SectionDecodeError;
 use std::str::{Chars, FromStr};
 
+const USP_V1_VERSION: u8 = 1;
+const KIND: &str = "uspv1";
+
 #[derive(Debug, Eq, PartialEq)]
 pub enum Consent {
     Yes,
@@ -19,15 +22,14 @@ impl Consent {
     }
 }
 
+// See https://github.com/InteractiveAdvertisingBureau/USPrivacy/blob/master/CCPA/US%20Privacy%20String.md#us-privacy-string-format
 #[derive(Debug, Eq, PartialEq)]
 pub struct UspV1 {
-    version: u32,
+    version: u8,
     notice: Consent,
     optout_sale: Consent,
     lspa_covered: Consent,
 }
-
-const KIND: &str = "uspv1";
 
 impl FromStr for UspV1 {
     type Err = SectionDecodeError;
@@ -44,7 +46,13 @@ impl FromStr for UspV1 {
                 character: version,
                 kind: KIND,
                 s: s.to_string(),
-            })?;
+            })? as u8;
+        if version != USP_V1_VERSION {
+            return Err(SectionDecodeError::InvalidSectionVersion {
+                expected: USP_V1_VERSION,
+                found: version,
+            });
+        }
 
         let notice = parse_next_consent_char(&mut chars, s)?;
         let optout_sale = parse_next_consent_char(&mut chars, s)?;
@@ -113,6 +121,14 @@ mod tests {
         assert!(matches!(
             UspV1::from_str("ZYN-").unwrap_err(),
             SectionDecodeError::InvalidCharacter { character: 'Z', .. }
+        ));
+
+        assert!(matches!(
+            UspV1::from_str("2YN-").unwrap_err(),
+            SectionDecodeError::InvalidSectionVersion {
+                expected: USP_V1_VERSION,
+                found: 2
+            }
         ));
 
         assert!(matches!(
