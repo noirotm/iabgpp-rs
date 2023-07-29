@@ -94,7 +94,7 @@ mod tests {
     use std::iter::repeat;
 
     #[test]
-    fn parse() {
+    fn success() {
         let actual = TcfEuV1::from_str("BOEFEAyOEFEAyAHABDENAI4AAAB9vABAASA").unwrap();
         let expected = TcfEuV1 {
             version: TCF_EU_V1_VERSION,
@@ -115,7 +115,24 @@ mod tests {
     #[test]
     fn missing_data() {
         let r = TcfEuV1::from_str("BO5a1L7O5a1L7AAABBENC2-AAAAtHAA");
-        dbg!(&r);
         assert!(matches!(r.unwrap_err(), SectionDecodeError::Read(_)));
+    }
+
+    #[test]
+    fn empty_string() {
+        let r = TcfEuV1::from_str("");
+        assert!(matches!(r.unwrap_err(), SectionDecodeError::Read(_)));
+    }
+
+    #[test]
+    fn invalid_version() {
+        let r = TcfEuV1::from_str("DOEFEAyOEFEAyAHABDENAI4AAAB9vABAASA");
+        assert!(matches!(
+            r.unwrap_err(),
+            SectionDecodeError::InvalidSectionVersion {
+                expected: TCF_EU_V1_VERSION,
+                found: 3
+            }
+        ));
     }
 }

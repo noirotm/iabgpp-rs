@@ -7,6 +7,7 @@ use std::str::FromStr;
 const TCFEUV2_DISCLOSED_VENDORS_SEGMENT_TYPE: u8 = 1;
 const TCFEUV2_PUBLISHER_PURPOSES_SEGMENT_TYPE: u8 = 3;
 
+#[derive(Debug, Eq, PartialEq)]
 pub struct TcfEuV2 {
     pub core: Core,
     pub disclosed_vendors: Option<VendorList>,
@@ -54,6 +55,7 @@ impl FromStr for TcfEuV2 {
     }
 }
 
+#[derive(Debug, Eq, PartialEq)]
 pub struct Core {
     pub version: u8,
     pub created: i64,
@@ -138,6 +140,7 @@ impl FromStr for Core {
     }
 }
 
+#[derive(Debug, Eq, PartialEq)]
 pub struct PublisherRestriction {
     pub purpose_id: u8,
     pub restriction_type: RestrictionType,
@@ -164,6 +167,7 @@ impl PublisherRestriction {
     }
 }
 
+#[derive(Debug, Eq, PartialEq)]
 pub enum RestrictionType {
     NotAllowed,
     RequireConsent,
@@ -171,6 +175,7 @@ pub enum RestrictionType {
     Undefined,
 }
 
+#[derive(Debug, Eq, PartialEq)]
 pub struct PublisherPurposes {
     pub consents: Vec<bool>,
     pub legitimate_interests: Vec<bool>,
@@ -220,37 +225,88 @@ impl<const N: usize> BitField<N> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::iter::repeat;
 
     #[test]
-    fn parse_tcfeuv2() {
-        let t = TcfEuV2::from_str("CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA").unwrap();
+    fn success() {
+        let actual = TcfEuV2::from_str("CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA").unwrap();
+        let expected = TcfEuV2 {
+            core: Core {
+                version: TCF_EU_V2,
+                created: 1650492000,
+                last_updated: 1650492000,
+                cmp_id: 31,
+                cmp_version: 640,
+                consent_screen: 1,
+                consent_language: "EN".to_string(),
+                vendor_list_version: 126,
+                policy_version: 2,
+                is_service_specific: true,
+                use_non_standard_stacks: false,
+                special_feature_optins: vec![false; 12],
+                purpose_consents: vec![false; 24],
+                purpose_legitimate_interests: vec![false; 24],
+                purpose_one_treatment: false,
+                publisher_country_code: "DE".to_string(),
+                vendor_consents: Default::default(),
+                vendor_legitimate_interests: Default::default(),
+                publisher_restrictions: vec![],
+            },
+            disclosed_vendors: None,
+            publisher_purposes: None,
+        };
+        assert_eq!(actual, expected);
+    }
 
-        assert_eq!(t.core.version, TCF_EU_V2);
-        assert_eq!(t.core.created, 1650492000);
-        assert_eq!(t.core.last_updated, 1650492000);
-        assert_eq!(t.core.cmp_id, 31);
-        assert_eq!(t.core.cmp_version, 640);
-        assert_eq!(t.core.consent_screen, 1);
-        assert_eq!(t.core.consent_language, "EN");
-        assert_eq!(t.core.vendor_list_version, 126);
-        assert_eq!(t.core.policy_version, 2);
-        assert!(t.core.is_service_specific);
-        assert!(!t.core.use_non_standard_stacks);
-        assert_eq!(t.core.special_feature_optins, vec![false; 12]);
-        assert_eq!(t.core.purpose_consents, vec![false; 24]);
-        assert_eq!(t.core.purpose_legitimate_interests, vec![false; 24]);
-        assert!(!t.core.purpose_one_treatment);
-        assert_eq!(t.core.publisher_country_code, "DE");
-        assert!(t.core.vendor_consents.is_empty());
-        assert!(t.core.vendor_legitimate_interests.is_empty());
-        assert!(t.core.publisher_restrictions.is_empty());
-        assert!(t.disclosed_vendors.is_none());
-        assert!(t.publisher_purposes.is_none());
+    #[test]
+    fn sections() {
+        let actual = TcfEuV2::from_str("COvFyGBOvFyGBAbAAAENAPCAAOAAAAAAAAAAAEEUACCKAAA.IFoEUQQgAIQwgIwQABAEAAAAOIAACAIAAAAQAIAgEAACEAAAAAgAQBAAAAAAAGBAAgAAAAAAAFAAECAAAgAAQARAEQAAAAAJAAIAAgAAAYQEAAAQmAgBC3ZAYzUw").unwrap();
+        let expected = TcfEuV2 {
+            core: Core {
+                version: TCF_EU_V2,
+                created: 1582243059,
+                last_updated: 1582243059,
+                cmp_id: 27,
+                cmp_version: 0,
+                consent_screen: 0,
+                consent_language: "EN".to_string(),
+                vendor_list_version: 15,
+                policy_version: 2,
+                is_service_specific: false,
+                use_non_standard_stacks: false,
+                special_feature_optins: vec![false; 12],
+                purpose_consents: repeat(true).take(3).chain(repeat(false).take(21)).collect(),
+                purpose_legitimate_interests: vec![false; 24],
+                purpose_one_treatment: false,
+                publisher_country_code: "AA".to_string(),
+                vendor_consents: [2, 6, 8].into(),
+                vendor_legitimate_interests: [2, 6, 8].into(),
+                publisher_restrictions: vec![],
+            },
+            disclosed_vendors: Some(
+                [
+                    2, 6, 8, 12, 18, 23, 37, 42, 47, 48, 53, 61, 65, 66, 72, 88, 98, 127, 128, 129,
+                    133, 153, 163, 192, 205, 215, 224, 243, 248, 281, 294, 304, 350, 351, 358, 371,
+                    422, 424, 440, 447, 467, 486, 498, 502, 512, 516, 553, 556, 571, 587, 612, 613,
+                    618, 626, 648, 653, 656, 657, 665, 676, 681, 683, 684, 686, 687, 688, 690, 691,
+                    694, 702, 703, 707, 708, 711, 712, 714, 716, 719, 720,
+                ]
+                .into(),
+            ),
+            publisher_purposes: None,
+        };
+        assert_eq!(actual, expected);
     }
 
     #[test]
     fn decode_error() {
-        let e = TcfEuV2::from_str("CPX");
-        assert!(matches!(e, Err(SectionDecodeError::DecodeSegment(_))));
+        let r = TcfEuV2::from_str("CPX");
+        assert!(matches!(r, Err(SectionDecodeError::DecodeSegment(_))));
+    }
+
+    #[test]
+    fn empty_string() {
+        let r = TcfEuV2::from_str("");
+        assert!(matches!(r, Err(SectionDecodeError::Read(_))));
     }
 }
