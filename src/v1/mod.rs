@@ -67,12 +67,12 @@ pub trait SectionMapper {
     }
 }
 
-pub trait AsGPPStr {
-    fn as_gpp_str(&self) -> Result<GPPStr, GPPDecodeError>;
+pub trait ToGPPStr {
+    fn to_gpp_str(&self) -> Result<GPPStr, GPPDecodeError>;
 }
 
-impl AsGPPStr for &str {
-    fn as_gpp_str(&self) -> Result<GPPStr, GPPDecodeError> {
+impl ToGPPStr for &str {
+    fn to_gpp_str(&self) -> Result<GPPStr, GPPDecodeError> {
         GPPStr::extract_from_str(self)
     }
 }
@@ -115,7 +115,7 @@ pub struct GPPString {
 }
 
 impl GPPString {
-    pub fn as_gpp_str(&self) -> GPPStr {
+    pub fn to_gpp_str(&self) -> GPPStr {
         GPPStr {
             section_ids: self.section_ids.clone(),
             sections: self
@@ -224,7 +224,7 @@ mod tests {
     #[test]
     fn str_as_gpp_str() {
         let r = "DBABMA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA"
-            .as_gpp_str()
+            .to_gpp_str()
             .unwrap();
 
         assert_eq!(r.section_ids, vec![TCF_EU_V2]);
@@ -334,7 +334,7 @@ mod tests {
     #[test]
     fn gpp_string_as_gpp_str() {
         let r = GPPString::from_str("DBABMA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA").unwrap();
-        let r = r.as_gpp_str();
+        let r = r.to_gpp_str();
 
         assert_eq!(r.section_ids, vec![TCF_EU_V2]);
         assert!(matches!(

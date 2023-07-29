@@ -18,16 +18,16 @@ Legend:
 - 🧪 implementation complete, validation in progress
 
 
-| Section           | Reading | Writing |
-|-------------------|:-------:|:-------:|
-| Global GPP string |   ✔️    |    ❌    |
-| US Privacy        |   ✔️    |    ❌    |
-| EU TCF v2         |   🧪    |    ❌    |
-| EU TCF v1         |    ❌    |    ❌    |
-| Canadian TCF      |    ❌    |    ❌    |
-| US - National     |    ❌    |    ❌    |
-| US - California   |    ❌    |    ❌    |
-| US - Virginia     |    ❌    |    ❌    |
-| US - Colorado     |    ❌    |    ❌    |
-| US - Utah         |    ❌    |    ❌    |
-| US - Connecticut  |    ❌    |    ❌    |
+| Section                | Reading | Writing |
+|------------------------|:-------:|:-------:|
+| Global GPP string      |   ✔️    |    ❌    |
+| US Privacy             |   ✔️    |    ❌    |
+| EU TCF v2              |   🧪    |    ❌    |
+| EU TCF v1 (deprecated) |   🧪    |    ❌    |
+| Canadian TCF           |    ❌    |    ❌    |
+| US - National          |    ❌    |    ❌    |
+| US - California        |    ❌    |    ❌    |
+| US - Virginia          |    ❌    |    ❌    |
+| US - Colorado          |    ❌    |    ❌    |
+| US - Utah              |    ❌    |    ❌    |
+| US - Connecticut       |    ❌    |    ❌    |
