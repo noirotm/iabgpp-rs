@@ -1,11 +1,11 @@
 use crate::core::{DataReader, DecodeExt};
-use crate::sections::id::TCF_EU_V2;
 use crate::sections::{SectionDecodeError, VendorList};
 use std::iter::repeat_with;
 use std::str::FromStr;
 
-const TCFEUV2_DISCLOSED_VENDORS_SEGMENT_TYPE: u8 = 1;
-const TCFEUV2_PUBLISHER_PURPOSES_SEGMENT_TYPE: u8 = 3;
+const TCF_EU_V2_VERSION: u8 = 2;
+const TCF_EU_V2_DISCLOSED_VENDORS_SEGMENT_TYPE: u8 = 1;
+const TCF_EU_V2_PUBLISHER_PURPOSES_SEGMENT_TYPE: u8 = 3;
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct TcfEuV2 {
@@ -39,10 +39,10 @@ impl FromStr for TcfEuV2 {
 
             let section_type = r.read_fixed_integer::<u8>(3)?;
             match section_type {
-                TCFEUV2_DISCLOSED_VENDORS_SEGMENT_TYPE => {
+                TCF_EU_V2_DISCLOSED_VENDORS_SEGMENT_TYPE => {
                     tcfeuv2.disclosed_vendors = Some(r.read_optimized_integer_range()?);
                 }
-                TCFEUV2_PUBLISHER_PURPOSES_SEGMENT_TYPE => {
+                TCF_EU_V2_PUBLISHER_PURPOSES_SEGMENT_TYPE => {
                     tcfeuv2.publisher_purposes = Some(PublisherPurposes::parse(&mut r)?);
                 }
                 n => {
@@ -86,9 +86,9 @@ impl FromStr for Core {
         let mut r = DataReader::new(&core);
 
         let version = r.read_fixed_integer::<u8>(6)?;
-        if version != TCF_EU_V2 {
+        if version != TCF_EU_V2_VERSION {
             return Err(SectionDecodeError::InvalidSegmentVersion {
-                expected: TCF_EU_V2,
+                expected: TCF_EU_V2_VERSION,
                 found: version,
             });
         }
@@ -232,7 +232,7 @@ mod tests {
         let actual = TcfEuV2::from_str("CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA").unwrap();
         let expected = TcfEuV2 {
             core: Core {
-                version: TCF_EU_V2,
+                version: TCF_EU_V2_VERSION,
                 created: 1650492000,
                 last_updated: 1650492000,
                 cmp_id: 31,
@@ -263,7 +263,7 @@ mod tests {
         let actual = TcfEuV2::from_str("COvFyGBOvFyGBAbAAAENAPCAAOAAAAAAAAAAAEEUACCKAAA.IFoEUQQgAIQwgIwQABAEAAAAOIAACAIAAAAQAIAgEAACEAAAAAgAQBAAAAAAAGBAAgAAAAAAAFAAECAAAgAAQARAEQAAAAAJAAIAAgAAAYQEAAAQmAgBC3ZAYzUw").unwrap();
         let expected = TcfEuV2 {
             core: Core {
-                version: TCF_EU_V2,
+                version: TCF_EU_V2_VERSION,
                 created: 1582243059,
                 last_updated: 1582243059,
                 cmp_id: 27,
