@@ -121,18 +121,18 @@ mod tests {
     #[test]
     fn empty_string() {
         let r = TcfEuV1::from_str("");
-        assert!(matches!(r.unwrap_err(), SectionDecodeError::Read(_)));
+        assert!(matches!(r, Err(SectionDecodeError::Read(_))));
     }
 
     #[test]
     fn invalid_version() {
         let r = TcfEuV1::from_str("DOEFEAyOEFEAyAHABDENAI4AAAB9vABAASA");
         assert!(matches!(
-            r.unwrap_err(),
-            SectionDecodeError::InvalidSectionVersion {
+            r,
+            Err(SectionDecodeError::InvalidSectionVersion {
                 expected: TCF_EU_V1_VERSION,
                 found: 3
-            }
+            })
         ));
     }
 }

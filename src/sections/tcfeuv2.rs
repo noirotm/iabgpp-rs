@@ -225,10 +225,12 @@ impl<const N: usize> BitField<N> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::sections::uspv1::Consent::No;
+    use base64::Engine;
     use std::iter::repeat;
 
     #[test]
-    fn success() {
+    fn core_only() {
         let actual = TcfEuV2::from_str("CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA").unwrap();
         let expected = TcfEuV2 {
             core: Core {
@@ -259,7 +261,7 @@ mod tests {
     }
 
     #[test]
-    fn sections() {
+    fn with_disclosed_vendors() {
         let actual = TcfEuV2::from_str("COvFyGBOvFyGBAbAAAENAPCAAOAAAAAAAAAAAEEUACCKAAA.IFoEUQQgAIQwgIwQABAEAAAAOIAACAIAAAAQAIAgEAACEAAAAAgAQBAAAAAAAGBAAgAAAAAAAFAAECAAAgAAQARAEQAAAAAJAAIAAgAAAYQEAAAQmAgBC3ZAYzUw").unwrap();
         let expected = TcfEuV2 {
             core: Core {
@@ -294,6 +296,52 @@ mod tests {
                 .into(),
             ),
             publisher_purposes: None,
+        };
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn with_publisher_purposes() {
+        let actual =
+            TcfEuV2::from_str("COvFyGBOvFyGBAbAAAENAPCAAOAAAAAAAAAAAEEUACCKAAA.ZAAgH9794ulA")
+                .unwrap();
+        let expected = TcfEuV2 {
+            core: Core {
+                version: TCF_EU_V2_VERSION,
+                created: 1582243059,
+                last_updated: 1582243059,
+                cmp_id: 27,
+                cmp_version: 0,
+                consent_screen: 0,
+                consent_language: "EN".to_string(),
+                vendor_list_version: 15,
+                policy_version: 2,
+                is_service_specific: false,
+                use_non_standard_stacks: false,
+                special_feature_optins: vec![false; 12],
+                purpose_consents: repeat(true).take(3).chain(repeat(false).take(21)).collect(),
+                purpose_legitimate_interests: vec![false; 24],
+                purpose_one_treatment: false,
+                publisher_country_code: "AA".to_string(),
+                vendor_consents: [2, 6, 8].into(),
+                vendor_legitimate_interests: [2, 6, 8].into(),
+                publisher_restrictions: vec![],
+            },
+            disclosed_vendors: None,
+            publisher_purposes: Some(PublisherPurposes {
+                consents: vec![
+                    false, false, true, false, false, false, false, false, false, false, false,
+                    false, false, false, false, true, false, false, false, false, false, false,
+                    false, false,
+                ],
+                legitimate_interests: vec![
+                    true, true, true, true, true, true, true, false, true, true, true, true, false,
+                    true, true, true, true, true, true, false, true, true, true, true,
+                ],
+                custom_purposes_num: 5,
+                custom_consents: vec![true, true, false, true, false],
+                custom_legitimate_interests: vec![false, true, false, true, false],
+            }),
         };
         assert_eq!(actual, expected);
     }
