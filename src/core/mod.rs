@@ -138,15 +138,16 @@ impl<'a> DataReader<'a> {
         Ok(range)
     }
 
-    pub fn read_optimized_range(&mut self) -> io::Result<Vec<u64>> {
+    pub fn read_optimized_range(&mut self) -> io::Result<BTreeSet<u16>> {
         let is_fibo = self.read_bool()?;
         if is_fibo {
-            self.read_fibonacci_range()
+            Ok(self.read_fibonacci_range::<u16>()?.into_iter().collect())
         } else {
             Ok(self
                 .read_variable_bitfield()?
-                .iter()
-                .map(|&b| b as u64)
+                .into_iter()
+                .enumerate()
+                .filter_map(|(i, b)| b.then_some((i + 1) as u16))
                 .collect())
         }
     }
@@ -159,7 +160,7 @@ impl<'a> DataReader<'a> {
         } else {
             Ok(self
                 .read_fixed_bitfield(len as usize)?
-                .iter()
+                .into_iter()
                 .enumerate()
                 .filter_map(|(i, b)| b.then_some((i + 1) as u16))
                 .collect())
@@ -313,13 +314,20 @@ mod tests {
     fn read_optimized_range() {
         let test_cases = [
             (b("1 000000000010 0 0011 1 011 0011"), vec![3, 5, 6, 7, 8]),
-            (b("0 0000000000000101 10101"), vec![1, 0, 1, 0, 1]),
+            (b("0 0000000000000101 10101"), vec![1, 3, 5]),
         ];
 
         for (buf, expected_value) in test_cases {
             let mut reader = DataReader::new(&buf);
 
-            assert_eq!(reader.read_optimized_range().unwrap(), expected_value);
+            assert_eq!(
+                reader
+                    .read_optimized_range()
+                    .unwrap()
+                    .into_iter()
+                    .collect::<Vec<_>>(),
+                expected_value
+            );
         }
     }
 
