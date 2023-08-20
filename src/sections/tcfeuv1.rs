@@ -1,5 +1,5 @@
 use crate::core::{DataReader, DecodeExt};
-use crate::sections::{SectionDecodeError, VendorList};
+use crate::sections::{IdList, SectionDecodeError};
 use std::collections::BTreeSet;
 use std::str::FromStr;
 
@@ -16,8 +16,8 @@ pub struct TcfEuV1 {
     pub consent_screen: u8,
     pub consent_language: String,
     pub vendor_list_version: u16,
-    pub purposes_allowed: Vec<bool>,
-    pub vendor_consents: VendorList,
+    pub purposes_allowed: IdList,
+    pub vendor_consents: IdList,
 }
 
 impl FromStr for TcfEuV1 {
@@ -61,7 +61,7 @@ impl FromStr for TcfEuV1 {
 }
 
 impl TcfEuV1 {
-    fn parse_vendor_consents(r: &mut DataReader) -> Result<VendorList, SectionDecodeError> {
+    fn parse_vendor_consents(r: &mut DataReader) -> Result<IdList, SectionDecodeError> {
         let max_vendor_id = r.read_fixed_integer::<u16>(16)?;
         let is_range = r.read_bool()?;
         Ok(if is_range {
@@ -80,10 +80,6 @@ impl TcfEuV1 {
         } else {
             // bitfield section
             r.read_fixed_bitfield(max_vendor_id as usize)?
-                .iter()
-                .enumerate()
-                .filter_map(|(i, b)| b.then_some((i + 1) as u16))
-                .collect()
         })
     }
 }
@@ -91,7 +87,6 @@ impl TcfEuV1 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::iter::repeat;
 
     #[test]
     fn success() {
@@ -105,7 +100,7 @@ mod tests {
             consent_screen: 3,
             consent_language: "EN".to_string(),
             vendor_list_version: 8,
-            purposes_allowed: repeat(true).take(3).chain(repeat(false).take(21)).collect(),
+            purposes_allowed: [1, 2, 3].into(),
             vendor_consents: (1..=2011).filter(|&id| id != 9).collect(),
         };
 

@@ -75,17 +75,21 @@ impl<'a> DataReader<'a> {
         Ok(self.read_fixed_integer::<i64>(36)? / 10) // seconds
     }
 
-    pub fn read_fixed_bitfield(&mut self, bits: usize) -> io::Result<Vec<bool>> {
-        repeat_with(|| self.read_bool())
-            .take(bits)
-            .collect::<Result<Vec<_>, _>>()
+    pub fn read_fixed_bitfield(&mut self, bits: usize) -> io::Result<BTreeSet<u16>> {
+        let mut result = BTreeSet::new();
+        for i in 1..=bits {
+            let b = self.read_bool()?;
+            if b {
+                result.insert(i as u16);
+            }
+        }
+
+        Ok(result)
     }
 
-    pub fn read_variable_bitfield(&mut self) -> io::Result<Vec<bool>> {
+    pub fn read_variable_bitfield(&mut self) -> io::Result<BTreeSet<u16>> {
         let n = self.read_fixed_integer::<u16>(16)? as usize;
-        repeat_with(|| self.read_bool())
-            .take(n)
-            .collect::<Result<Vec<_>, _>>()
+        self.read_fixed_bitfield(n)
     }
 
     pub fn read_integer_range(&mut self) -> io::Result<Vec<u16>> {
@@ -143,12 +147,7 @@ impl<'a> DataReader<'a> {
         if is_fibo {
             Ok(self.read_fibonacci_range::<u16>()?.into_iter().collect())
         } else {
-            Ok(self
-                .read_variable_bitfield()?
-                .into_iter()
-                .enumerate()
-                .filter_map(|(i, b)| b.then_some((i + 1) as u16))
-                .collect())
+            self.read_variable_bitfield()
         }
     }
 
@@ -158,12 +157,7 @@ impl<'a> DataReader<'a> {
         if is_int_range {
             self.read_integer_range().map(|r| r.into_iter().collect())
         } else {
-            Ok(self
-                .read_fixed_bitfield(len as usize)?
-                .into_iter()
-                .enumerate()
-                .filter_map(|(i, b)| b.then_some((i + 1) as u16))
-                .collect())
+            self.read_fixed_bitfield(len as usize)
         }
     }
 }
@@ -259,7 +253,7 @@ mod tests {
 
     #[test]
     fn read_fixed_bitfield() {
-        let test_cases = [(b("10101"), 5, vec![true, false, true, false, true])];
+        let test_cases = [(b("10101"), 5, BTreeSet::from_iter([1, 3, 5]))];
 
         for (buf, bits, expected_value) in test_cases {
             let mut reader = DataReader::new(&buf);
@@ -270,10 +264,7 @@ mod tests {
 
     #[test]
     fn read_variable_bitfield() {
-        let test_cases = [(
-            b("0000000000000101 10101"),
-            vec![true, false, true, false, true],
-        )];
+        let test_cases = [(b("0000000000000101 10101"), BTreeSet::from_iter([1, 3, 5]))];
 
         for (buf, expected_value) in test_cases {
             let mut reader = DataReader::new(&buf);
@@ -313,40 +304,41 @@ mod tests {
     #[test]
     fn read_optimized_range() {
         let test_cases = [
-            (b("1 000000000010 0 0011 1 011 0011"), vec![3, 5, 6, 7, 8]),
-            (b("0 0000000000000101 10101"), vec![1, 3, 5]),
+            (
+                b("1 000000000010 0 0011 1 011 0011"),
+                BTreeSet::from_iter([3, 5, 6, 7, 8]),
+            ),
+            (
+                b("0 0000000000000101 10101"),
+                BTreeSet::from_iter([1, 3, 5]),
+            ),
         ];
 
         for (buf, expected_value) in test_cases {
             let mut reader = DataReader::new(&buf);
 
-            assert_eq!(
-                reader
-                    .read_optimized_range()
-                    .unwrap()
-                    .into_iter()
-                    .collect::<Vec<_>>(),
-                expected_value
-            );
+            assert_eq!(reader.read_optimized_range().unwrap(), expected_value);
         }
     }
 
     #[test]
     fn read_optimized_int_range() {
         let test_cases = [
-            (b("0000000000000000 1 000000000010 0 0000000000000011 1 0000000000000101 0000000000001000"), vec![3, 5, 6, 7, 8]),
-            (b("0000000000000101 0 10101"), vec![1, 3, 5]),
+            (
+                b("0000000000000000 1 000000000010 0 0000000000000011 1 0000000000000101 0000000000001000"),
+                BTreeSet::from_iter([3, 5, 6, 7, 8])
+            ),
+            (
+                b("0000000000000101 0 10101"),
+                BTreeSet::from_iter([1, 3, 5])
+            ),
         ];
 
         for (buf, expected_value) in test_cases {
             let mut reader = DataReader::new(&buf);
 
             assert_eq!(
-                reader
-                    .read_optimized_integer_range()
-                    .unwrap()
-                    .into_iter()
-                    .collect::<Vec<_>>(),
+                reader.read_optimized_integer_range().unwrap(),
                 expected_value
             );
         }

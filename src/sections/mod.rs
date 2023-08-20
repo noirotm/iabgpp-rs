@@ -25,7 +25,7 @@ pub mod id {
     pub const US_CT: u8 = 12;
 }
 
-pub type VendorList = BTreeSet<u16>;
+pub type IdList = BTreeSet<u16>;
 
 #[derive(Error, Debug)]
 pub enum SectionDecodeError {

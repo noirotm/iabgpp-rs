@@ -1,5 +1,5 @@
 use crate::core::{DataReader, DecodeExt};
-use crate::sections::{SectionDecodeError, VendorList};
+use crate::sections::{IdList, SectionDecodeError};
 use std::iter::repeat_with;
 use std::str::FromStr;
 
@@ -10,7 +10,7 @@ const TCF_EU_V2_PUBLISHER_PURPOSES_SEGMENT_TYPE: u8 = 3;
 #[derive(Debug, Eq, PartialEq)]
 pub struct TcfEuV2 {
     pub core: Core,
-    pub disclosed_vendors: Option<VendorList>,
+    pub disclosed_vendors: Option<IdList>,
     pub publisher_purposes: Option<PublisherPurposes>,
 }
 
@@ -68,13 +68,13 @@ pub struct Core {
     pub policy_version: u8,
     pub is_service_specific: bool,
     pub use_non_standard_stacks: bool,
-    pub special_feature_optins: Vec<bool>,
-    pub purpose_consents: Vec<bool>,
-    pub purpose_legitimate_interests: Vec<bool>,
+    pub special_feature_optins: IdList,
+    pub purpose_consents: IdList,
+    pub purpose_legitimate_interests: IdList,
     pub purpose_one_treatment: bool,
     pub publisher_country_code: String,
-    pub vendor_consents: VendorList,
-    pub vendor_legitimate_interests: VendorList,
+    pub vendor_consents: IdList,
+    pub vendor_legitimate_interests: IdList,
     pub publisher_restrictions: Vec<PublisherRestriction>,
 }
 
@@ -144,7 +144,7 @@ impl FromStr for Core {
 pub struct PublisherRestriction {
     pub purpose_id: u8,
     pub restriction_type: RestrictionType,
-    pub restricted_vendor_ids: VendorList,
+    pub restricted_vendor_ids: IdList,
 }
 
 impl PublisherRestriction {
@@ -177,11 +177,11 @@ pub enum RestrictionType {
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct PublisherPurposes {
-    pub consents: Vec<bool>,
-    pub legitimate_interests: Vec<bool>,
+    pub consents: IdList,
+    pub legitimate_interests: IdList,
     pub custom_purposes_num: u8,
-    pub custom_consents: Vec<bool>,
-    pub custom_legitimate_interests: Vec<bool>,
+    pub custom_consents: IdList,
+    pub custom_legitimate_interests: IdList,
 }
 
 impl PublisherPurposes {
@@ -202,32 +202,9 @@ impl PublisherPurposes {
     }
 }
 
-/*pub struct BitField<const N: usize> {
-    bits: [bool; N],
-}
-
-impl<const N: usize> BitField<N> {
-    fn try_from_slice(bits: &[bool]) -> Result<Self, TryFromSliceError> {
-        Ok(Self {
-            bits: bits.try_into()?,
-        })
-    }
-
-    fn iter(&self) -> impl Iterator<Item = (usize, &bool)> {
-        self.bits.iter().enumerate().map(|(i, b)| (i + 1, b))
-    }
-
-    fn get_by_id(&self, id: usize) -> Option<bool> {
-        self.bits.get(id.checked_sub(1)?).cloned()
-    }
-}*/
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::sections::uspv1::Consent::No;
-    use base64::Engine;
-    use std::iter::repeat;
 
     #[test]
     fn core_only() {
@@ -245,9 +222,9 @@ mod tests {
                 policy_version: 2,
                 is_service_specific: true,
                 use_non_standard_stacks: false,
-                special_feature_optins: vec![false; 12],
-                purpose_consents: vec![false; 24],
-                purpose_legitimate_interests: vec![false; 24],
+                special_feature_optins: Default::default(),
+                purpose_consents: Default::default(),
+                purpose_legitimate_interests: Default::default(),
                 purpose_one_treatment: false,
                 publisher_country_code: "DE".to_string(),
                 vendor_consents: Default::default(),
@@ -276,9 +253,9 @@ mod tests {
                 policy_version: 2,
                 is_service_specific: false,
                 use_non_standard_stacks: false,
-                special_feature_optins: vec![false; 12],
-                purpose_consents: repeat(true).take(3).chain(repeat(false).take(21)).collect(),
-                purpose_legitimate_interests: vec![false; 24],
+                special_feature_optins: Default::default(),
+                purpose_consents: [1, 2, 3].into(),
+                purpose_legitimate_interests: Default::default(),
                 purpose_one_treatment: false,
                 publisher_country_code: "AA".to_string(),
                 vendor_consents: [2, 6, 8].into(),
@@ -318,9 +295,9 @@ mod tests {
                 policy_version: 2,
                 is_service_specific: false,
                 use_non_standard_stacks: false,
-                special_feature_optins: vec![false; 12],
-                purpose_consents: repeat(true).take(3).chain(repeat(false).take(21)).collect(),
-                purpose_legitimate_interests: vec![false; 24],
+                special_feature_optins: Default::default(),
+                purpose_consents: [1, 2, 3].into(),
+                purpose_legitimate_interests: Default::default(),
                 purpose_one_treatment: false,
                 publisher_country_code: "AA".to_string(),
                 vendor_consents: [2, 6, 8].into(),
@@ -329,18 +306,14 @@ mod tests {
             },
             disclosed_vendors: None,
             publisher_purposes: Some(PublisherPurposes {
-                consents: vec![
-                    false, false, true, false, false, false, false, false, false, false, false,
-                    false, false, false, false, true, false, false, false, false, false, false,
-                    false, false,
-                ],
-                legitimate_interests: vec![
-                    true, true, true, true, true, true, true, false, true, true, true, true, false,
-                    true, true, true, true, true, true, false, true, true, true, true,
-                ],
+                consents: [3, 16].into(),
+                legitimate_interests: [
+                    1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 21, 22, 23, 24,
+                ]
+                .into(),
                 custom_purposes_num: 5,
-                custom_consents: vec![true, true, false, true, false],
-                custom_legitimate_interests: vec![false, true, false, true, false],
+                custom_consents: [1, 2, 4].into(),
+                custom_legitimate_interests: [2, 4].into(),
             }),
         };
         assert_eq!(actual, expected);
