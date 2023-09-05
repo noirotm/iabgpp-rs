@@ -57,7 +57,6 @@ impl FromStr for TcfEuV2 {
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct Core {
-    pub version: u8,
     pub created: i64,
     pub last_updated: i64,
     pub cmp_id: u16,
@@ -117,7 +116,6 @@ impl FromStr for Core {
             .collect::<Result<_, _>>()?;
 
         Ok(Self {
-            version,
             created,
             last_updated,
             cmp_id,
@@ -179,7 +177,6 @@ pub enum RestrictionType {
 pub struct PublisherPurposes {
     pub consents: IdList,
     pub legitimate_interests: IdList,
-    pub custom_purposes_num: u8,
     pub custom_consents: IdList,
     pub custom_legitimate_interests: IdList,
 }
@@ -195,7 +192,6 @@ impl PublisherPurposes {
         Ok(Self {
             consents,
             legitimate_interests,
-            custom_purposes_num,
             custom_consents,
             custom_legitimate_interests,
         })
@@ -211,7 +207,6 @@ mod tests {
         let actual = TcfEuV2::from_str("CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA").unwrap();
         let expected = TcfEuV2 {
             core: Core {
-                version: TCF_EU_V2_VERSION,
                 created: 1650492000,
                 last_updated: 1650492000,
                 cmp_id: 31,
@@ -242,7 +237,6 @@ mod tests {
         let actual = TcfEuV2::from_str("COvFyGBOvFyGBAbAAAENAPCAAOAAAAAAAAAAAEEUACCKAAA.IFoEUQQgAIQwgIwQABAEAAAAOIAACAIAAAAQAIAgEAACEAAAAAgAQBAAAAAAAGBAAgAAAAAAAFAAECAAAgAAQARAEQAAAAAJAAIAAgAAAYQEAAAQmAgBC3ZAYzUw").unwrap();
         let expected = TcfEuV2 {
             core: Core {
-                version: TCF_EU_V2_VERSION,
                 created: 1582243059,
                 last_updated: 1582243059,
                 cmp_id: 27,
@@ -284,7 +278,6 @@ mod tests {
                 .unwrap();
         let expected = TcfEuV2 {
             core: Core {
-                version: TCF_EU_V2_VERSION,
                 created: 1582243059,
                 last_updated: 1582243059,
                 cmp_id: 27,
@@ -311,7 +304,6 @@ mod tests {
                     1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 21, 22, 23, 24,
                 ]
                 .into(),
-                custom_purposes_num: 5,
                 custom_consents: [1, 2, 4].into(),
                 custom_legitimate_interests: [2, 4].into(),
             }),
