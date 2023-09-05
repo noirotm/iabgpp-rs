@@ -1,3 +1,4 @@
+use crate::sections::tcfcav1::TcfCaV1;
 use crate::sections::tcfeuv1::TcfEuV1;
 use crate::sections::tcfeuv2::TcfEuV2;
 use crate::sections::uspv1::UspV1;
@@ -6,6 +7,7 @@ use std::io;
 use std::str::FromStr;
 use thiserror::Error;
 
+pub mod tcfcav1;
 pub mod tcfeuv1;
 pub mod tcfeuv2;
 pub mod uspv1;
@@ -15,7 +17,7 @@ pub mod id {
     pub const TCF_EU_V2: u8 = 2;
     pub const GPP_HEADER: u8 = 3;
     pub const GPP_SIGNAL_INTEGRITY: u8 = 4;
-    pub const TCF_CA: u8 = 5;
+    pub const TCF_CA_V1: u8 = 5;
     pub const USP_V1: u8 = 6;
     pub const US_NAT: u8 = 7;
     pub const US_CA: u8 = 8;
@@ -52,7 +54,7 @@ pub enum SectionDecodeError {
 pub enum Section {
     TcfEuV1(TcfEuV1),
     TcfEuV2(TcfEuV2),
-    TcfCa,
+    TcfCaV1(TcfCaV1),
     UspV1(UspV1),
     UsNat,
     UsCa,
@@ -67,6 +69,7 @@ pub(crate) fn decode_section(id: u8, s: &str) -> Result<Section, SectionDecodeEr
     match id {
         id::TCF_EU_V1 => TcfEuV1::from_str(s).map(Section::TcfEuV1),
         id::TCF_EU_V2 => TcfEuV2::from_str(s).map(Section::TcfEuV2),
+        id::TCF_CA_V1 => TcfCaV1::from_str(s).map(Section::TcfCaV1),
         id::USP_V1 => UspV1::from_str(s).map(Section::UspV1),
 
         _ => Ok(Section::Unsupported(s.to_string())),

@@ -188,7 +188,7 @@ fn extract_gpp_sections_from_str(s: &str) -> Result<(Vec<u8>, Vec<&str>), GPPDec
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::sections::id::{TCF_CA, TCF_EU_V2, USP_V1};
+    use crate::sections::id::{TCF_CA_V1, TCF_EU_V2, USP_V1};
 
     #[test]
     fn gpp_model_parse_str() {
@@ -211,13 +211,11 @@ mod tests {
     #[test]
     fn gpp_model_parse_str_multiple_sections_unsupported() {
         let r =
-            GPPModel::from_str("DBABjw~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN").unwrap();
+            GPPModel::from_str("DBABjw~BPXuQIAPXuQIAAfKABENB-CgAAAAAAAAAAAAAAAA.YAAAAAAAAAA~1YNN")
+                .unwrap();
 
-        assert_eq!(r.section_ids, vec![TCF_CA, USP_V1]);
-        assert!(matches!(
-            &r.sections[0],
-            Section::Unsupported(x) if x == "CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA"
-        ));
+        assert_eq!(r.section_ids, vec![TCF_CA_V1, USP_V1]);
+        assert!(matches!(&r.sections[0], Section::TcfCaV1(_)));
         assert!(matches!(r.sections[1], Section::UspV1(_)));
     }
 

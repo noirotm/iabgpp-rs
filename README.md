@@ -22,9 +22,9 @@ Legend:
 |------------------------|:-------:|:-------:|
 | Global GPP string      |   ✔️    |    ❌    |
 | US Privacy             |   ✔️    |    ❌    |
-| EU TCF v2              |   🧪    |    ❌    |
-| EU TCF v1 (deprecated) |   🧪    |    ❌    |
-| Canadian TCF           |    ❌    |    ❌    |
+| EU TCF v2              |   ✔️    |    ❌    |
+| EU TCF v1 (deprecated) |   ✔️    |    ❌    |
+| Canadian TCF v1        |   🧪    |    ❌    |
 | US - National          |    ❌    |    ❌    |
 | US - California        |    ❌    |    ❌    |
 | US - Virginia          |    ❌    |    ❌    |
