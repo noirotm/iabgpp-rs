@@ -177,4 +177,16 @@ mod tests {
 
         assert_eq!(actual, expected);
     }
+
+    #[test]
+    fn decode_error() {
+        let r = TcfCaV1::from_str("BPX");
+        assert!(matches!(r, Err(SectionDecodeError::DecodeSegment(_))));
+    }
+
+    #[test]
+    fn empty_string() {
+        let r = TcfCaV1::from_str("");
+        assert!(matches!(r, Err(SectionDecodeError::Read(_))));
+    }
 }
