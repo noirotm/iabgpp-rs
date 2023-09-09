@@ -1,7 +1,7 @@
 use crate::core::{DataReader, DecodeExt};
 use crate::sections::id::GPP_HEADER;
 use crate::sections::{decode_section, Section, SectionDecodeError};
-use std::collections::HashMap;
+use fnv::FnvHashMap;
 use std::io;
 use std::str::FromStr;
 use thiserror::Error;
@@ -79,7 +79,7 @@ impl ToGPPStr for &str {
 
 pub struct GPPStr<'a> {
     pub section_ids: Vec<u8>,
-    pub sections: HashMap<u8, &'a str>,
+    pub sections: FnvHashMap<u8, &'a str>,
 }
 
 impl<'a> GPPStr<'a> {
@@ -111,11 +111,11 @@ impl<'a> SectionMapper for GPPStr<'a> {
 
 pub struct GPPString {
     pub section_ids: Vec<u8>,
-    pub sections: HashMap<u8, String>,
+    pub sections: FnvHashMap<u8, String>,
 }
 
 impl GPPString {
-    pub fn to_gpp_str(&self) -> GPPStr {
+    pub fn as_gpp_str(&self) -> GPPStr {
         GPPStr {
             section_ids: self.section_ids.clone(),
             sections: self
@@ -332,7 +332,7 @@ mod tests {
     #[test]
     fn gpp_string_as_gpp_str() {
         let r = GPPString::from_str("DBABMA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA").unwrap();
-        let r = r.to_gpp_str();
+        let r = r.as_gpp_str();
 
         assert_eq!(r.section_ids, vec![TCF_EU_V2]);
         assert!(matches!(
