@@ -1,12 +1,13 @@
 # Resources
 
-This is a non-exhaustivee list of resources used to develop this library.
+This is a non-exhaustive list of resources used to develop this library.
 
 ## Specifications
 
 - [GPP specification](https://github.com/InteractiveAdvertisingBureau/Global-Privacy-Platform)
 - [TCF V2 specification](https://github.com/InteractiveAdvertisingBureau/GDPR-Transparency-and-Consent-Framework/tree/master/TCFv2)
 - [TCF V1 specification](https://github.com/InteractiveAdvertisingBureau/GDPR-Transparency-and-Consent-Framework/blob/master/Consent%20string%20and%20vendor%20list%20formats%20v1.1%20Final.md)
+- [US Privacy String specification](https://github.com/InteractiveAdvertisingBureau/USPrivacy/blob/master/CCPA/US%20Privacy%20String.md)
 
 ## Implementations
 
