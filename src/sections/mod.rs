@@ -2,6 +2,7 @@ use crate::core::{DataReader, DecodeExt, FromDataReader};
 use crate::sections::tcfcav1::TcfCaV1;
 use crate::sections::tcfeuv1::TcfEuV1;
 use crate::sections::tcfeuv2::TcfEuV2;
+use crate::sections::usnat::UsNat;
 use crate::sections::uspv1::UspV1;
 use std::collections::BTreeSet;
 use std::io;
@@ -10,6 +11,7 @@ use thiserror::Error;
 pub mod tcfcav1;
 pub mod tcfeuv1;
 pub mod tcfeuv2;
+pub mod usnat;
 pub mod uspv1;
 
 pub mod id {
@@ -53,6 +55,8 @@ pub enum SectionDecodeError {
     DuplicateSegmentType { segment_type: u8 },
     #[error("missing core segment")]
     MissingCoreSegment,
+    #[error("invalid field value (expected {expected}, found {found})")]
+    InvalidFieldValue { expected: String, found: String },
 }
 
 pub enum Section {
@@ -60,7 +64,7 @@ pub enum Section {
     TcfEuV2(TcfEuV2),
     TcfCaV1(TcfCaV1),
     UspV1(UspV1),
-    UsNat,
+    UsNat(UsNat),
     UsCa,
     UsVa,
     UsCo,
@@ -75,6 +79,7 @@ pub(crate) fn decode_section(id: u8, s: &str) -> Result<Section, SectionDecodeEr
         id::TCF_EU_V2 => Section::TcfEuV2(s.parse()?),
         id::TCF_CA_V1 => Section::TcfCaV1(s.parse()?),
         id::USP_V1 => Section::UspV1(s.parse()?),
+        id::US_NAT => Section::UsNat(s.parse()?),
         _ => Section::Unsupported(s.to_string()),
     })
 }
@@ -123,7 +128,7 @@ where
             let s = s.decode_base64_url()?;
             let mut r = DataReader::new(&s);
 
-            let segment_type = r.read_fixed_integer::<u8>(3)?;
+            let segment_type = T::read_segment_type(&mut r)?;
             T::parse_optional_segment(segment_type, &mut r, &mut output)?;
 
             // already present, duplicate segments is an error
@@ -140,6 +145,10 @@ where
 pub(crate) trait OptionalSegmentParser:
     Sized + FromDataReader<Err = SectionDecodeError>
 {
+    fn read_segment_type(r: &mut DataReader) -> Result<u8, SectionDecodeError> {
+        Ok(r.read_fixed_integer::<u8>(3)?)
+    }
+
     fn parse_optional_segment(
         segment_type: u8,
         r: &mut DataReader,
