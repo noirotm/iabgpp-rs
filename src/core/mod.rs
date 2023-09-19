@@ -19,15 +19,28 @@ impl DecodeExt for &str {
     }
 }
 
+pub trait FromDataReader: Sized {
+    type Err;
+
+    fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err>;
+}
+
 pub struct DataReader<'a> {
     bit_reader: BitReader<&'a [u8], BigEndian>,
 }
 
 impl<'a> DataReader<'a> {
-    pub fn new(bytes: &'a [u8]) -> DataReader {
-        DataReader {
+    pub fn new(bytes: &'a [u8]) -> Self {
+        Self {
             bit_reader: BitReader::endian(bytes, BigEndian),
         }
+    }
+
+    pub fn parse<F>(&mut self) -> Result<F, <F as FromDataReader>::Err>
+    where
+        F: FromDataReader,
+    {
+        FromDataReader::from_data_reader(self)
     }
 
     pub fn read_bool(&mut self) -> io::Result<bool> {

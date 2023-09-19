@@ -1,5 +1,5 @@
-use crate::core::{DataReader, DecodeExt};
-use crate::sections::{IdList, SectionDecodeError};
+use crate::core::{DataReader, FromDataReader};
+use crate::sections::{IdList, OptionalSegmentParser, SectionDecodeError, SegmentedStr};
 use std::str::FromStr;
 
 const TCF_CA_V1_VERSION: u8 = 1;
@@ -15,36 +15,36 @@ impl FromStr for TcfCaV1 {
     type Err = SectionDecodeError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut sections_iter = s.split('.');
+        s.parse_segmented_str()
+    }
+}
 
-        // first mandatory section is the core segment
-        let core = sections_iter
-            .next()
-            .ok_or_else(|| SectionDecodeError::UnexpectedEndOfString(s.to_string()))?;
-        let core = Core::from_str(core)?;
+impl FromDataReader for TcfCaV1 {
+    type Err = SectionDecodeError;
 
-        let mut tcfcav1 = Self {
-            core,
+    fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
+        Ok(Self {
+            core: r.parse()?,
             publisher_purposes: None,
-        };
+        })
+    }
+}
 
-        // next sections are optional and type depend on first int(3) value
-        for s in sections_iter {
-            let s = s.decode_base64_url()?;
-            let mut r = DataReader::new(&s);
-
-            let section_type = r.read_fixed_integer::<u8>(3)?;
-            match section_type {
-                TCF_CA_V1_PUBLISHER_PURPOSES_SEGMENT_TYPE => {
-                    tcfcav1.publisher_purposes = Some(PublisherPurposes::parse(&mut r)?);
-                }
-                n => {
-                    return Err(SectionDecodeError::UnknownSegmentType { segment_type: n });
-                }
+impl OptionalSegmentParser for TcfCaV1 {
+    fn parse_optional_segment(
+        segment_type: u8,
+        r: &mut DataReader,
+        into: &mut Self,
+    ) -> Result<(), SectionDecodeError> {
+        match segment_type {
+            TCF_CA_V1_PUBLISHER_PURPOSES_SEGMENT_TYPE => {
+                into.publisher_purposes = Some(r.parse()?);
+            }
+            n => {
+                return Err(SectionDecodeError::UnknownSegmentType { segment_type: n });
             }
         }
-
-        Ok(tcfcav1)
+        Ok(())
     }
 }
 
@@ -66,13 +66,10 @@ pub struct Core {
     pub vendor_implied_consents: IdList,
 }
 
-impl FromStr for Core {
+impl FromDataReader for Core {
     type Err = SectionDecodeError;
 
-    fn from_str(core: &str) -> Result<Core, SectionDecodeError> {
-        let core = core.decode_base64_url()?;
-        let mut r = DataReader::new(&core);
-
+    fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
         let version = r.read_fixed_integer::<u8>(6)?;
         if version != TCF_CA_V1_VERSION {
             return Err(SectionDecodeError::InvalidSegmentVersion {
@@ -123,8 +120,10 @@ pub struct PublisherPurposes {
     pub custom_purpose_implied_consents: IdList,
 }
 
-impl PublisherPurposes {
-    fn parse(r: &mut DataReader) -> Result<Self, SectionDecodeError> {
+impl FromDataReader for PublisherPurposes {
+    type Err = SectionDecodeError;
+
+    fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
         let purpose_express_consents = r.read_fixed_bitfield(24)?;
         let purpose_implied_consents = r.read_fixed_bitfield(24)?;
         let custom_purposes_num = r.read_fixed_integer::<u8>(6)?;

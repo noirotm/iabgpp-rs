@@ -1,5 +1,5 @@
-use crate::core::{DataReader, DecodeExt};
-use crate::sections::{IdList, SectionDecodeError};
+use crate::core::{DataReader, FromDataReader};
+use crate::sections::{Base64EncodedStr, IdList, SectionDecodeError};
 use std::collections::BTreeSet;
 use std::str::FromStr;
 
@@ -24,9 +24,14 @@ impl FromStr for TcfEuV1 {
     type Err = SectionDecodeError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let b = s.decode_base64_url()?;
-        let mut r = DataReader::new(&b);
+        s.parse_base64_str()
+    }
+}
 
+impl FromDataReader for TcfEuV1 {
+    type Err = SectionDecodeError;
+
+    fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
         let version = r.read_fixed_integer::<u8>(6)?;
         if version != TCF_EU_V1_VERSION {
             return Err(SectionDecodeError::InvalidSectionVersion {
@@ -43,7 +48,7 @@ impl FromStr for TcfEuV1 {
         let consent_language = r.read_string(2)?;
         let vendor_list_version = r.read_fixed_integer(12)?;
         let purposes_allowed = r.read_fixed_bitfield(24)?;
-        let vendor_consents = Self::parse_vendor_consents(&mut r)?;
+        let vendor_consents = parse_vendor_consents(r)?;
 
         Ok(Self {
             version,
@@ -60,28 +65,26 @@ impl FromStr for TcfEuV1 {
     }
 }
 
-impl TcfEuV1 {
-    fn parse_vendor_consents(r: &mut DataReader) -> Result<IdList, SectionDecodeError> {
-        let max_vendor_id = r.read_fixed_integer::<u16>(16)?;
-        let is_range = r.read_bool()?;
-        Ok(if is_range {
-            // range section
-            let default_consent = r.read_bool()?;
-            let ids = BTreeSet::from_iter(r.read_integer_range()?);
+fn parse_vendor_consents(r: &mut DataReader) -> Result<IdList, SectionDecodeError> {
+    let max_vendor_id = r.read_fixed_integer::<u16>(16)?;
+    let is_range = r.read_bool()?;
+    Ok(if is_range {
+        // range section
+        let default_consent = r.read_bool()?;
+        let ids = BTreeSet::from_iter(r.read_integer_range()?);
 
-            // create final vendor list based on the default consent:
-            // only return list of vendors who consent
-            (1..=max_vendor_id)
-                .filter(|id| {
-                    //(default_consent && !ids.contains(id)) || (!default_consent && ids.contains(id))
-                    default_consent ^ ids.contains(id)
-                })
-                .collect()
-        } else {
-            // bitfield section
-            r.read_fixed_bitfield(max_vendor_id as usize)?
-        })
-    }
+        // create final vendor list based on the default consent:
+        // only return list of vendors who consent
+        (1..=max_vendor_id)
+            .filter(|id| {
+                //(default_consent && !ids.contains(id)) || (!default_consent && ids.contains(id))
+                default_consent ^ ids.contains(id)
+            })
+            .collect()
+    } else {
+        // bitfield section
+        r.read_fixed_bitfield(max_vendor_id as usize)?
+    })
 }
 
 #[cfg(test)]

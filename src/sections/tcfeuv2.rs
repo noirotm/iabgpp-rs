@@ -1,5 +1,5 @@
-use crate::core::{DataReader, DecodeExt};
-use crate::sections::{IdList, SectionDecodeError};
+use crate::core::{DataReader, FromDataReader};
+use crate::sections::{IdList, OptionalSegmentParser, SectionDecodeError, SegmentedStr};
 use std::iter::repeat_with;
 use std::str::FromStr;
 
@@ -18,40 +18,40 @@ impl FromStr for TcfEuV2 {
     type Err = SectionDecodeError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut sections_iter = s.split('.');
+        s.parse_segmented_str()
+    }
+}
 
-        // first mandatory section is the core segment
-        let core = sections_iter
-            .next()
-            .ok_or_else(|| SectionDecodeError::UnexpectedEndOfString(s.to_string()))?;
-        let core = Core::from_str(core)?;
+impl FromDataReader for TcfEuV2 {
+    type Err = SectionDecodeError;
 
-        let mut tcfeuv2 = Self {
-            core,
+    fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
+        Ok(Self {
+            core: r.parse()?,
             disclosed_vendors: None,
             publisher_purposes: None,
-        };
+        })
+    }
+}
 
-        // next sections are optional and type depend on first int(3) value
-        for s in sections_iter {
-            let s = s.decode_base64_url()?;
-            let mut r = DataReader::new(&s);
-
-            let section_type = r.read_fixed_integer::<u8>(3)?;
-            match section_type {
-                TCF_EU_V2_DISCLOSED_VENDORS_SEGMENT_TYPE => {
-                    tcfeuv2.disclosed_vendors = Some(r.read_optimized_integer_range()?);
-                }
-                TCF_EU_V2_PUBLISHER_PURPOSES_SEGMENT_TYPE => {
-                    tcfeuv2.publisher_purposes = Some(PublisherPurposes::parse(&mut r)?);
-                }
-                n => {
-                    return Err(SectionDecodeError::UnknownSegmentType { segment_type: n });
-                }
+impl OptionalSegmentParser for TcfEuV2 {
+    fn parse_optional_segment(
+        segment_type: u8,
+        r: &mut DataReader,
+        into: &mut Self,
+    ) -> Result<(), SectionDecodeError> {
+        match segment_type {
+            TCF_EU_V2_DISCLOSED_VENDORS_SEGMENT_TYPE => {
+                into.disclosed_vendors = Some(r.read_optimized_integer_range()?);
+            }
+            TCF_EU_V2_PUBLISHER_PURPOSES_SEGMENT_TYPE => {
+                into.publisher_purposes = Some(r.parse()?);
+            }
+            n => {
+                return Err(SectionDecodeError::UnknownSegmentType { segment_type: n });
             }
         }
-
-        Ok(tcfeuv2)
+        Ok(())
     }
 }
 
@@ -77,13 +77,10 @@ pub struct Core {
     pub publisher_restrictions: Vec<PublisherRestriction>,
 }
 
-impl FromStr for Core {
+impl FromDataReader for Core {
     type Err = SectionDecodeError;
 
-    fn from_str(core: &str) -> Result<Core, SectionDecodeError> {
-        let core = core.decode_base64_url()?;
-        let mut r = DataReader::new(&core);
-
+    fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
         let version = r.read_fixed_integer::<u8>(6)?;
         if version != TCF_EU_V2_VERSION {
             return Err(SectionDecodeError::InvalidSegmentVersion {
@@ -111,7 +108,7 @@ impl FromStr for Core {
         let vendor_legitimate_interests = r.read_optimized_integer_range()?;
 
         let publisher_restrictions_num = r.read_fixed_integer::<u8>(6)?;
-        let publisher_restrictions = repeat_with(|| PublisherRestriction::parse(&mut r))
+        let publisher_restrictions = repeat_with(|| r.parse())
             .take(publisher_restrictions_num as usize)
             .collect::<Result<_, _>>()?;
 
@@ -145,8 +142,10 @@ pub struct PublisherRestriction {
     pub restricted_vendor_ids: IdList,
 }
 
-impl PublisherRestriction {
-    fn parse(r: &mut DataReader) -> Result<Self, SectionDecodeError> {
+impl FromDataReader for PublisherRestriction {
+    type Err = SectionDecodeError;
+
+    fn from_data_reader(r: &mut DataReader) -> Result<Self, SectionDecodeError> {
         let purpose_id = r.read_fixed_integer(6)?;
         let restriction_type = match r.read_fixed_integer::<u8>(2)? {
             0 => RestrictionType::NotAllowed,
@@ -181,8 +180,10 @@ pub struct PublisherPurposes {
     pub custom_legitimate_interests: IdList,
 }
 
-impl PublisherPurposes {
-    fn parse(r: &mut DataReader) -> Result<Self, SectionDecodeError> {
+impl FromDataReader for PublisherPurposes {
+    type Err = SectionDecodeError;
+
+    fn from_data_reader(r: &mut DataReader) -> Result<Self, SectionDecodeError> {
         let consents = r.read_fixed_bitfield(24)?;
         let legitimate_interests = r.read_fixed_bitfield(24)?;
         let custom_purposes_num = r.read_fixed_integer::<u8>(6)?;
@@ -235,6 +236,7 @@ mod tests {
     #[test]
     fn with_disclosed_vendors() {
         let actual = TcfEuV2::from_str("COvFyGBOvFyGBAbAAAENAPCAAOAAAAAAAAAAAEEUACCKAAA.IFoEUQQgAIQwgIwQABAEAAAAOIAACAIAAAAQAIAgEAACEAAAAAgAQBAAAAAAAGBAAgAAAAAAAFAAECAAAgAAQARAEQAAAAAJAAIAAgAAAYQEAAAQmAgBC3ZAYzUw").unwrap();
+
         let expected = TcfEuV2 {
             core: Core {
                 created: 1582243059,
@@ -268,6 +270,7 @@ mod tests {
             ),
             publisher_purposes: None,
         };
+
         assert_eq!(actual, expected);
     }
 
@@ -276,6 +279,7 @@ mod tests {
         let actual =
             TcfEuV2::from_str("COvFyGBOvFyGBAbAAAENAPCAAOAAAAAAAAAAAEEUACCKAAA.ZAAgH9794ulA")
                 .unwrap();
+
         let expected = TcfEuV2 {
             core: Core {
                 created: 1582243059,
@@ -308,7 +312,63 @@ mod tests {
                 custom_legitimate_interests: [2, 4].into(),
             }),
         };
+
         assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn with_all_segments() {
+        let test_cases = [
+            "COvFyGBOvFyGBAbAAAENAPCAAOAAAAAAAAAAAEEUACCKAAA.ZAAgH9794ulA.IFoEUQQgAIQwgIwQABAEAAAAOIAACAIAAAAQAIAgEAACEAAAAAgAQBAAAAAAAGBAAgAAAAAAAFAAECAAAgAAQARAEQAAAAAJAAIAAgAAAYQEAAAQmAgBC3ZAYzUw",
+            "COvFyGBOvFyGBAbAAAENAPCAAOAAAAAAAAAAAEEUACCKAAA.IFoEUQQgAIQwgIwQABAEAAAAOIAACAIAAAAQAIAgEAACEAAAAAgAQBAAAAAAAGBAAgAAAAAAAFAAECAAAgAAQARAEQAAAAAJAAIAAgAAAYQEAAAQmAgBC3ZAYzUw.ZAAgH9794ulA",
+        ];
+
+        let expected = TcfEuV2 {
+            core: Core {
+                created: 1582243059,
+                last_updated: 1582243059,
+                cmp_id: 27,
+                cmp_version: 0,
+                consent_screen: 0,
+                consent_language: "EN".to_string(),
+                vendor_list_version: 15,
+                policy_version: 2,
+                is_service_specific: false,
+                use_non_standard_stacks: false,
+                special_feature_optins: Default::default(),
+                purpose_consents: [1, 2, 3].into(),
+                purpose_legitimate_interests: Default::default(),
+                purpose_one_treatment: false,
+                publisher_country_code: "AA".to_string(),
+                vendor_consents: [2, 6, 8].into(),
+                vendor_legitimate_interests: [2, 6, 8].into(),
+                publisher_restrictions: vec![],
+            },
+            disclosed_vendors: Some(
+                [
+                    2, 6, 8, 12, 18, 23, 37, 42, 47, 48, 53, 61, 65, 66, 72, 88, 98, 127, 128, 129,
+                    133, 153, 163, 192, 205, 215, 224, 243, 248, 281, 294, 304, 350, 351, 358, 371,
+                    422, 424, 440, 447, 467, 486, 498, 502, 512, 516, 553, 556, 571, 587, 612, 613,
+                    618, 626, 648, 653, 656, 657, 665, 676, 681, 683, 684, 686, 687, 688, 690, 691,
+                    694, 702, 703, 707, 708, 711, 712, 714, 716, 719, 720,
+                ]
+                .into(),
+            ),
+            publisher_purposes: Some(PublisherPurposes {
+                consents: [3, 16].into(),
+                legitimate_interests: [
+                    1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 21, 22, 23, 24,
+                ]
+                .into(),
+                custom_consents: [1, 2, 4].into(),
+                custom_legitimate_interests: [2, 4].into(),
+            }),
+        };
+
+        for s in test_cases {
+            let actual = TcfEuV2::from_str(s).unwrap();
+            assert_eq!(actual, expected);
+        }
     }
 
     #[test]
@@ -321,5 +381,23 @@ mod tests {
     fn empty_string() {
         let r = TcfEuV2::from_str("");
         assert!(matches!(r, Err(SectionDecodeError::Read(_))));
+    }
+
+    #[test]
+    fn optional_sections_only() {
+        let test_cases = [
+            "IFoEUQQgAIQwgIwQABAEAAAAOIAACAIAAAAQAIAgEAACEAAAAAgAQBAAAAAAAGBAAgAAAAAAAFAAECAAAgAAQARAEQAAAAAJAAIAAgAAAYQEAAAQmAgBC3ZAYzUw",
+            "ZAAgH9794ulA",
+            "IFoEUQQgAIQwgIwQABAEAAAAOIAACAIAAAAQAIAgEAACEAAAAAgAQBAAAAAAAGBAAgAAAAAAAFAAECAAAgAAQARAEQAAAAAJAAIAAgAAAYQEAAAQmAgBC3ZAYzUw.ZAAgH9794ulA",
+            "ZAAgH9794ulA.IFoEUQQgAIQwgIwQABAEAAAAOIAACAIAAAAQAIAgEAACEAAAAAgAQBAAAAAAAGBAAgAAAAAAAFAAECAAAgAAQARAEQAAAAAJAAIAAgAAAYQEAAAQmAgBC3ZAYzUw",
+        ];
+
+        for s in test_cases {
+            let r = TcfEuV2::from_str(s);
+            assert!(matches!(
+                r,
+                Err(SectionDecodeError::InvalidSegmentVersion { .. })
+            ));
+        }
     }
 }
