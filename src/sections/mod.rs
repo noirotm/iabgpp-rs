@@ -79,21 +79,6 @@ pub(crate) fn decode_section(id: u8, s: &str) -> Result<Section, SectionDecodeEr
     })
 }
 
-/// A trait representing an operation to parse segments for a Base64-URL encoded string
-/// using '.' as separators into a typed composed of a mandatory code segment and an arbitrary
-/// number of optional segments.
-///
-/// This guarantees a given segment cannot appear twice.
-pub(crate) trait OptionalSegmentParser:
-    Sized + FromDataReader<Err = SectionDecodeError>
-{
-    fn parse_optional_segment(
-        segment_type: u8,
-        r: &mut DataReader,
-        into: &mut Self,
-    ) -> Result<(), SectionDecodeError>;
-}
-
 pub(crate) trait Base64EncodedStr<T> {
     fn parse_base64_str(&self) -> Result<T, SectionDecodeError>;
 }
@@ -108,6 +93,11 @@ where
     }
 }
 
+/// A trait representing an operation to parse segments for a Base64-URL encoded string
+/// using '.' as separators into a typed composed of a mandatory code segment and an arbitrary
+/// number of optional segments.
+///
+/// This guarantees a given segment cannot appear twice.
 pub(crate) trait SegmentedStr<T> {
     fn parse_segmented_str(&self) -> Result<T, SectionDecodeError>;
 }
@@ -144,4 +134,15 @@ where
 
         Ok(output)
     }
+}
+
+/// A trait representing an operation to parse optional segments for a Base64-URL encoded string
+pub(crate) trait OptionalSegmentParser:
+    Sized + FromDataReader<Err = SectionDecodeError>
+{
+    fn parse_optional_segment(
+        segment_type: u8,
+        r: &mut DataReader,
+        into: &mut Self,
+    ) -> Result<(), SectionDecodeError>;
 }
