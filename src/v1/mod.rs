@@ -340,4 +340,16 @@ mod tests {
             "CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA"
         ));
     }
+
+    #[test]
+    fn truncated_string() {
+        let r = GPPString::from_str("DBACNYA~CPytTYAPytTYABEACBENDXCoAP_AAH_AAAIwgoNf_X__b3_v-_7___t0eY1f9_7__-0zjhfdt-8N3f_X_L8X_2M7");
+        assert!(matches!(
+            r,
+            Err(GPPDecodeError::IdSectionMismatch {
+                ids: 2,
+                sections: 1
+            })
+        ));
+    }
 }
