@@ -532,7 +532,7 @@ mod tests {
         ));
 
         assert!(matches!(
-            dbg!(UsNat::from_str("BVVVVVVVVWA.AA").unwrap_err()),
+            UsNat::from_str("BVVVVVVVVWA.AA").unwrap_err(),
             SectionDecodeError::UnknownSegmentType { .. }
         ));
     }
