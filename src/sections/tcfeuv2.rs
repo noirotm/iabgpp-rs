@@ -202,6 +202,7 @@ impl FromDataReader for PublisherPurposes {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use test_case::test_case;
 
     #[test]
     fn core_only() {
@@ -316,13 +317,9 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    #[test]
-    fn with_all_segments() {
-        let test_cases = [
-            "COvFyGBOvFyGBAbAAAENAPCAAOAAAAAAAAAAAEEUACCKAAA.ZAAgH9794ulA.IFoEUQQgAIQwgIwQABAEAAAAOIAACAIAAAAQAIAgEAACEAAAAAgAQBAAAAAAAGBAAgAAAAAAAFAAECAAAgAAQARAEQAAAAAJAAIAAgAAAYQEAAAQmAgBC3ZAYzUw",
-            "COvFyGBOvFyGBAbAAAENAPCAAOAAAAAAAAAAAEEUACCKAAA.IFoEUQQgAIQwgIwQABAEAAAAOIAACAIAAAAQAIAgEAACEAAAAAgAQBAAAAAAAGBAAgAAAAAAAFAAECAAAgAAQARAEQAAAAAJAAIAAgAAAYQEAAAQmAgBC3ZAYzUw.ZAAgH9794ulA",
-        ];
-
+    #[test_case("COvFyGBOvFyGBAbAAAENAPCAAOAAAAAAAAAAAEEUACCKAAA.ZAAgH9794ulA.IFoEUQQgAIQwgIwQABAEAAAAOIAACAIAAAAQAIAgEAACEAAAAAgAQBAAAAAAAGBAAgAAAAAAAFAAECAAAgAAQARAEQAAAAAJAAIAAgAAAYQEAAAQmAgBC3ZAYzUw" ; "publisher purposes first")]
+    #[test_case("COvFyGBOvFyGBAbAAAENAPCAAOAAAAAAAAAAAEEUACCKAAA.IFoEUQQgAIQwgIwQABAEAAAAOIAACAIAAAAQAIAgEAACEAAAAAgAQBAAAAAAAGBAAgAAAAAAAFAAECAAAgAAQARAEQAAAAAJAAIAAgAAAYQEAAAQmAgBC3ZAYzUw.ZAAgH9794ulA" ; "disclosed vendors first")]
+    fn with_all_segments(s: &str) {
         let expected = TcfEuV2 {
             core: Core {
                 created: 1582243059,
@@ -365,39 +362,17 @@ mod tests {
             }),
         };
 
-        for s in test_cases {
-            let actual = TcfEuV2::from_str(s).unwrap();
-            assert_eq!(actual, expected);
-        }
+        let actual = TcfEuV2::from_str(s).unwrap();
+        assert_eq!(actual, expected);
     }
 
-    #[test]
-    fn decode_error() {
-        let r = TcfEuV2::from_str("CPX");
-        assert!(matches!(r, Err(SectionDecodeError::DecodeSegment(_))));
-    }
-
-    #[test]
-    fn empty_string() {
-        let r = TcfEuV2::from_str("");
-        assert!(matches!(r, Err(SectionDecodeError::Read(_))));
-    }
-
-    #[test]
-    fn optional_sections_only() {
-        let test_cases = [
-            "IFoEUQQgAIQwgIwQABAEAAAAOIAACAIAAAAQAIAgEAACEAAAAAgAQBAAAAAAAGBAAgAAAAAAAFAAECAAAgAAQARAEQAAAAAJAAIAAgAAAYQEAAAQmAgBC3ZAYzUw",
-            "ZAAgH9794ulA",
-            "IFoEUQQgAIQwgIwQABAEAAAAOIAACAIAAAAQAIAgEAACEAAAAAgAQBAAAAAAAGBAAgAAAAAAAFAAECAAAgAAQARAEQAAAAAJAAIAAgAAAYQEAAAQmAgBC3ZAYzUw.ZAAgH9794ulA",
-            "ZAAgH9794ulA.IFoEUQQgAIQwgIwQABAEAAAAOIAACAIAAAAQAIAgEAACEAAAAAgAQBAAAAAAAGBAAgAAAAAAAFAAECAAAgAAQARAEQAAAAAJAAIAAgAAAYQEAAAQmAgBC3ZAYzUw",
-        ];
-
-        for s in test_cases {
-            let r = TcfEuV2::from_str(s);
-            assert!(matches!(
-                r,
-                Err(SectionDecodeError::InvalidSegmentVersion { .. })
-            ));
-        }
+    #[test_case("CPX" => matches SectionDecodeError::DecodeSegment(_) ; "decode error")]
+    #[test_case("" => matches SectionDecodeError::Read(_) ; "empty string")]
+    #[test_case("IFoEUQQgAIQwgIwQABAEAAAAOIAACAIAAAAQAIAgEAACEAAAAAgAQBAAAAAAAGBAAgAAAAAAAFAAECAAAgAAQARAEQAAAAAJAAIAAgAAAYQEAAAQmAgBC3ZAYzUw" => matches SectionDecodeError::InvalidSegmentVersion { .. } ; "disclosed vendors only")]
+    #[test_case("ZAAgH9794ulA" => matches SectionDecodeError::InvalidSegmentVersion { .. } ; "publisher purposes only")]
+    #[test_case("IFoEUQQgAIQwgIwQABAEAAAAOIAACAIAAAAQAIAgEAACEAAAAAgAQBAAAAAAAGBAAgAAAAAAAFAAECAAAgAAQARAEQAAAAAJAAIAAgAAAYQEAAAQmAgBC3ZAYzUw.ZAAgH9794ulA" => matches SectionDecodeError::InvalidSegmentVersion { .. } ; "disclosed vendors and publisher purposes")]
+    #[test_case("ZAAgH9794ulA.IFoEUQQgAIQwgIwQABAEAAAAOIAACAIAAAAQAIAgEAACEAAAAAgAQBAAAAAAAGBAAgAAAAAAAFAAECAAAgAAQARAEQAAAAAJAAIAAgAAAYQEAAAQmAgBC3ZAYzUw" => matches SectionDecodeError::InvalidSegmentVersion { .. } ; "publisher purposes and disclosed vendors")]
+    fn error(s: &str) -> SectionDecodeError {
+        TcfEuV2::from_str(s).unwrap_err()
     }
 }

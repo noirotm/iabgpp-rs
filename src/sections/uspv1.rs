@@ -87,68 +87,40 @@ fn parse_next_consent_char(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use test_case::test_case;
 
-    #[test]
-    fn parse() {
-        let test_cases = [
-            (
-                "1YN-",
-                UspV1 {
-                    version: 1,
-                    notice: Consent::Yes,
-                    optout_sale: Consent::No,
-                    lspa_covered: Consent::NotApplicable,
-                },
-            ),
-            (
-                "1NNN",
-                UspV1 {
-                    version: 1,
-                    notice: Consent::No,
-                    optout_sale: Consent::No,
-                    lspa_covered: Consent::No,
-                },
-            ),
-        ];
-
-        for (s, expected) in test_cases {
-            assert_eq!(UspV1::from_str(s).unwrap(), expected);
-        }
+    #[test_case("1YN-" => UspV1 {
+        version: 1,
+        notice: Consent::Yes,
+        optout_sale: Consent::No,
+        lspa_covered: Consent::NotApplicable,
+    } ; "mix")]
+    #[test_case("1NNN" => UspV1 {
+        version: 1,
+        notice: Consent::No,
+        optout_sale: Consent::No,
+        lspa_covered: Consent::No,
+    } ; "all no")]
+    #[test_case("1YYY" => UspV1 {
+        version: 1,
+        notice: Consent::Yes,
+        optout_sale: Consent::Yes,
+        lspa_covered: Consent::Yes,
+    } ; "all yes")]
+    fn parse(s: &str) -> UspV1 {
+        UspV1::from_str(s).unwrap()
     }
 
-    #[test]
-    fn error() {
-        assert!(matches!(
-            UspV1::from_str("ZYN-").unwrap_err(),
-            SectionDecodeError::InvalidCharacter { character: 'Z', .. }
-        ));
-
-        assert!(matches!(
-            UspV1::from_str("2YN-").unwrap_err(),
-            SectionDecodeError::InvalidSectionVersion {
-                expected: USP_V1_VERSION,
-                found: 2
-            }
-        ));
-
-        assert!(matches!(
-            UspV1::from_str("").unwrap_err(),
-            SectionDecodeError::UnexpectedEndOfString(_)
-        ));
-
-        assert!(matches!(
-            UspV1::from_str("1").unwrap_err(),
-            SectionDecodeError::UnexpectedEndOfString(_)
-        ));
-
-        assert!(matches!(
-            UspV1::from_str("1N").unwrap_err(),
-            SectionDecodeError::UnexpectedEndOfString(_)
-        ));
-
-        assert!(matches!(
-            UspV1::from_str("1A").unwrap_err(),
-            SectionDecodeError::InvalidCharacter { character: 'A', .. }
-        ));
+    #[test_case("ZYN-" => matches SectionDecodeError::InvalidCharacter { character: 'Z', .. } ; "invalid version character")]
+    #[test_case("2YN-" => matches SectionDecodeError::InvalidSectionVersion {
+        expected: USP_V1_VERSION,
+        found: 2
+    } ; "invalid version number")]
+    #[test_case("" => matches SectionDecodeError::UnexpectedEndOfString(_) ; "empty string")]
+    #[test_case("1" => matches SectionDecodeError::UnexpectedEndOfString(_) ; "header only")]
+    #[test_case("1N" => matches SectionDecodeError::UnexpectedEndOfString(_) ; "missing characters")]
+    #[test_case("1A" => matches SectionDecodeError::InvalidCharacter { character: 'A', .. } ; "invalid consent character")]
+    fn error(s: &str) -> SectionDecodeError {
+        UspV1::from_str(s).unwrap_err()
     }
 }

@@ -178,6 +178,7 @@ impl<'a> DataReader<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use test_case::test_case;
 
     /// Transform a string of literal binary digits into a vector of bytes.
     /// Zeroes will be appended to fill missing bits.
@@ -194,166 +195,85 @@ mod tests {
             .unwrap_or(vec![])
     }
 
-    #[test]
-    fn bytes() {
-        assert_eq!(b("00000001 00000010 00000011"), vec![1, 2, 3]);
-        assert_eq!(b("000000 010000 001000 000011"), vec![1, 2, 3]);
-        assert_eq!(b("000000 010000 001000 000011 1000"), vec![1, 2, 3, 128]);
-        assert_eq!(b("000000 010000 001000 000011 100"), vec![1, 2, 3, 128]);
+    #[test_case("00000001 00000010 00000011" => vec![1, 2, 3])]
+    #[test_case("000000 010000 001000 000011" => vec![1, 2, 3])]
+    #[test_case("000000 010000 001000 000011 1000" => vec![1, 2, 3, 128])]
+    #[test_case("000000 010000 001000 000011 100" => vec![1, 2, 3, 128])]
+    #[test_case("000000 010000 001000 000011 1001" => vec![1, 2, 3, 144])]
+    fn bytes(s: &str) -> Vec<u8> {
+        b(s)
     }
 
-    #[test]
-    fn read_int() {
-        let test_cases = [(b("000101"), 6, 5), (b("101010"), 6, 42)];
-
-        for (buf, bits, expected_value) in test_cases {
-            let mut reader = DataReader::new(&buf);
-
-            assert_eq!(
-                reader.read_fixed_integer::<u32>(bits).unwrap(),
-                expected_value
-            );
-        }
+    #[test_case("000101", 6 => 5)]
+    #[test_case("101010", 6 => 42)]
+    fn read_int(s: &str, bits: u32) -> u32 {
+        DataReader::new(&b(s))
+            .read_fixed_integer::<u32>(bits)
+            .unwrap()
     }
 
-    #[test]
-    fn read_fibonacci() {
-        let test_cases = [
-            (b("11"), 1),
-            (b("011"), 2),
-            (b("0011"), 3),
-            (b("1011"), 4),
-            (b("00011"), 5),
-            (b("10011"), 6),
-            (b("01011"), 7),
-            (b("0100000000001011"), 2), // overflow for u8, we ignore bits we can't encode
-        ];
-
-        for (buf, expected_value) in test_cases {
-            let mut reader = DataReader::new(&buf);
-
-            assert_eq!(
-                reader.read_fibonacci_integer::<u8>().unwrap(),
-                expected_value
-            );
-        }
+    #[test_case("11" => 1)]
+    #[test_case("011" => 2)]
+    #[test_case("0011" => 3)]
+    #[test_case("1011" => 4)]
+    #[test_case("00011" => 5)]
+    #[test_case("10011" => 6)]
+    #[test_case("01011" => 7)]
+    #[test_case("0100000000001011" => 2 ; "overflow for u8")] // ignore bits we can't encode
+    fn read_fibonacci(s: &str) -> u8 {
+        DataReader::new(&b(s))
+            .read_fibonacci_integer::<u8>()
+            .unwrap()
     }
 
-    #[test]
-    fn read_string() {
-        let test_cases = [(b("101010"), 1, "k"), (b("101010 101011"), 2, "kl")];
-
-        for (buf, chars, expected_value) in test_cases {
-            let mut reader = DataReader::new(&buf);
-
-            assert_eq!(reader.read_string(chars).unwrap(), expected_value);
-        }
+    #[test_case("101010", 1 => "k")]
+    #[test_case("101010 101011", 2 => "kl")]
+    fn read_string(s: &str, chars: usize) -> String {
+        DataReader::new(&b(s)).read_string(chars).unwrap()
     }
 
-    #[test]
-    fn read_datetime_as_unix_timestamp() {
-        let test_cases = [(b("001111101100100110001110010001011101"), 1685434479)];
-
-        for (buf, expected_value) in test_cases {
-            let mut reader = DataReader::new(&buf);
-
-            assert_eq!(
-                reader.read_datetime_as_unix_timestamp().unwrap(),
-                expected_value
-            );
-        }
+    #[test_case("001111101100100110001110010001011101" => 1685434479)]
+    #[test_case("000000000000000000000000000000000000" => 0)]
+    fn read_datetime_as_unix_timestamp(s: &str) -> i64 {
+        DataReader::new(&b(s))
+            .read_datetime_as_unix_timestamp()
+            .unwrap()
     }
 
-    #[test]
-    fn read_fixed_bitfield() {
-        let test_cases = [(b("10101"), 5, BTreeSet::from_iter([1, 3, 5]))];
-
-        for (buf, bits, expected_value) in test_cases {
-            let mut reader = DataReader::new(&buf);
-
-            assert_eq!(reader.read_fixed_bitfield(bits).unwrap(), expected_value);
-        }
+    #[test_case("10101", 5 => BTreeSet::from_iter([1, 3, 5]))]
+    #[test_case("101010", 6 => BTreeSet::from_iter([1, 3, 5]))]
+    #[test_case("101010", 0 => BTreeSet::from_iter([]))]
+    fn read_fixed_bitfield(s: &str, bits: usize) -> BTreeSet<u16> {
+        DataReader::new(&b(s)).read_fixed_bitfield(bits).unwrap()
     }
 
-    #[test]
-    fn read_variable_bitfield() {
-        let test_cases = [(b("0000000000000101 10101"), BTreeSet::from_iter([1, 3, 5]))];
-
-        for (buf, expected_value) in test_cases {
-            let mut reader = DataReader::new(&buf);
-
-            assert_eq!(reader.read_variable_bitfield().unwrap(), expected_value);
-        }
+    #[test_case("0000000000000101 10101" => BTreeSet::from_iter([1, 3, 5]))]
+    fn read_variable_bitfield(s: &str) -> BTreeSet<u16> {
+        DataReader::new(&b(s)).read_variable_bitfield().unwrap()
     }
 
-    #[test]
-    fn read_integer_range() {
-        let test_cases = [(
-            b("000000000010 0 0000000000000011 1 0000000000000101 0000000000001000"),
-            vec![3, 5, 6, 7, 8],
-        )];
-
-        for (buf, expected_value) in test_cases {
-            let mut reader = DataReader::new(&buf);
-
-            assert_eq!(reader.read_integer_range().unwrap(), expected_value);
-        }
+    #[test_case("000000000010 0 0000000000000011 1 0000000000000101 0000000000001000" => vec![3, 5, 6, 7, 8] ; "test1")]
+    fn read_integer_range(s: &str) -> Vec<u16> {
+        DataReader::new(&b(s)).read_integer_range().unwrap()
     }
 
-    #[test]
-    fn read_fibonacci_range() {
-        let test_cases = [
-            (b("000000000010 0 0011 1 011 0011"), vec![3, 5, 6, 7, 8]),
-            (b("000000000010 0 011 0 1011"), vec![2, 6]),
-        ];
-
-        for (buf, expected_value) in test_cases {
-            let mut reader = DataReader::new(&buf);
-
-            assert_eq!(reader.read_fibonacci_range::<u8>().unwrap(), expected_value);
-        }
+    #[test_case("000000000010 0 0011 1 011 0011" => vec![3, 5, 6, 7, 8])]
+    #[test_case("000000000010 0 011 0 1011" => vec![2, 6])]
+    fn read_fibonacci_range(s: &str) -> Vec<u8> {
+        DataReader::new(&b(s)).read_fibonacci_range::<u8>().unwrap()
     }
 
-    #[test]
-    fn read_optimized_range() {
-        let test_cases = [
-            (
-                b("1 000000000010 0 0011 1 011 0011"),
-                BTreeSet::from_iter([3, 5, 6, 7, 8]),
-            ),
-            (
-                b("0 0000000000000101 10101"),
-                BTreeSet::from_iter([1, 3, 5]),
-            ),
-        ];
-
-        for (buf, expected_value) in test_cases {
-            let mut reader = DataReader::new(&buf);
-
-            assert_eq!(reader.read_optimized_range().unwrap(), expected_value);
-        }
+    #[test_case("1 000000000010 0 0011 1 011 0011" => BTreeSet::from_iter([3, 5, 6, 7, 8]))]
+    #[test_case("0 0000000000000101 10101" => BTreeSet::from_iter([1, 3, 5]))]
+    fn read_optimized_range(s: &str) -> BTreeSet<u16> {
+        DataReader::new(&b(s)).read_optimized_range().unwrap()
     }
 
-    #[test]
-    fn read_optimized_int_range() {
-        let test_cases = [
-            (
-                b("0000000000000000 1 000000000010 0 0000000000000011 1 0000000000000101 0000000000001000"),
-                BTreeSet::from_iter([3, 5, 6, 7, 8])
-            ),
-            (
-                b("0000000000000101 0 10101"),
-                BTreeSet::from_iter([1, 3, 5])
-            ),
-        ];
-
-        for (buf, expected_value) in test_cases {
-            let mut reader = DataReader::new(&buf);
-
-            assert_eq!(
-                reader.read_optimized_integer_range().unwrap(),
-                expected_value
-            );
-        }
+    #[test_case("0000000000000000 1 000000000010 0 0000000000000011 1 0000000000000101 0000000000001000" => BTreeSet::from_iter([3, 5, 6, 7, 8]) ; "test1")]
+    #[test_case("0000000000000101 0 10101" => BTreeSet::from_iter([1, 3, 5]) ; "test2")]
+    fn read_optimized_int_range(s: &str) -> BTreeSet<u16> {
+        DataReader::new(&b(s))
+            .read_optimized_integer_range()
+            .unwrap()
     }
 }

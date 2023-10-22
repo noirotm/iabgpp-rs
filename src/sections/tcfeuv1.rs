@@ -90,6 +90,7 @@ fn parse_vendor_consents(r: &mut DataReader) -> Result<IdList, SectionDecodeErro
 #[cfg(test)]
 mod tests {
     use super::*;
+    use test_case::test_case;
 
     #[test]
     fn success() {
@@ -110,27 +111,10 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    #[test]
-    fn missing_data() {
-        let r = TcfEuV1::from_str("BO5a1L7O5a1L7AAABBENC2-AAAAtHAA");
-        assert!(matches!(r.unwrap_err(), SectionDecodeError::Read(_)));
-    }
-
-    #[test]
-    fn empty_string() {
-        let r = TcfEuV1::from_str("");
-        assert!(matches!(r, Err(SectionDecodeError::Read(_))));
-    }
-
-    #[test]
-    fn invalid_version() {
-        let r = TcfEuV1::from_str("DOEFEAyOEFEAyAHABDENAI4AAAB9vABAASA");
-        assert!(matches!(
-            r,
-            Err(SectionDecodeError::InvalidSectionVersion {
-                expected: TCF_EU_V1_VERSION,
-                found: 3
-            })
-        ));
+    #[test_case("BO5a1L7O5a1L7AAABBENC2-AAAAtHAA" => matches SectionDecodeError::Read(_) ; "missing data")]
+    #[test_case("" => matches SectionDecodeError::Read(_) ; "empty string")]
+    #[test_case("DOEFEAyOEFEAyAHABDENAI4AAAB9vABAASA" => matches SectionDecodeError::InvalidSectionVersion { expected: TCF_EU_V1_VERSION, found: 3 } ; "invalid version")]
+    fn error(s: &str) -> SectionDecodeError {
+        TcfEuV1::from_str(s).unwrap_err()
     }
 }

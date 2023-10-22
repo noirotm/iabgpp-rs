@@ -144,6 +144,33 @@ impl FromDataReader for PublisherPurposes {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use test_case::test_case;
+
+    #[test]
+    fn basic() {
+        let actual = TcfCaV1::from_str("BPXuQIAPXuQIAAfKABENB-CgAAAAAAAAAAAAAAAA").unwrap();
+        let expected = TcfCaV1 {
+            core: Core {
+                created: 1650412800,
+                last_updated: 1650412800,
+                cmp_id: 31,
+                cmp_version: 640,
+                consent_screen: 1,
+                consent_language: "EN".to_string(),
+                vendor_list_version: 126,
+                policy_version: 2,
+                use_non_standard_stacks: true,
+                special_feature_express_consents: Default::default(),
+                purpose_express_consents: Default::default(),
+                purpose_implied_consents: Default::default(),
+                vendor_express_consents: Default::default(),
+                vendor_implied_consents: Default::default(),
+            },
+            publisher_purposes: None,
+        };
+
+        assert_eq!(actual, expected);
+    }
 
     #[test]
     fn with_publisher_purposes() {
@@ -177,15 +204,9 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    #[test]
-    fn decode_error() {
-        let r = TcfCaV1::from_str("BPX");
-        assert!(matches!(r, Err(SectionDecodeError::DecodeSegment(_))));
-    }
-
-    #[test]
-    fn empty_string() {
-        let r = TcfCaV1::from_str("");
-        assert!(matches!(r, Err(SectionDecodeError::Read(_))));
+    #[test_case("BPX" => matches SectionDecodeError::DecodeSegment(_) ; "decode error")]
+    #[test_case("" => matches SectionDecodeError::Read(_) ; "empty string")]
+    fn error(s: &str) -> SectionDecodeError {
+        TcfCaV1::from_str(s).unwrap_err()
     }
 }

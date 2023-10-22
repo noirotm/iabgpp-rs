@@ -4,6 +4,8 @@ use crate::sections::tcfeuv1::TcfEuV1;
 use crate::sections::tcfeuv2::TcfEuV2;
 use crate::sections::usnat::UsNat;
 use crate::sections::uspv1::UspV1;
+use num_derive::{FromPrimitive, ToPrimitive};
+use num_traits::ToPrimitive;
 use std::collections::BTreeSet;
 use std::io;
 use thiserror::Error;
@@ -14,25 +16,28 @@ pub mod tcfeuv2;
 pub mod usnat;
 pub mod uspv1;
 
-pub mod id {
-    pub const TCF_EU_V1: u8 = 1;
-    pub const TCF_EU_V2: u8 = 2;
-    pub const GPP_HEADER: u8 = 3;
-    pub const GPP_SIGNAL_INTEGRITY: u8 = 4;
-    pub const TCF_CA_V1: u8 = 5;
-    pub const USP_V1: u8 = 6;
-    pub const US_NAT: u8 = 7;
-    pub const US_CA: u8 = 8;
-    pub const US_VA: u8 = 9;
-    pub const US_CO: u8 = 10;
-    pub const US_UT: u8 = 11;
-    pub const US_CT: u8 = 12;
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash, FromPrimitive, ToPrimitive)]
+pub enum SectionId {
+    TcfEuV1 = 1,
+    TcfEuV2 = 2,
+    GppHeader = 3,
+    GppSignalIntegrity = 4,
+    TcfCaV1 = 5,
+    UspV1 = 6,
+    UsNat = 7,
+    UsCa = 8,
+    UsVa = 9,
+    UsCo = 10,
+    UsUt = 11,
+    UsCt = 12,
 }
 
 pub type IdList = BTreeSet<u16>;
 
 #[derive(Error, Debug)]
 pub enum SectionDecodeError {
+    #[error("unsupported section id {0}")]
+    UnsupportedSectionId(u8),
     #[error("unable to read string")]
     Read(#[from] io::Error),
     #[error("unexpected end of string in {0}")]
@@ -59,6 +64,7 @@ pub enum SectionDecodeError {
     InvalidFieldValue { expected: String, found: String },
 }
 
+#[derive(Debug)]
 pub enum Section {
     TcfEuV1(TcfEuV1),
     TcfEuV2(TcfEuV2),
@@ -70,17 +76,40 @@ pub enum Section {
     UsCo,
     UsUt,
     UsCt,
-    Unsupported(String),
 }
 
-pub(crate) fn decode_section(id: u8, s: &str) -> Result<Section, SectionDecodeError> {
+impl Section {
+    pub fn id(&self) -> SectionId {
+        match self {
+            Section::TcfEuV1(_) => SectionId::TcfEuV1,
+            Section::TcfEuV2(_) => SectionId::TcfEuV2,
+            Section::TcfCaV1(_) => SectionId::TcfCaV1,
+            Section::UspV1(_) => SectionId::UspV1,
+            Section::UsNat(_) => SectionId::UsNat,
+            Section::UsCa => SectionId::UsCa,
+            Section::UsVa => SectionId::UsVa,
+            Section::UsCo => SectionId::UsCo,
+            Section::UsUt => SectionId::UsUt,
+            Section::UsCt => SectionId::UsCt,
+        }
+    }
+}
+
+pub(crate) fn decode_section(id: SectionId, s: &str) -> Result<Section, SectionDecodeError> {
     Ok(match id {
-        id::TCF_EU_V1 => Section::TcfEuV1(s.parse()?),
-        id::TCF_EU_V2 => Section::TcfEuV2(s.parse()?),
-        id::TCF_CA_V1 => Section::TcfCaV1(s.parse()?),
-        id::USP_V1 => Section::UspV1(s.parse()?),
-        id::US_NAT => Section::UsNat(s.parse()?),
-        _ => Section::Unsupported(s.to_string()),
+        SectionId::TcfEuV1 => Section::TcfEuV1(s.parse()?),
+        SectionId::TcfEuV2 => Section::TcfEuV2(s.parse()?),
+        SectionId::TcfCaV1 => Section::TcfCaV1(s.parse()?),
+        SectionId::UspV1 => Section::UspV1(s.parse()?),
+        SectionId::UsNat => Section::UsNat(s.parse()?),
+        SectionId::UsCa => Section::UsCa,
+        SectionId::UsVa => Section::UsVa,
+        SectionId::UsCo => Section::UsCo,
+        SectionId::UsUt => Section::UsUt,
+        SectionId::UsCt => Section::UsCt,
+        id => Err(SectionDecodeError::UnsupportedSectionId(
+            id.to_u8().expect("existing section id"),
+        ))?,
     })
 }
 

@@ -20,3 +20,6 @@ num-derive = "0.4.0"
 num-iter = "0.1.43"
 num-traits = "0.2.16"
 thiserror = "1.0.44"
+
+[dev-dependencies]
+test-case = "3.2.1"

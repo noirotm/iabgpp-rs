@@ -1,11 +1,12 @@
 use crate::core::{DataReader, DecodeExt};
-use crate::sections::id::GPP_HEADER;
-use crate::sections::{decode_section, Section, SectionDecodeError};
+use crate::sections::{decode_section, Section, SectionDecodeError, SectionId};
 use fnv::FnvHashMap;
+use num_traits::FromPrimitive;
 use std::io;
 use std::str::FromStr;
 use thiserror::Error;
 
+const GPP_HEADER: u8 = 3;
 const GPP_VERSION: u8 = 1;
 
 #[derive(Error, Debug)]
@@ -20,41 +21,26 @@ pub enum GPPDecodeError {
     InvalidGPPVersion { found: u8 },
     #[error("unable to read string")]
     Read(#[from] io::Error),
+    #[error("unsupported section id {0}")]
+    UnsupportedSectionId(u8),
     #[error("ids do not match sections (number of ids {ids}, number of sections {sections}")]
     IdSectionMismatch { ids: usize, sections: usize },
     #[error("unable to decode section")]
     SectionDecode(#[from] SectionDecodeError),
 }
 
-pub struct GPPModel {
-    pub section_ids: Vec<u8>,
-    pub sections: Vec<Section>,
-}
-
-impl FromStr for GPPModel {
-    type Err = GPPDecodeError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let (section_ids, sections) = extract_gpp_sections_from_str(s)?;
-
-        let sections = section_ids
-            .iter()
-            .zip(sections)
-            .map(|(&id, s)| decode_section(id, s))
-            .collect::<Result<Vec<_>, _>>()?;
-
-        Ok(Self {
-            section_ids,
-            sections,
-        })
-    }
-}
-
 pub trait SectionMapper {
-    fn section(&self, id: u8) -> Option<&str>;
-    fn section_ids(&self) -> &[u8];
+    fn section(&self, id: SectionId) -> Option<&str>;
+    fn section_ids(&self) -> &[SectionId];
 
-    fn decode_section(&self, id: u8) -> Option<Result<Section, SectionDecodeError>> {
+    fn sections(&self) -> Vec<&str> {
+        self.section_ids()
+            .iter()
+            .filter_map(|id| self.section(*id))
+            .collect()
+    }
+
+    fn decode_section(&self, id: SectionId) -> Option<Result<Section, SectionDecodeError>> {
         let s = self.section(id)?;
         Some(decode_section(id, s))
     }
@@ -78,8 +64,8 @@ impl ToGPPStr for &str {
 }
 
 pub struct GPPStr<'a> {
-    pub section_ids: Vec<u8>,
-    pub sections: FnvHashMap<u8, &'a str>,
+    pub section_ids: Vec<SectionId>,
+    pub sections: FnvHashMap<SectionId, &'a str>,
 }
 
 impl<'a> GPPStr<'a> {
@@ -100,18 +86,18 @@ impl<'a> GPPStr<'a> {
 }
 
 impl<'a> SectionMapper for GPPStr<'a> {
-    fn section(&self, id: u8) -> Option<&str> {
+    fn section(&self, id: SectionId) -> Option<&str> {
         self.sections.get(&id).copied()
     }
 
-    fn section_ids(&self) -> &[u8] {
+    fn section_ids(&self) -> &[SectionId] {
         &self.section_ids
     }
 }
 
 pub struct GPPString {
-    pub section_ids: Vec<u8>,
-    pub sections: FnvHashMap<u8, String>,
+    pub section_ids: Vec<SectionId>,
+    pub sections: FnvHashMap<SectionId, String>,
 }
 
 impl GPPString {
@@ -147,16 +133,16 @@ impl FromStr for GPPString {
 }
 
 impl SectionMapper for GPPString {
-    fn section(&self, id: u8) -> Option<&str> {
+    fn section(&self, id: SectionId) -> Option<&str> {
         self.sections.get(&id).map(|s| s.as_str())
     }
 
-    fn section_ids(&self) -> &[u8] {
+    fn section_ids(&self) -> &[SectionId] {
         &self.section_ids
     }
 }
 
-fn extract_gpp_sections_from_str(s: &str) -> Result<(Vec<u8>, Vec<&str>), GPPDecodeError> {
+fn extract_gpp_sections_from_str(s: &str) -> Result<(Vec<SectionId>, Vec<&str>), GPPDecodeError> {
     let mut sections_iter = s.split('~');
 
     let header_str = sections_iter.next().ok_or(GPPDecodeError::NoHeaderFound)?;
@@ -173,7 +159,12 @@ fn extract_gpp_sections_from_str(s: &str) -> Result<(Vec<u8>, Vec<&str>), GPPDec
         return Err(GPPDecodeError::InvalidGPPVersion { found: gpp_version });
     }
 
-    let section_ids = reader.read_fibonacci_range()?;
+    let section_ids = reader
+        .read_fibonacci_range()?
+        .into_iter()
+        .map(|id| SectionId::from_u8(id).ok_or(GPPDecodeError::UnsupportedSectionId(id)))
+        .collect::<Result<Vec<_>, _>>()?;
+
     let sections = sections_iter.collect::<Vec<_>>();
     if sections.len() != section_ids.len() {
         return Err(GPPDecodeError::IdSectionMismatch {
@@ -188,145 +179,105 @@ fn extract_gpp_sections_from_str(s: &str) -> Result<(Vec<u8>, Vec<&str>), GPPDec
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::sections::id::{TCF_CA_V1, TCF_EU_V2, USP_V1};
+    use test_case::test_case;
 
-    #[test]
-    fn gpp_model_parse_str() {
-        let r = GPPModel::from_str("DBABMA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA").unwrap();
+    #[test_case("DBABMA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA" => vec![SectionId::TcfEuV2] ; "single section")]
+    #[test_case("DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN" => vec![SectionId::TcfEuV2, SectionId::UspV1] ; "tcf eu and us sections")]
+    #[test_case("DBABjw~BPXuQIAPXuQIAAfKABENB-CgAAAAAAAAAAAAAAAA.YAAAAAAAAAA~1YNN" => vec![SectionId::TcfCaV1, SectionId::UspV1] ; "tcf ca and us sections")]
+    fn gpp_string_section_ids(s: &str) -> Vec<SectionId> {
+        GPPString::from_str(s).unwrap().section_ids
+    }
 
-        assert_eq!(r.section_ids, vec![TCF_EU_V2]);
-        assert!(matches!(r.sections[0], Section::TcfEuV2(_)));
+    #[test_case("DBABMA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA" => vec!["CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA"] ; "single section")]
+    #[test_case("DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN" => vec!["CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA", "1YNN"] ; "tcf eu and us sections")]
+    #[test_case("DBABjw~BPXuQIAPXuQIAAfKABENB-CgAAAAAAAAAAAAAAAA.YAAAAAAAAAA~1YNN" => vec!["BPXuQIAPXuQIAAfKABENB-CgAAAAAAAAAAAAAAAA.YAAAAAAAAAA", "1YNN"] ; "tcf ca and us sections")]
+    fn gpp_string_sections(s: &str) -> Vec<String> {
+        GPPString::from_str(s)
+            .unwrap()
+            .sections()
+            .iter()
+            .map(|s| s.to_string())
+            .collect()
+    }
+
+    #[test_case("DBABMA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA" => vec![SectionId::TcfEuV2] ; "single section")]
+    #[test_case("DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN" => vec![SectionId::TcfEuV2, SectionId::UspV1] ; "tcf eu and us sections")]
+    #[test_case("DBABjw~BPXuQIAPXuQIAAfKABENB-CgAAAAAAAAAAAAAAAA.YAAAAAAAAAA~1YNN" => vec![SectionId::TcfCaV1, SectionId::UspV1] ; "tcf ca and us sections")]
+    fn gpp_string_decode_section(s: &str) -> Vec<SectionId> {
+        let s = GPPString::from_str(s).unwrap();
+        s.section_ids
+            .iter()
+            .map(|id| s.decode_section(*id).unwrap().unwrap().id())
+            .collect()
+    }
+
+    #[test_case("DBABMA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA" => vec![SectionId::TcfEuV2] ; "single section")]
+    #[test_case("DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN" => vec![SectionId::TcfEuV2, SectionId::UspV1] ; "tcf eu and us sections")]
+    #[test_case("DBABjw~BPXuQIAPXuQIAAfKABENB-CgAAAAAAAAAAAAAAAA.YAAAAAAAAAA~1YNN" => vec![SectionId::TcfCaV1, SectionId::UspV1] ; "tcf ca and us sections")]
+    fn gpp_str_decode_all(s: &str) -> Vec<SectionId> {
+        GPPString::from_str(s)
+            .unwrap()
+            .decode_all_sections()
+            .unwrap()
+            .iter()
+            .map(|s| s.id())
+            .collect()
+    }
+
+    #[test_case("DBABMA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA" => vec![SectionId::TcfEuV2] ; "single section")]
+    #[test_case("DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN" => vec![SectionId::TcfEuV2, SectionId::UspV1] ; "tcf eu and us sections")]
+    #[test_case("DBABjw~BPXuQIAPXuQIAAfKABENB-CgAAAAAAAAAAAAAAAA.YAAAAAAAAAA~1YNN" => vec![SectionId::TcfCaV1, SectionId::UspV1] ; "tcf ca and us sections")]
+    fn gpp_str_section_ids(s: &str) -> Vec<SectionId> {
+        GPPStr::extract_from_str(s).unwrap().section_ids
+    }
+
+    #[test_case("DBABMA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA" => vec!["CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA"] ; "single section")]
+    #[test_case("DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN" => vec!["CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA", "1YNN"] ; "tcf eu and us sections")]
+    #[test_case("DBABjw~BPXuQIAPXuQIAAfKABENB-CgAAAAAAAAAAAAAAAA.YAAAAAAAAAA~1YNN" => vec!["BPXuQIAPXuQIAAfKABENB-CgAAAAAAAAAAAAAAAA.YAAAAAAAAAA", "1YNN"] ; "tcf ca and us sections")]
+    fn gpp_str_sections(s: &str) -> Vec<String> {
+        GPPStr::extract_from_str(s)
+            .unwrap()
+            .sections()
+            .iter()
+            .map(|s| s.to_string())
+            .collect()
+    }
+
+    #[test_case("DBABMA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA" => vec![SectionId::TcfEuV2] ; "single section")]
+    #[test_case("DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN" => vec![SectionId::TcfEuV2, SectionId::UspV1] ; "tcf eu and us sections")]
+    #[test_case("DBABjw~BPXuQIAPXuQIAAfKABENB-CgAAAAAAAAAAAAAAAA.YAAAAAAAAAA~1YNN" => vec![SectionId::TcfCaV1, SectionId::UspV1] ; "tcf ca and us sections")]
+    fn gpp_str_decode_section(s: &str) -> Vec<SectionId> {
+        let s = GPPStr::extract_from_str(s).unwrap();
+        s.section_ids
+            .iter()
+            .map(|id| s.decode_section(*id).unwrap().unwrap().id())
+            .collect()
+    }
+
+    #[test_case("DBABMA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA" => vec![SectionId::TcfEuV2] ; "single section")]
+    #[test_case("DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN" => vec![SectionId::TcfEuV2, SectionId::UspV1] ; "tcf eu and us sections")]
+    #[test_case("DBABjw~BPXuQIAPXuQIAAfKABENB-CgAAAAAAAAAAAAAAAA.YAAAAAAAAAA~1YNN" => vec![SectionId::TcfCaV1, SectionId::UspV1] ; "tcf ca and us sections")]
+    fn gpp_string_decode_all(s: &str) -> Vec<SectionId> {
+        GPPStr::extract_from_str(s)
+            .unwrap()
+            .decode_all_sections()
+            .unwrap()
+            .iter()
+            .map(|s| s.id())
+            .collect()
     }
 
     #[test]
-    fn gpp_model_parse_str_multiple_sections() {
-        let r = GPPModel::from_str("DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN")
-            .unwrap();
-
-        assert_eq!(r.section_ids, vec![TCF_EU_V2, USP_V1]);
-        assert!(matches!(r.sections[0], Section::TcfEuV2(_)));
-        assert!(matches!(r.sections[1], Section::UspV1(_)));
-    }
-
-    #[test]
-    fn gpp_model_parse_str_multiple_sections_unsupported() {
-        let r =
-            GPPModel::from_str("DBABjw~BPXuQIAPXuQIAAfKABENB-CgAAAAAAAAAAAAAAAA.YAAAAAAAAAA~1YNN")
-                .unwrap();
-
-        assert_eq!(r.section_ids, vec![TCF_CA_V1, USP_V1]);
-        assert!(matches!(&r.sections[0], Section::TcfCaV1(_)));
-        assert!(matches!(r.sections[1], Section::UspV1(_)));
-    }
-
-    #[test]
-    fn str_as_gpp_str() {
+    fn str_to_gpp_str() {
         let r = "DBABMA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA"
             .to_gpp_str()
             .unwrap();
 
-        assert_eq!(r.section_ids, vec![TCF_EU_V2]);
+        assert_eq!(r.section_ids, vec![SectionId::TcfEuV2]);
         assert!(matches!(
-            r.section(TCF_EU_V2).unwrap(),
+            r.section(SectionId::TcfEuV2).unwrap(),
             "CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA"
         ));
-    }
-
-    #[test]
-    fn gpp_str_parse_str() {
-        let r = GPPStr::extract_from_str("DBABMA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA")
-            .unwrap();
-
-        assert_eq!(r.section_ids, vec![TCF_EU_V2]);
-        assert_eq!(
-            r.sections[&TCF_EU_V2],
-            "CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA"
-        );
-        assert!(matches!(
-            r.decode_section(TCF_EU_V2),
-            Some(Ok(Section::TcfEuV2(_)))
-        ));
-    }
-
-    #[test]
-    fn gpp_str_parse_str_multiple_sections() {
-        let r =
-            GPPStr::extract_from_str("DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN")
-                .unwrap();
-
-        assert_eq!(r.section_ids, vec![TCF_EU_V2, USP_V1]);
-        assert_eq!(
-            r.sections[&TCF_EU_V2],
-            "CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA"
-        );
-        assert_eq!(r.sections[&USP_V1], "1YNN");
-        assert!(matches!(
-            r.decode_section(TCF_EU_V2),
-            Some(Ok(Section::TcfEuV2(_)))
-        ));
-        assert!(matches!(
-            r.decode_section(USP_V1),
-            Some(Ok(Section::UspV1(_)))
-        ));
-    }
-
-    #[test]
-    fn gpp_str_decode_all() {
-        let r =
-            GPPStr::extract_from_str("DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN")
-                .unwrap();
-
-        let s = r.decode_all_sections().unwrap();
-
-        assert!(matches!(s[0], Section::TcfEuV2(_)));
-        assert!(matches!(s[1], Section::UspV1(_)));
-    }
-
-    #[test]
-    fn gpp_string_parse_str() {
-        let r = GPPString::from_str("DBABMA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA").unwrap();
-
-        assert_eq!(r.section_ids, vec![TCF_EU_V2]);
-        assert_eq!(
-            r.sections[&TCF_EU_V2].as_str(),
-            "CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA"
-        );
-        assert!(matches!(
-            r.decode_section(TCF_EU_V2),
-            Some(Ok(Section::TcfEuV2(_)))
-        ));
-    }
-
-    #[test]
-    fn gpp_string_parse_str_multiple_sections() {
-        let r = GPPString::from_str("DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN")
-            .unwrap();
-
-        assert_eq!(r.section_ids, vec![TCF_EU_V2, USP_V1]);
-        assert_eq!(
-            r.sections[&TCF_EU_V2].as_str(),
-            "CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA"
-        );
-        assert_eq!(r.sections[&USP_V1].as_str(), "1YNN");
-        assert!(matches!(
-            r.decode_section(TCF_EU_V2),
-            Some(Ok(Section::TcfEuV2(_)))
-        ));
-        assert!(matches!(
-            r.decode_section(USP_V1),
-            Some(Ok(Section::UspV1(_)))
-        ));
-    }
-
-    #[test]
-    fn gpp_string_decode_all() {
-        let r = GPPString::from_str("DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN")
-            .unwrap();
-
-        let s = r.decode_all_sections().unwrap();
-
-        assert!(matches!(s[0], Section::TcfEuV2(_)));
-        assert!(matches!(s[1], Section::UspV1(_)));
     }
 
     #[test]
@@ -334,9 +285,9 @@ mod tests {
         let r = GPPString::from_str("DBABMA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA").unwrap();
         let r = r.as_gpp_str();
 
-        assert_eq!(r.section_ids, vec![TCF_EU_V2]);
+        assert_eq!(r.section_ids, vec![SectionId::TcfEuV2]);
         assert!(matches!(
-            r.section(TCF_EU_V2).unwrap(),
+            r.section(SectionId::TcfEuV2).unwrap(),
             "CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA"
         ));
     }

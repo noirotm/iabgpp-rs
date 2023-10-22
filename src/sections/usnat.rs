@@ -384,6 +384,7 @@ pub enum MspaMode {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use test_case::test_case;
 
     #[test]
     fn parse() {
@@ -514,26 +515,11 @@ mod tests {
         }
     }
 
-    #[test]
-    fn error() {
-        assert!(matches!(
-            UsNat::from_str("").unwrap_err(),
-            SectionDecodeError::Read(_)
-        ));
-
-        assert!(matches!(
-            UsNat::from_str("123").unwrap_err(),
-            SectionDecodeError::DecodeSegment(_)
-        ));
-
-        assert!(matches!(
-            UsNat::from_str("CVVVVVVVVWA.YA").unwrap_err(),
-            SectionDecodeError::InvalidSegmentVersion { .. }
-        ));
-
-        assert!(matches!(
-            UsNat::from_str("BVVVVVVVVWA.AA").unwrap_err(),
-            SectionDecodeError::UnknownSegmentType { .. }
-        ));
+    #[test_case("" => matches SectionDecodeError::Read(_) ; "empty string")]
+    #[test_case("123" => matches SectionDecodeError::DecodeSegment(_) ; "decode error")]
+    #[test_case("CVVVVVVVVWA.YA" => matches SectionDecodeError::InvalidSegmentVersion { .. } ; "invalid segment version")]
+    #[test_case("BVVVVVVVVWA.AA" => matches SectionDecodeError::UnknownSegmentType { .. } ; "unknown segment version")]
+    fn error(s: &str) -> SectionDecodeError {
+        UsNat::from_str(s).unwrap_err()
     }
 }
