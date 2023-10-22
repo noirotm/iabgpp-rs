@@ -5,13 +5,13 @@ const USP_V1_VERSION: u8 = 1;
 const KIND: &str = "uspv1";
 
 #[derive(Debug, Eq, PartialEq)]
-pub enum Consent {
+pub enum Char {
     Yes,
     No,
     NotApplicable,
 }
 
-impl Consent {
+impl Char {
     fn from_char(c: char) -> Option<Self> {
         match c {
             'Y' => Some(Self::Yes),
@@ -22,13 +22,16 @@ impl Consent {
     }
 }
 
+type Notice = Char;
+type Optout = Char;
+type Covered = Char;
+
 // See https://github.com/InteractiveAdvertisingBureau/USPrivacy/blob/master/CCPA/US%20Privacy%20String.md#us-privacy-string-format
 #[derive(Debug, Eq, PartialEq)]
 pub struct UspV1 {
-    version: u8,
-    notice: Consent,
-    optout_sale: Consent,
-    lspa_covered: Consent,
+    optout_notice: Notice,
+    optout_sale: Optout,
+    lspa_covered: Covered,
 }
 
 impl FromStr for UspV1 {
@@ -54,31 +57,23 @@ impl FromStr for UspV1 {
             });
         }
 
-        let notice = parse_next_consent_char(&mut chars, s)?;
-        let optout_sale = parse_next_consent_char(&mut chars, s)?;
-        let lspa_covered = parse_next_consent_char(&mut chars, s)?;
-
         Ok(Self {
-            version,
-            notice,
-            optout_sale,
-            lspa_covered,
+            optout_notice: parse_next_char(&mut chars, s)?,
+            optout_sale: parse_next_char(&mut chars, s)?,
+            lspa_covered: parse_next_char(&mut chars, s)?,
         })
     }
 }
 
-fn parse_next_consent_char(
-    chars: &mut Chars,
-    original_str: &str,
-) -> Result<Consent, SectionDecodeError> {
-    let consent = chars
+fn parse_next_char(chars: &mut Chars, original_str: &str) -> Result<Char, SectionDecodeError> {
+    let char = chars
         .next()
         .ok_or(SectionDecodeError::UnexpectedEndOfString(
             original_str.to_string(),
         ))?;
 
-    Consent::from_char(consent).ok_or(SectionDecodeError::InvalidCharacter {
-        character: consent,
+    Char::from_char(char).ok_or(SectionDecodeError::InvalidCharacter {
+        character: char,
         kind: KIND,
         s: original_str.to_string(),
     })
@@ -90,22 +85,19 @@ mod tests {
     use test_case::test_case;
 
     #[test_case("1YN-" => UspV1 {
-        version: 1,
-        notice: Consent::Yes,
-        optout_sale: Consent::No,
-        lspa_covered: Consent::NotApplicable,
+        optout_notice: Notice::Yes,
+        optout_sale: Optout::No,
+        lspa_covered: Covered::NotApplicable,
     } ; "mix")]
     #[test_case("1NNN" => UspV1 {
-        version: 1,
-        notice: Consent::No,
-        optout_sale: Consent::No,
-        lspa_covered: Consent::No,
+        optout_notice: Notice::No,
+        optout_sale: Optout::No,
+        lspa_covered: Covered::No,
     } ; "all no")]
     #[test_case("1YYY" => UspV1 {
-        version: 1,
-        notice: Consent::Yes,
-        optout_sale: Consent::Yes,
-        lspa_covered: Consent::Yes,
+        optout_notice: Notice::Yes,
+        optout_sale: Optout::Yes,
+        lspa_covered: Covered::Yes,
     } ; "all yes")]
     fn parse(s: &str) -> UspV1 {
         UspV1::from_str(s).unwrap()
