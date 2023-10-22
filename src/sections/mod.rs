@@ -32,7 +32,7 @@ pub enum SectionId {
     UsCt = 12,
 }
 
-pub type IdList = BTreeSet<u16>;
+pub type IdSet = BTreeSet<u16>;
 
 #[derive(Error, Debug)]
 pub enum SectionDecodeError {

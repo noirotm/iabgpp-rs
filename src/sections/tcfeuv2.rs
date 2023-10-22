@@ -1,5 +1,5 @@
 use crate::core::{DataReader, FromDataReader};
-use crate::sections::{IdList, OptionalSegmentParser, SectionDecodeError, SegmentedStr};
+use crate::sections::{IdSet, OptionalSegmentParser, SectionDecodeError, SegmentedStr};
 use std::iter::repeat_with;
 use std::str::FromStr;
 
@@ -10,7 +10,7 @@ const TCF_EU_V2_PUBLISHER_PURPOSES_SEGMENT_TYPE: u8 = 3;
 #[derive(Debug, Eq, PartialEq)]
 pub struct TcfEuV2 {
     pub core: Core,
-    pub disclosed_vendors: Option<IdList>,
+    pub disclosed_vendors: Option<IdSet>,
     pub publisher_purposes: Option<PublisherPurposes>,
 }
 
@@ -67,13 +67,13 @@ pub struct Core {
     pub policy_version: u8,
     pub is_service_specific: bool,
     pub use_non_standard_stacks: bool,
-    pub special_feature_optins: IdList,
-    pub purpose_consents: IdList,
-    pub purpose_legitimate_interests: IdList,
+    pub special_feature_optins: IdSet,
+    pub purpose_consents: IdSet,
+    pub purpose_legitimate_interests: IdSet,
     pub purpose_one_treatment: bool,
     pub publisher_country_code: String,
-    pub vendor_consents: IdList,
-    pub vendor_legitimate_interests: IdList,
+    pub vendor_consents: IdSet,
+    pub vendor_legitimate_interests: IdSet,
     pub publisher_restrictions: Vec<PublisherRestriction>,
 }
 
@@ -139,7 +139,7 @@ impl FromDataReader for Core {
 pub struct PublisherRestriction {
     pub purpose_id: u8,
     pub restriction_type: RestrictionType,
-    pub restricted_vendor_ids: IdList,
+    pub restricted_vendor_ids: IdSet,
 }
 
 impl FromDataReader for PublisherRestriction {
@@ -174,10 +174,10 @@ pub enum RestrictionType {
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct PublisherPurposes {
-    pub consents: IdList,
-    pub legitimate_interests: IdList,
-    pub custom_consents: IdList,
-    pub custom_legitimate_interests: IdList,
+    pub consents: IdSet,
+    pub legitimate_interests: IdSet,
+    pub custom_consents: IdSet,
+    pub custom_legitimate_interests: IdSet,
 }
 
 impl FromDataReader for PublisherPurposes {

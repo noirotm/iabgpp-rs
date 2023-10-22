@@ -1,5 +1,5 @@
 use crate::core::{DataReader, FromDataReader};
-use crate::sections::{Base64EncodedStr, IdList, SectionDecodeError};
+use crate::sections::{Base64EncodedStr, IdSet, SectionDecodeError};
 use std::collections::BTreeSet;
 use std::str::FromStr;
 
@@ -16,8 +16,8 @@ pub struct TcfEuV1 {
     pub consent_screen: u8,
     pub consent_language: String,
     pub vendor_list_version: u16,
-    pub purposes_allowed: IdList,
-    pub vendor_consents: IdList,
+    pub purposes_allowed: IdSet,
+    pub vendor_consents: IdSet,
 }
 
 impl FromStr for TcfEuV1 {
@@ -65,7 +65,7 @@ impl FromDataReader for TcfEuV1 {
     }
 }
 
-fn parse_vendor_consents(r: &mut DataReader) -> Result<IdList, SectionDecodeError> {
+fn parse_vendor_consents(r: &mut DataReader) -> Result<IdSet, SectionDecodeError> {
     let max_vendor_id = r.read_fixed_integer::<u16>(16)?;
     let is_range = r.read_bool()?;
     Ok(if is_range {

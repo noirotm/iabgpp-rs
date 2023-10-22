@@ -1,5 +1,5 @@
 use crate::core::{DataReader, FromDataReader};
-use crate::sections::{IdList, OptionalSegmentParser, SectionDecodeError, SegmentedStr};
+use crate::sections::{IdSet, OptionalSegmentParser, SectionDecodeError, SegmentedStr};
 use std::str::FromStr;
 
 const TCF_CA_V1_VERSION: u8 = 1;
@@ -59,11 +59,11 @@ pub struct Core {
     pub vendor_list_version: u16,
     pub policy_version: u8,
     pub use_non_standard_stacks: bool,
-    pub special_feature_express_consents: IdList,
-    pub purpose_express_consents: IdList,
-    pub purpose_implied_consents: IdList,
-    pub vendor_express_consents: IdList,
-    pub vendor_implied_consents: IdList,
+    pub special_feature_express_consents: IdSet,
+    pub purpose_express_consents: IdSet,
+    pub purpose_implied_consents: IdSet,
+    pub vendor_express_consents: IdSet,
+    pub vendor_implied_consents: IdSet,
 }
 
 impl FromDataReader for Core {
@@ -114,10 +114,10 @@ impl FromDataReader for Core {
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct PublisherPurposes {
-    pub purpose_express_consents: IdList,
-    pub purpose_implied_consents: IdList,
-    pub custom_purpose_express_consents: IdList,
-    pub custom_purpose_implied_consents: IdList,
+    pub purpose_express_consents: IdSet,
+    pub purpose_implied_consents: IdSet,
+    pub custom_purpose_express_consents: IdSet,
+    pub custom_purpose_implied_consents: IdSet,
 }
 
 impl FromDataReader for PublisherPurposes {
