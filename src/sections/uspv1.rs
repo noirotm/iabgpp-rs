@@ -23,14 +23,14 @@ impl Char {
 }
 
 type Notice = Char;
-type Optout = Char;
+type OptOut = Char;
 type Covered = Char;
 
 // See https://github.com/InteractiveAdvertisingBureau/USPrivacy/blob/master/CCPA/US%20Privacy%20String.md#us-privacy-string-format
 #[derive(Debug, Eq, PartialEq)]
 pub struct UspV1 {
-    optout_notice: Notice,
-    optout_sale: Optout,
+    opt_out_notice: Notice,
+    opt_out_sale: OptOut,
     lspa_covered: Covered,
 }
 
@@ -58,8 +58,8 @@ impl FromStr for UspV1 {
         }
 
         Ok(Self {
-            optout_notice: parse_next_char(&mut chars, s)?,
-            optout_sale: parse_next_char(&mut chars, s)?,
+            opt_out_notice: parse_next_char(&mut chars, s)?,
+            opt_out_sale: parse_next_char(&mut chars, s)?,
             lspa_covered: parse_next_char(&mut chars, s)?,
         })
     }
@@ -85,18 +85,18 @@ mod tests {
     use test_case::test_case;
 
     #[test_case("1YN-" => UspV1 {
-        optout_notice: Notice::Yes,
-        optout_sale: Optout::No,
+        opt_out_notice: Notice::Yes,
+        opt_out_sale: OptOut::No,
         lspa_covered: Covered::NotApplicable,
     } ; "mix")]
     #[test_case("1NNN" => UspV1 {
-        optout_notice: Notice::No,
-        optout_sale: Optout::No,
+        opt_out_notice: Notice::No,
+        opt_out_sale: OptOut::No,
         lspa_covered: Covered::No,
     } ; "all no")]
     #[test_case("1YYY" => UspV1 {
-        optout_notice: Notice::Yes,
-        optout_sale: Optout::Yes,
+        opt_out_notice: Notice::Yes,
+        opt_out_sale: OptOut::Yes,
         lspa_covered: Covered::Yes,
     } ; "all yes")]
     fn parse(s: &str) -> UspV1 {

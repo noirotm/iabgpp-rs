@@ -23,69 +23,69 @@ impl UsNat {
     pub fn validate(&self) -> Result<(), Vec<ValidationError>> {
         let mut errors = vec![];
 
-        if !Self::is_notice_and_optout_combination_ok(
+        if !Self::is_notice_and_opt_out_combination_ok(
             &self.core.sharing_notice,
-            &self.core.sharing_optout,
+            &self.core.sharing_opt_out,
         ) {
             errors.push(ValidationError::new(
                 "sharing_notice",
                 &self.core.sharing_notice,
-                "sharing_optout",
-                &self.core.sharing_optout,
+                "sharing_opt_out",
+                &self.core.sharing_opt_out,
             ));
         }
 
-        if !Self::is_notice_and_optout_combination_ok(
-            &self.core.sharing_optout_notice,
-            &self.core.sharing_optout,
+        if !Self::is_notice_and_opt_out_combination_ok(
+            &self.core.sharing_opt_out_notice,
+            &self.core.sharing_opt_out,
         ) {
             errors.push(ValidationError::new(
-                "sharing_optout_notice",
-                &self.core.sharing_optout_notice,
-                "sharing_optout",
-                &self.core.sharing_optout,
+                "sharing_opt_out_notice",
+                &self.core.sharing_opt_out_notice,
+                "sharing_opt_out",
+                &self.core.sharing_opt_out,
             ));
         }
 
-        if !Self::is_notice_and_optout_combination_ok(
-            &self.core.sale_optout_notice,
-            &self.core.sale_optout,
+        if !Self::is_notice_and_opt_out_combination_ok(
+            &self.core.sale_opt_out_notice,
+            &self.core.sale_opt_out,
         ) {
             errors.push(ValidationError::new(
-                "sale_optout_notice",
-                &self.core.sale_optout_notice,
-                "sale_optout",
-                &self.core.sale_optout,
+                "sale_opt_out_notice",
+                &self.core.sale_opt_out_notice,
+                "sale_opt_out",
+                &self.core.sale_opt_out,
             ));
         }
 
-        if !Self::is_notice_and_optout_combination_ok(
-            &self.core.targeted_advertising_optout_notice,
-            &self.core.targeted_advertising_optout,
+        if !Self::is_notice_and_opt_out_combination_ok(
+            &self.core.targeted_advertising_opt_out_notice,
+            &self.core.targeted_advertising_opt_out,
         ) {
             errors.push(ValidationError::new(
-                "targeted_advertising_optout_notice",
-                &self.core.targeted_advertising_optout_notice,
-                "targeted_advertising_optout_optout",
-                &self.core.targeted_advertising_optout,
+                "targeted_advertising_opt_out_notice",
+                &self.core.targeted_advertising_opt_out_notice,
+                "targeted_advertising_opt_out_opt_out",
+                &self.core.targeted_advertising_opt_out,
             ));
         }
 
         if self.core.mspa_service_provider_mode == MspaMode::NotApplicable {
-            if self.core.sale_optout_notice != Notice::NotApplicable {
+            if self.core.sale_opt_out_notice != Notice::NotApplicable {
                 errors.push(ValidationError::new(
                     "mspa_service_provider_mode",
                     &self.core.mspa_service_provider_mode,
-                    "sale_optout_notice",
-                    &self.core.sale_optout_notice,
+                    "sale_opt_out_notice",
+                    &self.core.sale_opt_out_notice,
                 ));
             }
-            if self.core.sharing_optout_notice != Notice::NotApplicable {
+            if self.core.sharing_opt_out_notice != Notice::NotApplicable {
                 errors.push(ValidationError::new(
                     "mspa_service_provider_mode",
                     &self.core.mspa_service_provider_mode,
-                    "sharing_optout_notice",
-                    &self.core.sharing_optout_notice,
+                    "sharing_opt_out_notice",
+                    &self.core.sharing_opt_out_notice,
                 ));
             }
             if self.core.sensitive_data_limit_use_notice != Notice::NotApplicable {
@@ -105,20 +105,20 @@ impl UsNat {
                     &self.core.mspa_opt_out_option_mode,
                 ));
             }
-            if self.core.sale_optout_notice != Notice::NotApplicable {
+            if self.core.sale_opt_out_notice != Notice::NotApplicable {
                 errors.push(ValidationError::new(
                     "mspa_service_provider_mode",
                     &self.core.mspa_service_provider_mode,
-                    "sale_optout_notice",
-                    &self.core.sale_optout_notice,
+                    "sale_opt_out_notice",
+                    &self.core.sale_opt_out_notice,
                 ));
             }
-            if self.core.sharing_optout_notice != Notice::NotApplicable {
+            if self.core.sharing_opt_out_notice != Notice::NotApplicable {
                 errors.push(ValidationError::new(
                     "mspa_service_provider_mode",
                     &self.core.mspa_service_provider_mode,
-                    "sharing_optout_notice",
-                    &self.core.sharing_optout_notice,
+                    "sharing_opt_out_notice",
+                    &self.core.sharing_opt_out_notice,
                 ));
             }
             if self.core.sensitive_data_limit_use_notice != Notice::NotApplicable {
@@ -147,10 +147,10 @@ impl UsNat {
         }
     }
 
-    fn is_notice_and_optout_combination_ok(notice: &Notice, optout: &Optout) -> bool {
-        *notice == Notice::NotApplicable && *optout == Optout::NotApplicable
-            || *notice == Notice::Provided && *optout != Optout::NotApplicable
-            || *notice == Notice::NotProvided && *optout == Optout::OptedOut
+    fn is_notice_and_opt_out_combination_ok(notice: &Notice, opt_out: &OptOut) -> bool {
+        *notice == Notice::NotApplicable && *opt_out == OptOut::NotApplicable
+            || *notice == Notice::Provided && *opt_out != OptOut::NotApplicable
+            || *notice == Notice::NotProvided && *opt_out == OptOut::OptedOut
     }
 }
 
@@ -216,14 +216,14 @@ impl OptionalSegmentParser for UsNat {
 #[derive(Debug, Eq, PartialEq)]
 pub struct Core {
     pub sharing_notice: Notice,
-    pub sale_optout_notice: Notice,
-    pub sharing_optout_notice: Notice,
-    pub targeted_advertising_optout_notice: Notice,
-    pub sensitive_data_processing_optout_notice: Notice,
+    pub sale_opt_out_notice: Notice,
+    pub sharing_opt_out_notice: Notice,
+    pub targeted_advertising_opt_out_notice: Notice,
+    pub sensitive_data_processing_opt_out_notice: Notice,
     pub sensitive_data_limit_use_notice: Notice,
-    pub sale_optout: Optout,
-    pub sharing_optout: Optout,
-    pub targeted_advertising_optout: Optout,
+    pub sale_opt_out: OptOut,
+    pub sharing_opt_out: OptOut,
+    pub targeted_advertising_opt_out: OptOut,
     pub sensitive_data_processing: SensitiveDataProcessing,
     pub known_child_sensitive_data_consents: KnownChildSensitiveDataConsents,
     pub personal_data_consent: Consent,
@@ -247,21 +247,22 @@ impl FromDataReader for Core {
         Ok(Self {
             sharing_notice: Notice::from_u8(r.read_fixed_integer(2)?)
                 .unwrap_or(Notice::NotApplicable),
-            sale_optout_notice: Notice::from_u8(r.read_fixed_integer(2)?)
+            sale_opt_out_notice: Notice::from_u8(r.read_fixed_integer(2)?)
                 .unwrap_or(Notice::NotApplicable),
-            sharing_optout_notice: Notice::from_u8(r.read_fixed_integer(2)?)
+            sharing_opt_out_notice: Notice::from_u8(r.read_fixed_integer(2)?)
                 .unwrap_or(Notice::NotApplicable),
-            targeted_advertising_optout_notice: Notice::from_u8(r.read_fixed_integer(2)?)
+            targeted_advertising_opt_out_notice: Notice::from_u8(r.read_fixed_integer(2)?)
                 .unwrap_or(Notice::NotApplicable),
-            sensitive_data_processing_optout_notice: Notice::from_u8(r.read_fixed_integer(2)?)
+            sensitive_data_processing_opt_out_notice: Notice::from_u8(r.read_fixed_integer(2)?)
                 .unwrap_or(Notice::NotApplicable),
             sensitive_data_limit_use_notice: Notice::from_u8(r.read_fixed_integer(2)?)
                 .unwrap_or(Notice::NotApplicable),
-            sale_optout: Optout::from_u8(r.read_fixed_integer(2)?).unwrap_or(Optout::NotApplicable),
-            sharing_optout: Optout::from_u8(r.read_fixed_integer(2)?)
-                .unwrap_or(Optout::NotApplicable),
-            targeted_advertising_optout: Optout::from_u8(r.read_fixed_integer(2)?)
-                .unwrap_or(Optout::NotApplicable),
+            sale_opt_out: OptOut::from_u8(r.read_fixed_integer(2)?)
+                .unwrap_or(OptOut::NotApplicable),
+            sharing_opt_out: OptOut::from_u8(r.read_fixed_integer(2)?)
+                .unwrap_or(OptOut::NotApplicable),
+            targeted_advertising_opt_out: OptOut::from_u8(r.read_fixed_integer(2)?)
+                .unwrap_or(OptOut::NotApplicable),
             sensitive_data_processing: r.parse()?,
             known_child_sensitive_data_consents: r.parse()?,
             personal_data_consent: Consent::from_u8(r.read_fixed_integer(2)?)
@@ -361,7 +362,7 @@ pub enum Notice {
 }
 
 #[derive(Debug, Eq, PartialEq, FromPrimitive, ToPrimitive)]
-pub enum Optout {
+pub enum OptOut {
     NotApplicable = 0,
     OptedOut = 1,
     DidNotOptOut = 2,
@@ -394,14 +395,14 @@ mod tests {
                 UsNat {
                     core: Core {
                         sharing_notice: Notice::NotApplicable,
-                        sale_optout_notice: Notice::NotApplicable,
-                        sharing_optout_notice: Notice::NotApplicable,
-                        targeted_advertising_optout_notice: Notice::NotApplicable,
-                        sensitive_data_processing_optout_notice: Notice::NotApplicable,
+                        sale_opt_out_notice: Notice::NotApplicable,
+                        sharing_opt_out_notice: Notice::NotApplicable,
+                        targeted_advertising_opt_out_notice: Notice::NotApplicable,
+                        sensitive_data_processing_opt_out_notice: Notice::NotApplicable,
                         sensitive_data_limit_use_notice: Notice::NotApplicable,
-                        sale_optout: Optout::NotApplicable,
-                        sharing_optout: Optout::NotApplicable,
-                        targeted_advertising_optout: Optout::NotApplicable,
+                        sale_opt_out: OptOut::NotApplicable,
+                        sharing_opt_out: OptOut::NotApplicable,
+                        targeted_advertising_opt_out: OptOut::NotApplicable,
                         sensitive_data_processing: SensitiveDataProcessing {
                             racial_or_ethnic_origin: Consent::NotApplicable,
                             religious_or_philosophical_beliefs: Consent::NotApplicable,
@@ -433,14 +434,14 @@ mod tests {
                 UsNat {
                     core: Core {
                         sharing_notice: Notice::Provided,
-                        sale_optout_notice: Notice::Provided,
-                        sharing_optout_notice: Notice::Provided,
-                        targeted_advertising_optout_notice: Notice::Provided,
-                        sensitive_data_processing_optout_notice: Notice::Provided,
+                        sale_opt_out_notice: Notice::Provided,
+                        sharing_opt_out_notice: Notice::Provided,
+                        targeted_advertising_opt_out_notice: Notice::Provided,
+                        sensitive_data_processing_opt_out_notice: Notice::Provided,
                         sensitive_data_limit_use_notice: Notice::Provided,
-                        sale_optout: Optout::OptedOut,
-                        sharing_optout: Optout::OptedOut,
-                        targeted_advertising_optout: Optout::OptedOut,
+                        sale_opt_out: OptOut::OptedOut,
+                        sharing_opt_out: OptOut::OptedOut,
+                        targeted_advertising_opt_out: OptOut::OptedOut,
                         sensitive_data_processing: SensitiveDataProcessing {
                             racial_or_ethnic_origin: Consent::NoConsent,
                             religious_or_philosophical_beliefs: Consent::NoConsent,
@@ -472,14 +473,14 @@ mod tests {
                 UsNat {
                     core: Core {
                         sharing_notice: Notice::Provided,
-                        sale_optout_notice: Notice::Provided,
-                        sharing_optout_notice: Notice::Provided,
-                        targeted_advertising_optout_notice: Notice::Provided,
-                        sensitive_data_processing_optout_notice: Notice::Provided,
+                        sale_opt_out_notice: Notice::Provided,
+                        sharing_opt_out_notice: Notice::Provided,
+                        targeted_advertising_opt_out_notice: Notice::Provided,
+                        sensitive_data_processing_opt_out_notice: Notice::Provided,
                         sensitive_data_limit_use_notice: Notice::Provided,
-                        sale_optout: Optout::OptedOut,
-                        sharing_optout: Optout::OptedOut,
-                        targeted_advertising_optout: Optout::OptedOut,
+                        sale_opt_out: OptOut::OptedOut,
+                        sharing_opt_out: OptOut::OptedOut,
+                        targeted_advertising_opt_out: OptOut::OptedOut,
                         sensitive_data_processing: SensitiveDataProcessing {
                             racial_or_ethnic_origin: Consent::NoConsent,
                             religious_or_philosophical_beliefs: Consent::NoConsent,
