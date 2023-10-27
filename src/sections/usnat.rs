@@ -291,7 +291,7 @@ fn mspa_covered_transaction_to_bool(val: u8) -> Result<bool, SectionDecodeError>
 pub struct SensitiveDataProcessing {
     pub racial_or_ethnic_origin: Consent,
     pub religious_or_philosophical_beliefs: Consent,
-    pub consumer_health: Consent,
+    pub health_data: Consent,
     pub sex_life_or_sexual_orientation: Consent,
     pub citizenship_or_immigration_status: Consent,
     pub genetic_unique_identification: Consent,
@@ -312,7 +312,7 @@ impl FromDataReader for SensitiveDataProcessing {
                 .unwrap_or(Consent::NotApplicable),
             religious_or_philosophical_beliefs: Consent::from_u8(r.read_fixed_integer(2)?)
                 .unwrap_or(Consent::NotApplicable),
-            consumer_health: Consent::from_u8(r.read_fixed_integer(2)?)
+            health_data: Consent::from_u8(r.read_fixed_integer(2)?)
                 .unwrap_or(Consent::NotApplicable),
             sex_life_or_sexual_orientation: Consent::from_u8(r.read_fixed_integer(2)?)
                 .unwrap_or(Consent::NotApplicable),
@@ -406,7 +406,7 @@ mod tests {
                         sensitive_data_processing: SensitiveDataProcessing {
                             racial_or_ethnic_origin: Consent::NotApplicable,
                             religious_or_philosophical_beliefs: Consent::NotApplicable,
-                            consumer_health: Consent::NotApplicable,
+                            health_data: Consent::NotApplicable,
                             sex_life_or_sexual_orientation: Consent::NotApplicable,
                             citizenship_or_immigration_status: Consent::NotApplicable,
                             genetic_unique_identification: Consent::NotApplicable,
@@ -445,7 +445,7 @@ mod tests {
                         sensitive_data_processing: SensitiveDataProcessing {
                             racial_or_ethnic_origin: Consent::NoConsent,
                             religious_or_philosophical_beliefs: Consent::NoConsent,
-                            consumer_health: Consent::NoConsent,
+                            health_data: Consent::NoConsent,
                             sex_life_or_sexual_orientation: Consent::NoConsent,
                             citizenship_or_immigration_status: Consent::NoConsent,
                             genetic_unique_identification: Consent::NoConsent,
@@ -484,7 +484,7 @@ mod tests {
                         sensitive_data_processing: SensitiveDataProcessing {
                             racial_or_ethnic_origin: Consent::NoConsent,
                             religious_or_philosophical_beliefs: Consent::NoConsent,
-                            consumer_health: Consent::NoConsent,
+                            health_data: Consent::NoConsent,
                             sex_life_or_sexual_orientation: Consent::NoConsent,
                             citizenship_or_immigration_status: Consent::NoConsent,
                             genetic_unique_identification: Consent::NoConsent,
