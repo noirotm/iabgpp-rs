@@ -26,8 +26,8 @@ Legend:
 | EU TCF v1 (deprecated) |   ✔️    |    ❌    |
 | Canadian TCF v1        |   ✔️    |    ❌    |
 | US - National          |   ✔️    |    ❌    |
-| US - California        |   🧪    |    ❌    |
+| US - California        |   ✔️    |    ❌    |
 | US - Virginia          |    ❌    |    ❌    |
-| US - Colorado          |    ❌    |    ❌    |
+| US - Colorado          |   ✔️    |    ❌    |
 | US - Utah              |    ❌    |    ❌    |
 | US - Connecticut       |    ❌    |    ❌    |
