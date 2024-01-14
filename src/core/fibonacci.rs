@@ -3,7 +3,7 @@ use num_traits::One;
 
 /// Iterative generic fibonacci implementation
 pub struct Fibonacci<T> {
-    curr: Option<T>,
+    curr: T,
     next: Option<T>,
 }
 
@@ -14,12 +14,11 @@ where
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
-        let next = self.curr?.checked_add(&self.next?);
+        let curr = self.next?;
+        self.next = self.curr.checked_add(&curr);
+        self.curr = curr;
 
-        self.curr = self.next;
-        self.next = next;
-
-        self.curr
+        Some(self.curr)
     }
 }
 
@@ -30,7 +29,7 @@ where
 {
     let init = T::one();
     Fibonacci {
-        curr: Some(init),
+        curr: init,
         next: Some(init),
     }
 }
