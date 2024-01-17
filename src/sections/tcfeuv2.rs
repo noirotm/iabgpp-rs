@@ -366,7 +366,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    #[test_case("CPX" => matches SectionDecodeError::DecodeSegment(_) ; "decode error")]
+    #[test_case("CPX" => matches SectionDecodeError::Read(_) ; "decode error")]
     #[test_case("" => matches SectionDecodeError::Read(_) ; "empty string")]
     #[test_case("IFoEUQQgAIQwgIwQABAEAAAAOIAACAIAAAAQAIAgEAACEAAAAAgAQBAAAAAAAGBAAgAAAAAAAFAAECAAAgAAQARAEQAAAAAJAAIAAgAAAYQEAAAQmAgBC3ZAYzUw" => matches SectionDecodeError::InvalidSegmentVersion { .. } ; "disclosed vendors only")]
     #[test_case("ZAAgH9794ulA" => matches SectionDecodeError::InvalidSegmentVersion { .. } ; "publisher purposes only")]

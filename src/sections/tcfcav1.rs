@@ -204,7 +204,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    #[test_case("BPX" => matches SectionDecodeError::DecodeSegment(_) ; "decode error")]
+    #[test_case("BPX" => matches SectionDecodeError::Read(_) ; "decode error")]
     #[test_case("" => matches SectionDecodeError::Read(_) ; "empty string")]
     fn error(s: &str) -> SectionDecodeError {
         TcfCaV1::from_str(s).unwrap_err()

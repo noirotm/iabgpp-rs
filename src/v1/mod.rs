@@ -1,3 +1,4 @@
+use crate::core::base64::DecodeError;
 use crate::core::{DataReader, DecodeExt};
 use crate::sections::{decode_section, Section, SectionDecodeError, SectionId};
 use fnv::FnvHashMap;
@@ -14,7 +15,7 @@ pub enum GPPDecodeError {
     #[error("no header found")]
     NoHeaderFound,
     #[error("unable to decode header")]
-    DecodeHeader(#[from] base64::DecodeError),
+    DecodeHeader(#[from] DecodeError),
     #[error("invalid header type (expected {GPP_HEADER}, found {found})")]
     InvalidHeaderType { found: u8 },
     #[error("invalid GPP version (expected {GPP_VERSION}, found {found})")]
@@ -181,15 +182,15 @@ mod tests {
     use super::*;
     use test_case::test_case;
 
-    #[test_case("DBABMA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA" => vec![SectionId::TcfEuV2] ; "single section")]
-    #[test_case("DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN" => vec![SectionId::TcfEuV2, SectionId::UspV1] ; "tcf eu and us sections")]
+    #[test_case("DBABM~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA" => vec![SectionId::TcfEuV2] ; "single section")]
+    #[test_case("DBACNY~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN" => vec![SectionId::TcfEuV2, SectionId::UspV1] ; "tcf eu and us sections")]
     #[test_case("DBABjw~BPXuQIAPXuQIAAfKABENB-CgAAAAAAAAAAAAAAAA.YAAAAAAAAAA~1YNN" => vec![SectionId::TcfCaV1, SectionId::UspV1] ; "tcf ca and us sections")]
     fn gpp_string_section_ids(s: &str) -> Vec<SectionId> {
         GPPString::from_str(s).unwrap().section_ids
     }
 
-    #[test_case("DBABMA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA" => vec!["CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA"] ; "single section")]
-    #[test_case("DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN" => vec!["CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA", "1YNN"] ; "tcf eu and us sections")]
+    #[test_case("DBABM~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA" => vec!["CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA"] ; "single section")]
+    #[test_case("DBACNY~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN" => vec!["CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA", "1YNN"] ; "tcf eu and us sections")]
     #[test_case("DBABjw~BPXuQIAPXuQIAAfKABENB-CgAAAAAAAAAAAAAAAA.YAAAAAAAAAA~1YNN" => vec!["BPXuQIAPXuQIAAfKABENB-CgAAAAAAAAAAAAAAAA.YAAAAAAAAAA", "1YNN"] ; "tcf ca and us sections")]
     fn gpp_string_sections(s: &str) -> Vec<String> {
         GPPString::from_str(s)
@@ -200,8 +201,8 @@ mod tests {
             .collect()
     }
 
-    #[test_case("DBABMA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA" => vec![SectionId::TcfEuV2] ; "single section")]
-    #[test_case("DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN" => vec![SectionId::TcfEuV2, SectionId::UspV1] ; "tcf eu and us sections")]
+    #[test_case("DBABM~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA" => vec![SectionId::TcfEuV2] ; "single section")]
+    #[test_case("DBACNY~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN" => vec![SectionId::TcfEuV2, SectionId::UspV1] ; "tcf eu and us sections")]
     #[test_case("DBABjw~BPXuQIAPXuQIAAfKABENB-CgAAAAAAAAAAAAAAAA.YAAAAAAAAAA~1YNN" => vec![SectionId::TcfCaV1, SectionId::UspV1] ; "tcf ca and us sections")]
     fn gpp_string_decode_section(s: &str) -> Vec<SectionId> {
         let s = GPPString::from_str(s).unwrap();
@@ -211,8 +212,8 @@ mod tests {
             .collect()
     }
 
-    #[test_case("DBABMA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA" => vec![SectionId::TcfEuV2] ; "single section")]
-    #[test_case("DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN" => vec![SectionId::TcfEuV2, SectionId::UspV1] ; "tcf eu and us sections")]
+    #[test_case("DBABM~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA" => vec![SectionId::TcfEuV2] ; "single section")]
+    #[test_case("DBACNY~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN" => vec![SectionId::TcfEuV2, SectionId::UspV1] ; "tcf eu and us sections")]
     #[test_case("DBABjw~BPXuQIAPXuQIAAfKABENB-CgAAAAAAAAAAAAAAAA.YAAAAAAAAAA~1YNN" => vec![SectionId::TcfCaV1, SectionId::UspV1] ; "tcf ca and us sections")]
     fn gpp_str_decode_all(s: &str) -> Vec<SectionId> {
         GPPString::from_str(s)
@@ -224,15 +225,15 @@ mod tests {
             .collect()
     }
 
-    #[test_case("DBABMA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA" => vec![SectionId::TcfEuV2] ; "single section")]
-    #[test_case("DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN" => vec![SectionId::TcfEuV2, SectionId::UspV1] ; "tcf eu and us sections")]
+    #[test_case("DBABM~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA" => vec![SectionId::TcfEuV2] ; "single section")]
+    #[test_case("DBACNY~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN" => vec![SectionId::TcfEuV2, SectionId::UspV1] ; "tcf eu and us sections")]
     #[test_case("DBABjw~BPXuQIAPXuQIAAfKABENB-CgAAAAAAAAAAAAAAAA.YAAAAAAAAAA~1YNN" => vec![SectionId::TcfCaV1, SectionId::UspV1] ; "tcf ca and us sections")]
     fn gpp_str_section_ids(s: &str) -> Vec<SectionId> {
         GPPStr::extract_from_str(s).unwrap().section_ids
     }
 
-    #[test_case("DBABMA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA" => vec!["CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA"] ; "single section")]
-    #[test_case("DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN" => vec!["CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA", "1YNN"] ; "tcf eu and us sections")]
+    #[test_case("DBABM~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA" => vec!["CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA"] ; "single section")]
+    #[test_case("DBACNY~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN" => vec!["CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA", "1YNN"] ; "tcf eu and us sections")]
     #[test_case("DBABjw~BPXuQIAPXuQIAAfKABENB-CgAAAAAAAAAAAAAAAA.YAAAAAAAAAA~1YNN" => vec!["BPXuQIAPXuQIAAfKABENB-CgAAAAAAAAAAAAAAAA.YAAAAAAAAAA", "1YNN"] ; "tcf ca and us sections")]
     fn gpp_str_sections(s: &str) -> Vec<String> {
         GPPStr::extract_from_str(s)
@@ -243,8 +244,8 @@ mod tests {
             .collect()
     }
 
-    #[test_case("DBABMA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA" => vec![SectionId::TcfEuV2] ; "single section")]
-    #[test_case("DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN" => vec![SectionId::TcfEuV2, SectionId::UspV1] ; "tcf eu and us sections")]
+    #[test_case("DBABM~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA" => vec![SectionId::TcfEuV2] ; "single section")]
+    #[test_case("DBACNY~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN" => vec![SectionId::TcfEuV2, SectionId::UspV1] ; "tcf eu and us sections")]
     #[test_case("DBABjw~BPXuQIAPXuQIAAfKABENB-CgAAAAAAAAAAAAAAAA.YAAAAAAAAAA~1YNN" => vec![SectionId::TcfCaV1, SectionId::UspV1] ; "tcf ca and us sections")]
     fn gpp_str_decode_section(s: &str) -> Vec<SectionId> {
         let s = GPPStr::extract_from_str(s).unwrap();
@@ -254,8 +255,8 @@ mod tests {
             .collect()
     }
 
-    #[test_case("DBABMA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA" => vec![SectionId::TcfEuV2] ; "single section")]
-    #[test_case("DBACNYA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN" => vec![SectionId::TcfEuV2, SectionId::UspV1] ; "tcf eu and us sections")]
+    #[test_case("DBABM~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA" => vec![SectionId::TcfEuV2] ; "single section")]
+    #[test_case("DBACNY~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN" => vec![SectionId::TcfEuV2, SectionId::UspV1] ; "tcf eu and us sections")]
     #[test_case("DBABjw~BPXuQIAPXuQIAAfKABENB-CgAAAAAAAAAAAAAAAA.YAAAAAAAAAA~1YNN" => vec![SectionId::TcfCaV1, SectionId::UspV1] ; "tcf ca and us sections")]
     fn gpp_string_decode_all(s: &str) -> Vec<SectionId> {
         GPPStr::extract_from_str(s)
@@ -269,7 +270,7 @@ mod tests {
 
     #[test]
     fn str_to_gpp_str() {
-        let r = "DBABMA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA"
+        let r = "DBABM~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA"
             .to_gpp_str()
             .unwrap();
 
@@ -282,7 +283,7 @@ mod tests {
 
     #[test]
     fn gpp_string_as_gpp_str() {
-        let r = GPPString::from_str("DBABMA~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA").unwrap();
+        let r = GPPString::from_str("DBABM~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA").unwrap();
         let r = r.as_gpp_str();
 
         assert_eq!(r.section_ids, vec![SectionId::TcfEuV2]);
@@ -294,7 +295,7 @@ mod tests {
 
     #[test]
     fn truncated_string() {
-        let r = GPPString::from_str("DBACNYA~CPytTYAPytTYABEACBENDXCoAP_AAH_AAAIwgoNf_X__b3_v-_7___t0eY1f9_7__-0zjhfdt-8N3f_X_L8X_2M7");
+        let r = GPPString::from_str("DBACNY~CPytTYAPytTYABEACBENDXCoAP_AAH_AAAIwgoNf_X__b3_v-_7___t0eY1f9_7__-0zjhfdt-8N3f_X_L8X_2M7");
         assert!(matches!(
             r,
             Err(GPPDecodeError::IdSectionMismatch {

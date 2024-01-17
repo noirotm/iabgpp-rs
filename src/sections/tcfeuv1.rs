@@ -111,7 +111,7 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    #[test_case("BO5a1L7O5a1L7AAABBENC2-AAAAtHAA" => matches SectionDecodeError::Read(_) ; "missing data")]
+    #[test_case("BO5a1L7O5a1L7AAABBENC2-AAAAtH" => matches SectionDecodeError::Read(_) ; "missing data")]
     #[test_case("" => matches SectionDecodeError::Read(_) ; "empty string")]
     #[test_case("DOEFEAyOEFEAyAHABDENAI4AAAB9vABAASA" => matches SectionDecodeError::InvalidSectionVersion { expected: TCF_EU_V1_VERSION, found: 3 } ; "invalid version")]
     fn error(s: &str) -> SectionDecodeError {

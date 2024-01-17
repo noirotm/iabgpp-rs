@@ -1,5 +1,5 @@
 use crate::core::fibonacci::fibonacci_iterator;
-use base64::{DecodeError, Engine};
+use base64::DecodeError;
 use bitstream_io::{BigEndian, BitRead, BitReader, Numeric};
 use num_iter::range_inclusive;
 use num_traits::{CheckedAdd, Num, NumAssignOps, ToPrimitive};
@@ -7,6 +7,7 @@ use std::collections::BTreeSet;
 use std::io;
 use std::iter::repeat_with;
 
+pub mod base64;
 mod fibonacci;
 
 pub trait DecodeExt {
@@ -15,7 +16,7 @@ pub trait DecodeExt {
 
 impl DecodeExt for &str {
     fn decode_base64_url(&self) -> Result<Vec<u8>, DecodeError> {
-        base64::engine::general_purpose::URL_SAFE_NO_PAD.decode(self)
+        base64::decode(self)
     }
 }
 

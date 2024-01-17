@@ -1,3 +1,4 @@
+use crate::core::base64::DecodeError;
 use crate::core::{DataReader, DecodeExt, FromDataReader};
 use crate::sections::tcfcav1::TcfCaV1;
 use crate::sections::tcfeuv1::TcfEuV1;
@@ -55,7 +56,7 @@ pub enum SectionDecodeError {
     #[error("invalid section version (expected {expected}, found {found})")]
     InvalidSectionVersion { expected: u8, found: u8 },
     #[error("unable to decode segment")]
-    DecodeSegment(#[from] base64::DecodeError),
+    DecodeSegment(#[from] DecodeError),
     #[error("invalid segment version (expected {expected}, found {found})")]
     InvalidSegmentVersion { expected: u8, found: u8 },
     #[error("unknown segment type {segment_type}")]

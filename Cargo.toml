@@ -13,7 +13,6 @@ documentation = "https://docs.rs/iab_gpp/"
 readme = "README.md"
 
 [dependencies]
-base64 = "0.21.2"
 bitstream-io = "1.7.0"
 fnv = "1.0.7"
 num-derive = "0.4.0"
