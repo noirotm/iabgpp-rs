@@ -27,7 +27,7 @@ Legend:
 | Canadian TCF v1        |   ✔️    |    ❌    |
 | US - National          |   ✔️    |    ❌    |
 | US - California        |   ✔️    |    ❌    |
-| US - Virginia          |    ❌    |    ❌    |
+| US - Virginia          |   ✔️    |    ❌    |
 | US - Colorado          |   ✔️    |    ❌    |
 | US - Utah              |    ❌    |    ❌    |
 | US - Connecticut       |    ❌    |    ❌    |

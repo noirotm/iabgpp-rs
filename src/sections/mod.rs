@@ -7,6 +7,7 @@ use crate::sections::usca::UsCa;
 use crate::sections::usco::UsCo;
 use crate::sections::usnat::UsNat;
 use crate::sections::uspv1::UspV1;
+use crate::sections::usva::UsVa;
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::ToPrimitive;
 use std::collections::BTreeSet;
@@ -20,6 +21,7 @@ pub mod usca;
 pub mod usco;
 pub mod usnat;
 pub mod uspv1;
+pub mod usva;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash, FromPrimitive, ToPrimitive)]
 pub enum SectionId {
@@ -77,7 +79,7 @@ pub enum Section {
     UspV1(UspV1),
     UsNat(UsNat),
     UsCa(UsCa),
-    UsVa,
+    UsVa(UsVa),
     UsCo(UsCo),
     UsUt,
     UsCt,
@@ -92,7 +94,7 @@ impl Section {
             Section::UspV1(_) => SectionId::UspV1,
             Section::UsNat(_) => SectionId::UsNat,
             Section::UsCa(_) => SectionId::UsCa,
-            Section::UsVa => SectionId::UsVa,
+            Section::UsVa(_) => SectionId::UsVa,
             Section::UsCo(_) => SectionId::UsCo,
             Section::UsUt => SectionId::UsUt,
             Section::UsCt => SectionId::UsCt,
@@ -108,7 +110,7 @@ pub(crate) fn decode_section(id: SectionId, s: &str) -> Result<Section, SectionD
         SectionId::UspV1 => Section::UspV1(s.parse()?),
         SectionId::UsNat => Section::UsNat(s.parse()?),
         SectionId::UsCa => Section::UsCa(s.parse()?),
-        SectionId::UsVa => Section::UsVa,
+        SectionId::UsVa => Section::UsVa(s.parse()?),
         SectionId::UsCo => Section::UsCo(s.parse()?),
         SectionId::UsUt => Section::UsUt,
         SectionId::UsCt => Section::UsCt,
