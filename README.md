@@ -29,5 +29,5 @@ Legend:
 | US - California        |   ✔️    |    ❌    |
 | US - Virginia          |   ✔️    |    ❌    |
 | US - Colorado          |   ✔️    |    ❌    |
-| US - Utah              |    ❌    |    ❌    |
+| US - Utah              |   ✔️    |    ❌    |
 | US - Connecticut       |    ❌    |    ❌    |
