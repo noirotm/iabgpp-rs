@@ -518,8 +518,9 @@ mod tests {
 
     #[test_case("" => matches SectionDecodeError::Read(_) ; "empty string")]
     #[test_case("123" => matches SectionDecodeError::InvalidSegmentVersion { .. } ; "decode error")]
-    #[test_case("CVVVVVVVVWA.YA" => matches SectionDecodeError::InvalidSegmentVersion { .. } ; "invalid segment version")]
-    #[test_case("BVVVVVVVVWA.AA" => matches SectionDecodeError::UnknownSegmentType { .. } ; "unknown segment version")]
+    #[test_case("CVVVVVVVVWA.YA" => matches SectionDecodeError::InvalidSegmentVersion { .. } ; "invalid segment version 1")]
+    #[test_case("gqgkgAAAAEA" => matches SectionDecodeError::InvalidSegmentVersion { .. } ; "invalid segment version 2")]
+    #[test_case("BVVVVVVVVWA.AA" => matches SectionDecodeError::UnknownSegmentType { .. } ; "unknown segment type")]
     fn error(s: &str) -> SectionDecodeError {
         UsNat::from_str(s).unwrap_err()
     }
