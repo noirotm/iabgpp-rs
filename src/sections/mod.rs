@@ -5,6 +5,7 @@ use crate::sections::tcfeuv1::TcfEuV1;
 use crate::sections::tcfeuv2::TcfEuV2;
 use crate::sections::usca::UsCa;
 use crate::sections::usco::UsCo;
+use crate::sections::usct::UsCt;
 use crate::sections::usnat::UsNat;
 use crate::sections::uspv1::UspV1;
 use crate::sections::usut::UsUt;
@@ -20,6 +21,7 @@ pub mod tcfeuv1;
 pub mod tcfeuv2;
 pub mod usca;
 pub mod usco;
+pub mod usct;
 pub mod usnat;
 pub mod uspv1;
 pub mod usut;
@@ -84,7 +86,7 @@ pub enum Section {
     UsVa(UsVa),
     UsCo(UsCo),
     UsUt(UsUt),
-    UsCt,
+    UsCt(UsCt),
 }
 
 impl Section {
@@ -99,7 +101,7 @@ impl Section {
             Section::UsVa(_) => SectionId::UsVa,
             Section::UsCo(_) => SectionId::UsCo,
             Section::UsUt(_) => SectionId::UsUt,
-            Section::UsCt => SectionId::UsCt,
+            Section::UsCt(_) => SectionId::UsCt,
         }
     }
 }
@@ -115,7 +117,7 @@ pub(crate) fn decode_section(id: SectionId, s: &str) -> Result<Section, SectionD
         SectionId::UsVa => Section::UsVa(s.parse()?),
         SectionId::UsCo => Section::UsCo(s.parse()?),
         SectionId::UsUt => Section::UsUt(s.parse()?),
-        SectionId::UsCt => Section::UsCt,
+        SectionId::UsCt => Section::UsCt(s.parse()?),
         id => Err(SectionDecodeError::UnsupportedSectionId(
             id.to_u8().expect("existing section id"),
         ))?,
