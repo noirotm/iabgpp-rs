@@ -32,7 +32,7 @@ impl FromDataReader for TcfEuV1 {
     type Err = SectionDecodeError;
 
     fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
-        let version = r.read_fixed_integer::<u8>(6)?;
+        let version = r.read_fixed_integer(6)?;
         if version != TCF_EU_V1_VERSION {
             return Err(SectionDecodeError::InvalidSectionVersion {
                 expected: TCF_EU_V1_VERSION,
@@ -66,7 +66,7 @@ impl FromDataReader for TcfEuV1 {
 }
 
 fn parse_vendor_consents(r: &mut DataReader) -> Result<IdSet, SectionDecodeError> {
-    let max_vendor_id = r.read_fixed_integer::<u16>(16)?;
+    let max_vendor_id = r.read_fixed_integer(16)?;
     let is_range = r.read_bool()?;
     Ok(if is_range {
         // range section

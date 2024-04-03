@@ -186,7 +186,7 @@ pub(crate) trait OptionalSegmentParser:
     Sized + FromDataReader<Err = SectionDecodeError>
 {
     fn read_segment_type(r: &mut DataReader) -> Result<u8, SectionDecodeError> {
-        Ok(r.read_fixed_integer::<u8>(3)?)
+        Ok(r.read_fixed_integer(3)?)
     }
 
     fn parse_optional_segment(

@@ -81,7 +81,7 @@ impl FromDataReader for Core {
     type Err = SectionDecodeError;
 
     fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
-        let version = r.read_fixed_integer::<u8>(6)?;
+        let version = r.read_fixed_integer(6)?;
         if version != TCF_EU_V2_VERSION {
             return Err(SectionDecodeError::InvalidSegmentVersion {
                 expected: TCF_EU_V2_VERSION,
@@ -107,9 +107,9 @@ impl FromDataReader for Core {
         let vendor_consents = r.read_optimized_integer_range()?;
         let vendor_legitimate_interests = r.read_optimized_integer_range()?;
 
-        let publisher_restrictions_num = r.read_fixed_integer::<u8>(6)?;
+        let publisher_restrictions_num = r.read_fixed_integer::<u8>(6)? as usize;
         let publisher_restrictions = repeat_with(|| r.parse())
-            .take(publisher_restrictions_num as usize)
+            .take(publisher_restrictions_num)
             .collect::<Result<_, _>>()?;
 
         Ok(Self {
@@ -147,7 +147,7 @@ impl FromDataReader for PublisherRestriction {
 
     fn from_data_reader(r: &mut DataReader) -> Result<Self, SectionDecodeError> {
         let purpose_id = r.read_fixed_integer(6)?;
-        let restriction_type = match r.read_fixed_integer::<u8>(2)? {
+        let restriction_type = match r.read_fixed_integer(2)? {
             0 => RestrictionType::NotAllowed,
             1 => RestrictionType::RequireConsent,
             2 => RestrictionType::RequireLegitimateInterest,
@@ -186,9 +186,9 @@ impl FromDataReader for PublisherPurposes {
     fn from_data_reader(r: &mut DataReader) -> Result<Self, SectionDecodeError> {
         let consents = r.read_fixed_bitfield(24)?;
         let legitimate_interests = r.read_fixed_bitfield(24)?;
-        let custom_purposes_num = r.read_fixed_integer::<u8>(6)?;
-        let custom_consents = r.read_fixed_bitfield(custom_purposes_num as usize)?;
-        let custom_legitimate_interests = r.read_fixed_bitfield(custom_purposes_num as usize)?;
+        let custom_purposes_num = r.read_fixed_integer::<u8>(6)? as usize;
+        let custom_consents = r.read_fixed_bitfield(custom_purposes_num)?;
+        let custom_legitimate_interests = r.read_fixed_bitfield(custom_purposes_num)?;
 
         Ok(Self {
             consents,

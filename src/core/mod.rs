@@ -56,7 +56,7 @@ impl<'a> DataReader<'a> {
     where
         T: CheckedAdd + Copy + Num + NumAssignOps,
     {
-        let mut fib = fibonacci_iterator::<T>();
+        let mut fib = fibonacci_iterator();
         let mut total = T::zero();
         let mut last_bit = false;
 
@@ -107,20 +107,20 @@ impl<'a> DataReader<'a> {
     }
 
     pub fn read_integer_range(&mut self) -> io::Result<Vec<u16>> {
-        let n = self.bit_reader.read::<u16>(12)? as usize;
+        let n = self.read_fixed_integer::<u16>(12)? as usize;
         let mut range = vec![];
 
         for _ in 0..n {
             let is_group = self.read_bool()?;
             if is_group {
-                let start = self.read_fixed_integer::<u16>(16)?;
-                let end = self.read_fixed_integer::<u16>(16)?;
+                let start = self.read_fixed_integer(16)?;
+                let end = self.read_fixed_integer(16)?;
 
                 for id in start..=end {
                     range.push(id);
                 }
             } else {
-                let id = self.read_fixed_integer::<u16>(16)?;
+                let id = self.read_fixed_integer(16)?;
                 range.push(id);
             }
         }
@@ -132,7 +132,7 @@ impl<'a> DataReader<'a> {
     where
         T: CheckedAdd + Copy + Num + NumAssignOps + PartialOrd + ToPrimitive,
     {
-        let n = self.bit_reader.read::<u16>(12)? as usize;
+        let n = self.read_fixed_integer::<u16>(12)? as usize;
         let mut range = vec![];
         let mut last_id = T::zero();
 
@@ -166,12 +166,12 @@ impl<'a> DataReader<'a> {
     }
 
     pub fn read_optimized_integer_range(&mut self) -> io::Result<BTreeSet<u16>> {
-        let len = self.read_fixed_integer::<u16>(16)?;
+        let n = self.read_fixed_integer::<u16>(16)? as usize;
         let is_int_range = self.read_bool()?;
         if is_int_range {
             self.read_integer_range().map(|r| r.into_iter().collect())
         } else {
-            self.read_fixed_bitfield(len as usize)
+            self.read_fixed_bitfield(n)
         }
     }
 }
@@ -208,9 +208,7 @@ mod tests {
     #[test_case("000101", 6 => 5)]
     #[test_case("101010", 6 => 42)]
     fn read_int(s: &str, bits: u32) -> u32 {
-        DataReader::new(&b(s))
-            .read_fixed_integer::<u32>(bits)
-            .unwrap()
+        DataReader::new(&b(s)).read_fixed_integer(bits).unwrap()
     }
 
     #[test_case("11" => 1)]
@@ -222,9 +220,7 @@ mod tests {
     #[test_case("01011" => 7)]
     #[test_case("0100000000001011" => 2 ; "overflow for u8")] // ignore bits we can't encode
     fn read_fibonacci(s: &str) -> u8 {
-        DataReader::new(&b(s))
-            .read_fibonacci_integer::<u8>()
-            .unwrap()
+        DataReader::new(&b(s)).read_fibonacci_integer().unwrap()
     }
 
     #[test_case("101010", 1 => "k")]
@@ -261,7 +257,7 @@ mod tests {
     #[test_case("000000000010 0 0011 1 011 0011" => vec![3, 5, 6, 7, 8])]
     #[test_case("000000000010 0 011 0 1011" => vec![2, 6])]
     fn read_fibonacci_range(s: &str) -> Vec<u8> {
-        DataReader::new(&b(s)).read_fibonacci_range::<u8>().unwrap()
+        DataReader::new(&b(s)).read_fibonacci_range().unwrap()
     }
 
     #[test_case("1 000000000010 0 0011 1 011 0011" => BTreeSet::from_iter([3, 5, 6, 7, 8]))]

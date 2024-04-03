@@ -70,7 +70,7 @@ impl FromDataReader for Core {
     type Err = SectionDecodeError;
 
     fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
-        let version = r.read_fixed_integer::<u8>(6)?;
+        let version = r.read_fixed_integer(6)?;
         if version != TCF_CA_V1_VERSION {
             return Err(SectionDecodeError::InvalidSegmentVersion {
                 expected: TCF_CA_V1_VERSION,
@@ -126,11 +126,9 @@ impl FromDataReader for PublisherPurposes {
     fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
         let purpose_express_consents = r.read_fixed_bitfield(24)?;
         let purpose_implied_consents = r.read_fixed_bitfield(24)?;
-        let custom_purposes_num = r.read_fixed_integer::<u8>(6)?;
-        let custom_purpose_express_consents =
-            r.read_fixed_bitfield(custom_purposes_num as usize)?;
-        let custom_purpose_implied_consents =
-            r.read_fixed_bitfield(custom_purposes_num as usize)?;
+        let custom_purposes_num = r.read_fixed_integer::<u8>(6)? as usize;
+        let custom_purpose_express_consents = r.read_fixed_bitfield(custom_purposes_num)?;
+        let custom_purpose_implied_consents = r.read_fixed_bitfield(custom_purposes_num)?;
 
         Ok(Self {
             purpose_express_consents,

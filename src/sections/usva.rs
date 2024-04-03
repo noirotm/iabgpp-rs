@@ -149,7 +149,7 @@ impl FromDataReader for Core {
     type Err = SectionDecodeError;
 
     fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
-        let version = r.read_fixed_integer::<u8>(6)?;
+        let version = r.read_fixed_integer(6)?;
         if version != US_VA_VERSION {
             return Err(SectionDecodeError::InvalidSegmentVersion {
                 expected: US_VA_VERSION,

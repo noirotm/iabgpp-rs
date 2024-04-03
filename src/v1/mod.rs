@@ -150,12 +150,12 @@ fn extract_gpp_sections_from_str(s: &str) -> Result<(Vec<SectionId>, Vec<&str>),
     let header = header_str.decode_base64_url()?;
     let mut reader = DataReader::new(&header);
 
-    let header_type = reader.read_fixed_integer::<u8>(6)?;
+    let header_type = reader.read_fixed_integer(6)?;
     if header_type != GPP_HEADER {
         return Err(GPPDecodeError::InvalidHeaderType { found: header_type });
     }
 
-    let gpp_version = reader.read_fixed_integer::<u8>(6)?;
+    let gpp_version = reader.read_fixed_integer(6)?;
     if gpp_version != GPP_VERSION {
         return Err(GPPDecodeError::InvalidGPPVersion { found: gpp_version });
     }

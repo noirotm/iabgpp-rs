@@ -169,7 +169,7 @@ impl FromDataReader for UsCa {
 
 impl OptionalSegmentParser for UsCa {
     fn read_segment_type(r: &mut DataReader) -> Result<u8, SectionDecodeError> {
-        Ok(r.read_fixed_integer::<u8>(2)?)
+        Ok(r.read_fixed_integer(2)?)
     }
 
     fn parse_optional_segment(
@@ -210,7 +210,7 @@ impl FromDataReader for Core {
     type Err = SectionDecodeError;
 
     fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
-        let version = r.read_fixed_integer::<u8>(6)?;
+        let version = r.read_fixed_integer(6)?;
         if version != US_CA_VERSION {
             return Err(SectionDecodeError::InvalidSegmentVersion {
                 expected: US_CA_VERSION,
