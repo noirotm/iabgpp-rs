@@ -1,6 +1,7 @@
-use crate::core::{DataReader, FromDataReader};
+use crate::core::{DataReader, FromDataReader, Range};
 use crate::sections::{IdSet, OptionalSegmentParser, SectionDecodeError, SegmentedStr};
-use std::iter::repeat_with;
+use num_derive::FromPrimitive;
+use num_traits::FromPrimitive;
 use std::str::FromStr;
 
 const TCF_EU_V2_VERSION: u8 = 2;
@@ -106,11 +107,11 @@ impl FromDataReader for Core {
         let publisher_country_code = r.read_string(2)?;
         let vendor_consents = r.read_optimized_integer_range()?;
         let vendor_legitimate_interests = r.read_optimized_integer_range()?;
-
-        let publisher_restrictions_num = r.read_fixed_integer::<u8>(6)? as usize;
-        let publisher_restrictions = repeat_with(|| r.parse())
-            .take(publisher_restrictions_num)
-            .collect::<Result<_, _>>()?;
+        let publisher_restrictions = r
+            .read_array_of_ranges()?
+            .into_iter()
+            .map(PublisherRestriction::from)
+            .collect();
 
         Ok(Self {
             created,
@@ -142,34 +143,23 @@ pub struct PublisherRestriction {
     pub restricted_vendor_ids: IdSet,
 }
 
-impl FromDataReader for PublisherRestriction {
-    type Err = SectionDecodeError;
-
-    fn from_data_reader(r: &mut DataReader) -> Result<Self, SectionDecodeError> {
-        let purpose_id = r.read_fixed_integer(6)?;
-        let restriction_type = match r.read_fixed_integer(2)? {
-            0 => RestrictionType::NotAllowed,
-            1 => RestrictionType::RequireConsent,
-            2 => RestrictionType::RequireLegitimateInterest,
-            3 => RestrictionType::Undefined,
-            _ => unreachable!(), // any other value can't exist here as we read 2 bits only
-        };
-        let restricted_vendor_ids = r.read_optimized_integer_range()?;
-
-        Ok(Self {
-            purpose_id,
-            restriction_type,
-            restricted_vendor_ids,
-        })
+impl From<Range> for PublisherRestriction {
+    fn from(r: Range) -> Self {
+        Self {
+            purpose_id: r.key,
+            restriction_type: RestrictionType::from_u8(r.range_type)
+                .unwrap_or(RestrictionType::Undefined),
+            restricted_vendor_ids: r.ids,
+        }
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, FromPrimitive)]
 pub enum RestrictionType {
-    NotAllowed,
-    RequireConsent,
-    RequireLegitimateInterest,
-    Undefined,
+    NotAllowed = 0,
+    RequireConsent = 1,
+    RequireLegitimateInterest = 2,
+    Undefined = 3,
 }
 
 #[derive(Debug, Eq, PartialEq)]
