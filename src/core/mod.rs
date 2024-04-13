@@ -30,6 +30,15 @@ pub struct DataReader<'a> {
     bit_reader: BitReader<&'a [u8], BigEndian>,
 }
 
+#[derive(Debug, Eq, PartialEq)]
+pub struct GenericRange<X, Y> {
+    pub key: X,
+    pub range_type: Y,
+    pub ids: BTreeSet<u16>,
+}
+
+pub type Range = GenericRange<u8, u8>;
+
 impl<'a> DataReader<'a> {
     pub fn new(bytes: &'a [u8]) -> Self {
         Self {
@@ -174,6 +183,50 @@ impl<'a> DataReader<'a> {
             self.read_fixed_bitfield(n)
         }
     }
+
+    pub fn read_array_of_ranges(&mut self) -> io::Result<Vec<Range>> {
+        let n = self.read_fixed_integer::<u16>(12)? as usize;
+        let mut ranges = vec![];
+
+        for _ in 0..n {
+            let key = self.read_fixed_integer(6)?;
+            let range_type = self.read_fixed_integer(2)?;
+            let ids = self.read_optimized_integer_range()?;
+            ranges.push(Range {
+                key,
+                range_type,
+                ids,
+            });
+        }
+
+        Ok(ranges)
+    }
+
+    pub fn read_n_array_of_ranges<X, Y>(
+        &mut self,
+        x: u32,
+        y: u32,
+    ) -> io::Result<Vec<GenericRange<X, Y>>>
+    where
+        X: Numeric,
+        Y: Numeric,
+    {
+        let n = self.read_fixed_integer::<u16>(12)? as usize;
+        let mut ranges = vec![];
+
+        for _ in 0..n {
+            let key = self.read_fixed_integer::<X>(x)?;
+            let range_type = self.read_fixed_integer::<Y>(y)?;
+            let ids = self.read_optimized_range()?;
+            ranges.push(GenericRange {
+                key,
+                range_type,
+                ids,
+            });
+        }
+
+        Ok(ranges)
+    }
 }
 
 #[cfg(test)]
@@ -271,6 +324,56 @@ mod tests {
     fn read_optimized_int_range(s: &str) -> BTreeSet<u16> {
         DataReader::new(&b(s))
             .read_optimized_integer_range()
+            .unwrap()
+    }
+
+    #[test_case("000000000000" => Vec::<Range>::new() ; "empty")]
+    #[test_case("000000000001 000011 01 0000000000000101 0 10101" => vec![
+        Range {
+            key: 3,
+            range_type: 1,
+            ids: BTreeSet::from_iter([1, 3, 5]),
+        },
+    ] ; "1 element")]
+    #[test_case("000000000010 000011 01 0000000000000101 0 10101 000010 10 0000000000000000 1 000000000010 0 0000000000000011 1 0000000000000101 0000000000001000" => vec![
+        Range {
+            key: 3,
+            range_type: 1,
+            ids: BTreeSet::from_iter([1, 3, 5]),
+        },
+        Range {
+            key: 2,
+            range_type: 2,
+            ids: BTreeSet::from_iter([3, 5, 6, 7, 8]),
+        },
+    ] ; "2 elements")]
+    fn read_array_of_ranges(s: &str) -> Vec<Range> {
+        DataReader::new(&b(s)).read_array_of_ranges().unwrap()
+    }
+
+    #[test_case("000000000000" => Vec::<GenericRange<u8, u8>>::new() ; "empty")]
+    #[test_case("000000000001 000011 01 0 0000000000000101 10101" => vec![
+        Range {
+            key: 3,
+            range_type: 1,
+            ids: BTreeSet::from_iter([1, 3, 5]),
+        },
+    ] ; "1 element")]
+    #[test_case("000000000010 000011 01 0 0000000000000101 10101 000010 10 1 000000000010 0 0011 1 011 0011" => vec![
+        Range {
+            key: 3,
+            range_type: 1,
+            ids: BTreeSet::from_iter([1, 3, 5]),
+        },
+        Range {
+            key: 2,
+            range_type: 2,
+            ids: BTreeSet::from_iter([3, 5, 6, 7, 8]),
+        },
+    ] ; "2 elements")]
+    fn read_n_array_of_ranges(s: &str) -> Vec<GenericRange<u8, u8>> {
+        DataReader::new(&b(s))
+            .read_n_array_of_ranges::<u8, u8>(6, 2)
             .unwrap()
     }
 }
