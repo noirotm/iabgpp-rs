@@ -10,8 +10,9 @@ pub enum DecodeError {
 /// Custom base64 implementation, 6-bits aligned, no padding,
 /// using the URL Safe Base64 dictionary.
 pub fn decode(s: &str) -> Result<Vec<u8>, DecodeError> {
-    // output buffer should not be larger than input string, so we pre-allocate enough bytes as to avoid realloc
-    // which is slow, and could cause allocation of a bigger capacity than needed (x2 or more)
+    // output buffer should not be larger than input string, so we pre-allocate enough bytes to
+    // avoid realloc which is slow, and could cause allocation of a bigger capacity than needed
+    // (x2 or more)
     let mut buffer = Vec::with_capacity(s.len());
     let mut bw = BitWriter::endian(&mut buffer, BigEndian);
 
