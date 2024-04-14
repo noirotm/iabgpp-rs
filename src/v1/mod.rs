@@ -306,4 +306,27 @@ mod tests {
             })
         ));
     }
+
+    #[test]
+    fn non_gpp_tcfeuv2_string() {
+        let r = GPPString::from_str("CP48G0AP48G0AEsACCPLAkEgAAAAAEPgAB5YAAAQaQD2F2K2kKFkPCmQWYAQBCijYEAhQAAAAkCBIAAgAUgQAgFIIAgAIFAAAAAAAAAQEgCQAAQABAAAIACgAAAAAAIAAAAAAAQQAAAAAIAAAAAAAAEAAAAAAAQAAAAIAABEhCAAQQAEAAAAAAAQAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAgAA");
+        assert!(matches!(
+            r,
+            Err(GPPDecodeError::InvalidHeaderType { found: 2 })
+        ));
+    }
+
+    #[test]
+    fn invalid_tcfca_section() {
+        let r = GPPString::from_str("DBABjw~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN")
+            .unwrap()
+            .decode_all_sections();
+        assert!(matches!(
+            r,
+            Err(SectionDecodeError::InvalidSegmentVersion {
+                expected: 1,
+                found: 2,
+            })
+        ));
+    }
 }
