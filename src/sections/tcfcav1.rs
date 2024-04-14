@@ -1,13 +1,17 @@
-use crate::core::{DataReader, FromDataReader};
+use crate::core::{DataReader, FromDataReader, GenericRange};
 use crate::sections::{IdSet, OptionalSegmentParser, SectionDecodeError, SegmentedStr};
+use num_derive::FromPrimitive;
+use num_traits::FromPrimitive;
 use std::str::FromStr;
 
 const TCF_CA_V1_VERSION: u8 = 1;
-const TCF_CA_V1_PUBLISHER_PURPOSES_SEGMENT_TYPE: u8 = 3;
+const TCF_CA_V1_DISCLOSED_VENDORS_SUB_SECTION_TYPE: u8 = 1;
+const TCF_CA_V1_PUBLISHER_PURPOSES_SUB_SECTION_TYPE: u8 = 3;
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct TcfCaV1 {
     pub core: Core,
+    pub disclosed_vendors: Option<IdSet>,
     pub publisher_purposes: Option<PublisherPurposes>,
 }
 
@@ -25,6 +29,7 @@ impl FromDataReader for TcfCaV1 {
     fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
         Ok(Self {
             core: r.parse()?,
+            disclosed_vendors: None,
             publisher_purposes: None,
         })
     }
@@ -37,7 +42,10 @@ impl OptionalSegmentParser for TcfCaV1 {
         into: &mut Self,
     ) -> Result<(), SectionDecodeError> {
         match segment_type {
-            TCF_CA_V1_PUBLISHER_PURPOSES_SEGMENT_TYPE => {
+            TCF_CA_V1_DISCLOSED_VENDORS_SUB_SECTION_TYPE => {
+                into.disclosed_vendors = Some(r.read_optimized_range()?);
+            }
+            TCF_CA_V1_PUBLISHER_PURPOSES_SUB_SECTION_TYPE => {
                 into.publisher_purposes = Some(r.parse()?);
             }
             n => {
@@ -64,6 +72,8 @@ pub struct Core {
     pub purpose_implied_consents: IdSet,
     pub vendor_express_consents: IdSet,
     pub vendor_implied_consents: IdSet,
+    /// Introduced in TCF CA v1.1
+    pub pub_restrictions: Vec<PublisherRestriction>,
 }
 
 impl FromDataReader for Core {
@@ -92,6 +102,17 @@ impl FromDataReader for Core {
         let purpose_implied_consents = r.read_fixed_bitfield(24)?;
         let vendor_express_consents = r.read_optimized_range()?;
         let vendor_implied_consents = r.read_optimized_range()?;
+        let pub_restrictions = r
+            .read_n_array_of_ranges(6, 2)
+            .unwrap_or_default()
+            .into_iter()
+            .map(|r| PublisherRestriction {
+                purpose_id: r.key,
+                restriction_type: RestrictionType::from_u8(r.range_type)
+                    .unwrap_or(RestrictionType::Undefined),
+                restricted_vendor_ids: r.ids,
+            })
+            .collect();
 
         Ok(Self {
             created,
@@ -108,8 +129,35 @@ impl FromDataReader for Core {
             purpose_implied_consents,
             vendor_express_consents,
             vendor_implied_consents,
+            pub_restrictions,
         })
     }
+}
+
+#[derive(Debug, Eq, PartialEq)]
+pub struct PublisherRestriction {
+    pub purpose_id: u8,
+    pub restriction_type: RestrictionType,
+    pub restricted_vendor_ids: IdSet,
+}
+
+impl From<GenericRange<u8, u8>> for PublisherRestriction {
+    fn from(r: GenericRange<u8, u8>) -> Self {
+        Self {
+            purpose_id: r.key,
+            restriction_type: RestrictionType::from_u8(r.range_type)
+                .unwrap_or(RestrictionType::Undefined),
+            restricted_vendor_ids: r.ids,
+        }
+    }
+}
+
+#[derive(Debug, Eq, PartialEq, FromPrimitive)]
+pub enum RestrictionType {
+    NotAllowed = 0,
+    RequireExpressConsent = 1,
+    RequireImpliedConsent = 2,
+    Undefined = 3,
 }
 
 #[derive(Debug, Eq, PartialEq)]
@@ -163,7 +211,9 @@ mod tests {
                 purpose_implied_consents: Default::default(),
                 vendor_express_consents: Default::default(),
                 vendor_implied_consents: Default::default(),
+                pub_restrictions: Default::default(),
             },
+            disclosed_vendors: None,
             publisher_purposes: None,
         };
 
@@ -190,7 +240,9 @@ mod tests {
                 purpose_implied_consents: Default::default(),
                 vendor_express_consents: Default::default(),
                 vendor_implied_consents: Default::default(),
+                pub_restrictions: Default::default(),
             },
+            disclosed_vendors: None,
             publisher_purposes: Some(PublisherPurposes {
                 purpose_express_consents: Default::default(),
                 purpose_implied_consents: Default::default(),
