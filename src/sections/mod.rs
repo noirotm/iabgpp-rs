@@ -165,8 +165,8 @@ where
 
         // parse each optional segment and fill the output
         for s in sections_iter {
-            let s = s.decode_base64_url()?;
-            let mut r = DataReader::new(&s);
+            let b = s.decode_base64_url()?;
+            let mut r = DataReader::new(&b);
 
             let segment_type = T::read_segment_type(&mut r)?;
             T::parse_optional_segment(segment_type, &mut r, &mut output)?;
