@@ -64,6 +64,7 @@ impl ToGPPStr for &str {
     }
 }
 
+#[derive(Debug)]
 pub struct GPPStr<'a> {
     section_ids: Vec<SectionId>,
     sections: FnvHashMap<SectionId, &'a str>,
@@ -96,6 +97,7 @@ impl<'a> SectionMapper for GPPStr<'a> {
     }
 }
 
+#[derive(Debug)]
 pub struct GPPString {
     section_ids: Vec<SectionId>,
     sections: FnvHashMap<SectionId, String>,
