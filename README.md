@@ -23,14 +23,13 @@ iab-gpp = "0.1"
 main.rs:
 
 ```rust
-use iab_gpp::GPPStr;
+use iab_gpp::v1::{GPPStr, SectionMapper};
 
 fn main() {
-    let s = "DBACNYA~CPSG_8APSG_8ANwAAAENAwCAAAAAAAAAAAAAAAAAAAAA.QAAA.IAAA~1YNN";
+    let s = "DBABM~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA";
     let gpp_str = GPPStr::extract_from_str(s).expect("a valid GPP string");
-    let section_ids = gpp_str.section_ids();
 
-    for id in section_ids {
+    for &id in gpp_str.section_ids() {
         println!("Section id: {:?}", id);
 
         let section = gpp_str.decode_section(id).expect("a valid section");
@@ -60,7 +59,7 @@ Legend:
 | EU TCF v2.2            |   ✔️    |    ❌    |
 | EU TCF v1 (deprecated) |   ✔️    |    ❌    |
 | Canadian TCF v1        |   ✔️    |    ❌    |
-| Canadian TCF v1.1      |    ❌    |    ❌    |
+| Canadian TCF v1.1      |   ✔️    |    ❌    |
 | US - National v1       |   ✔️    |    ❌    |
 | US - California v1     |   ✔️    |    ❌    |
 | US - Virginia v1       |   ✔️    |    ❌    |
