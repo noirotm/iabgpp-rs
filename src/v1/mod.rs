@@ -41,16 +41,18 @@ pub trait SectionMapper {
             .collect()
     }
 
-    fn decode_section(&self, id: SectionId) -> Option<Result<Section, SectionDecodeError>> {
-        let s = self.section(id)?;
-        Some(decode_section(id, s))
+    fn decode_section(&self, id: SectionId) -> Result<Section, SectionDecodeError> {
+        let s = self
+            .section(id)
+            .ok_or(SectionDecodeError::MissingSection(id))?;
+        decode_section(id, s)
     }
 
-    fn decode_all_sections(&self) -> Result<Vec<Section>, SectionDecodeError> {
+    fn decode_all_sections(&self) -> Vec<Result<Section, SectionDecodeError>> {
         self.section_ids()
             .iter()
-            .filter_map(|id| self.decode_section(*id))
-            .collect::<Result<Vec<_>, _>>()
+            .map(|id| self.decode_section(*id))
+            .collect()
     }
 }
 
@@ -210,7 +212,7 @@ mod tests {
         let s = GPPString::from_str(s).unwrap();
         s.section_ids
             .iter()
-            .map(|id| s.decode_section(*id).unwrap().unwrap().id())
+            .map(|id| s.decode_section(*id).unwrap().id())
             .collect()
     }
 
@@ -221,9 +223,8 @@ mod tests {
         GPPString::from_str(s)
             .unwrap()
             .decode_all_sections()
-            .unwrap()
-            .iter()
-            .map(|s| s.id())
+            .into_iter()
+            .map(|s| s.unwrap().id())
             .collect()
     }
 
@@ -253,7 +254,7 @@ mod tests {
         let s = GPPStr::extract_from_str(s).unwrap();
         s.section_ids
             .iter()
-            .map(|id| s.decode_section(*id).unwrap().unwrap().id())
+            .map(|id| s.decode_section(*id).unwrap().id())
             .collect()
     }
 
@@ -264,9 +265,8 @@ mod tests {
         GPPStr::extract_from_str(s)
             .unwrap()
             .decode_all_sections()
-            .unwrap()
-            .iter()
-            .map(|s| s.id())
+            .into_iter()
+            .map(|s| s.unwrap().id())
             .collect()
     }
 
@@ -322,7 +322,7 @@ mod tests {
             .unwrap()
             .decode_all_sections();
         assert!(matches!(
-            r,
+            r[0],
             Err(SectionDecodeError::InvalidSegmentVersion {
                 expected: 1,
                 found: 2,

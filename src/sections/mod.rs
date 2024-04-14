@@ -11,9 +11,9 @@ use crate::sections::uspv1::UspV1;
 use crate::sections::usut::UsUt;
 use crate::sections::usva::UsVa;
 use num_derive::{FromPrimitive, ToPrimitive};
-use num_traits::ToPrimitive;
 use std::collections::BTreeSet;
 use std::io;
+use strum_macros::Display;
 use thiserror::Error;
 
 pub mod tcfcav1;
@@ -27,7 +27,7 @@ pub mod uspv1;
 pub mod usut;
 pub mod usva;
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash, FromPrimitive, ToPrimitive)]
+#[derive(Clone, Copy, Debug, Display, Eq, PartialEq, Hash, FromPrimitive, ToPrimitive)]
 pub enum SectionId {
     TcfEuV1 = 1,
     TcfEuV2 = 2,
@@ -47,8 +47,10 @@ pub type IdSet = BTreeSet<u16>;
 
 #[derive(Error, Debug)]
 pub enum SectionDecodeError {
+    #[error("missing section {0}")]
+    MissingSection(SectionId),
     #[error("unsupported section id {0}")]
-    UnsupportedSectionId(u8),
+    UnsupportedSectionId(SectionId),
     #[error("unable to read string")]
     Read(#[from] io::Error),
     #[error("unexpected end of string in {0}")]
@@ -118,9 +120,7 @@ pub(crate) fn decode_section(id: SectionId, s: &str) -> Result<Section, SectionD
         SectionId::UsCo => Section::UsCo(s.parse()?),
         SectionId::UsUt => Section::UsUt(s.parse()?),
         SectionId::UsCt => Section::UsCt(s.parse()?),
-        id => Err(SectionDecodeError::UnsupportedSectionId(
-            id.to_u8().expect("existing section id"),
-        ))?,
+        id => Err(SectionDecodeError::UnsupportedSectionId(id))?,
     })
 }
 
