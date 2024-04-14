@@ -1,4 +1,4 @@
-use iab_gpp::v1::{GPPStr, SectionMapper};
+use iab_gpp::v1::{GPPStr, SectionDecoder};
 use std::env::args;
 use std::error::Error;
 

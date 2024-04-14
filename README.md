@@ -23,7 +23,7 @@ iab-gpp = "0.1"
 main.rs:
 
 ```rust
-use iab_gpp::v1::{GPPStr, SectionMapper};
+use iab_gpp::v1::{GPPStr, SectionDecoder};
 
 fn main() {
     let s = "DBABM~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA";

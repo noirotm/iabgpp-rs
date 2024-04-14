@@ -30,7 +30,7 @@ pub enum GPPDecodeError {
     SectionDecode(#[from] SectionDecodeError),
 }
 
-pub trait SectionMapper {
+pub trait SectionDecoder {
     fn section(&self, id: SectionId) -> Option<&str>;
     fn section_ids(&self) -> &[SectionId];
 
@@ -89,7 +89,7 @@ impl<'a> GPPStr<'a> {
     }
 }
 
-impl<'a> SectionMapper for GPPStr<'a> {
+impl<'a> SectionDecoder for GPPStr<'a> {
     fn section(&self, id: SectionId) -> Option<&str> {
         self.sections.get(&id).copied()
     }
@@ -137,7 +137,7 @@ impl FromStr for GPPString {
     }
 }
 
-impl SectionMapper for GPPString {
+impl SectionDecoder for GPPString {
     fn section(&self, id: SectionId) -> Option<&str> {
         self.sections.get(&id).map(|s| s.as_str())
     }
