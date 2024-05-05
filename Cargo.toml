@@ -1,6 +1,6 @@
 [package]
 name = "iab-gpp"
-version = "0.0.0"
+version = "0.1.0"
 edition = "2021"
 authors = ["Marc Noirot <marc.noirot@gmail.com>"]
 description = "IAB GPP Consent String implementation"

@@ -18,7 +18,7 @@ pub struct UsCt {
 impl UsCt {
     /// Checks the consistency of values in the already populated fields.
     ///
-    /// This is based on the code found in https://iabgpp.com/js/3.2.0/cmpapi/encoder/segment/UsCtV1CoreSegment.js.
+    /// This is based on the code found in <https://iabgpp.com/js/3.2.0/cmpapi/encoder/segment/UsCtV1CoreSegment.js>.
     ///
     /// While CMPs shouldn't be able to generate invalid combinations, the binary wire format
     /// does not prevent it.

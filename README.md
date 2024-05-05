@@ -1,7 +1,7 @@
 # iabgpp-rs
 
-Rust implementation of the IAB Global Privacy Platform
-(GPP) [consent string specification](https://github.com/InteractiveAdvertisingBureau/Global-Privacy-Platform).
+Rust implementation of the IAB Global Privacy Platform (GPP)
+[consent string specification](https://github.com/InteractiveAdvertisingBureau/Global-Privacy-Platform/blob/main/Core/Consent%20String%20Specification.md).
 
 ⚠️ This is work in progress.
 
@@ -10,6 +10,7 @@ Rust implementation of the IAB Global Privacy Platform
 - Eager or lazy decoding of GPP sections
 - Owning type (GPPString)
 - Reference type (GPPStr)
+- Read support for all current GPP sections
 
 ## Usage example
 
@@ -23,11 +24,13 @@ iab-gpp = "0.1"
 main.rs:
 
 ```rust
-use iab_gpp::v1::{GPPStr, SectionDecoder};
+use std::error::Error;
+use std::str::FromStr;
+use iab_gpp::v1::GPPString;
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     let s = "DBABM~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA";
-    let gpp_str = GPPStr::extract_from_str(s).expect("a valid GPP string");
+    let gpp_str = GPPString::from_str(s).expect("a valid GPP string");
 
     for &id in gpp_str.section_ids() {
         println!("Section id: {:?}", id);
@@ -48,24 +51,24 @@ incompatibilities.
 
 Legend:
 
-- ✔️ complete support
+- ✅ complete support
 - 🧪 experimental or partial support
 - ❌ no support
 
-| Section                | Reading | Writing |
-|------------------------|:-------:|:-------:|
-| Global GPP string v1   |   ✔️    |    ❌    |
-| US Privacy v1          |   ✔️    |    ❌    |
-| EU TCF v2.2            |   ✔️    |    ❌    |
-| EU TCF v1 (deprecated) |   ✔️    |    ❌    |
-| Canadian TCF v1        |   ✔️    |    ❌    |
-| Canadian TCF v1.1      |   ✔️    |    ❌    |
-| US - National v1       |   ✔️    |    ❌    |
-| US - California v1     |   ✔️    |    ❌    |
-| US - Virginia v1       |   ✔️    |    ❌    |
-| US - Colorado v1       |   ✔️    |    ❌    |
-| US - Utah v1           |   ✔️    |    ❌    |
-| US - Connecticut v1    |   ✔️    |    ❌    |
+| Section                      | Reading | Writing |
+|------------------------------|:-------:|:-------:|
+| GPP string v1                |    ✅    |    ❌    |
+| US Privacy v1 (deprecated)   |    ✅    |    ❌    |
+| EU TCF v2.2                  |    ✅    |    ❌    |
+| EU TCF v1 (deprecated)       |    ✅    |    ❌    |
+| Canadian TCF v1 (deprecated) |    ✅    |    ❌    |
+| Canadian TCF v1.1            |    ✅    |    ❌    |
+| US - National v1             |    ✅    |    ❌    |
+| US - California v1           |    ✅    |    ❌    |
+| US - Virginia v1             |    ✅    |    ❌    |
+| US - Colorado v1             |    ✅    |    ❌    |
+| US - Utah v1                 |    ✅    |    ❌    |
+| US - Connecticut v1          |    ✅    |    ❌    |
 
 ## Development status
 

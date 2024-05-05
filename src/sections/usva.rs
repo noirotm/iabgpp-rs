@@ -14,7 +14,7 @@ pub struct UsVa {
 impl UsVa {
     /// Checks the consistency of values in the already populated fields.
     ///
-    /// This is based on the code found in https://iabgpp.com/js/3.2.0/cmpapi/encoder/segment/UsVaV1CoreSegment.js.
+    /// This is based on the code found in <https://iabgpp.com/js/3.2.0/cmpapi/encoder/segment/UsVaV1CoreSegment.js>.
     ///
     /// While CMPs shouldn't be able to generate invalid combinations, the binary wire format
     /// does not prevent it.

@@ -1,3 +1,57 @@
+//! Version 1 of the IAB Global Privacy Platform string.
+//!
+//! A GPP string contains a header which lists the sections which are present
+//! in the next optional parts.
+//!
+//! A typical GPP string will look like this:
+//!
+//! ```text
+//! DBACNY~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN
+//! ```
+//!
+//! It contains a header (`DBACNY`) and two sections separated by a `~` character.
+//!
+//! GPP string sections are usually encoded in a variation of URL-safe Base64.
+//!
+//! It is not mandatory though, and certain sections, such as the deprecated USP v1 are using
+//! a simpler character set.
+//! In the example above, the first section is a base64 encoded TCF EU v2.2 section.
+//! The second section is a USP v1 section where `Y` and `N` characters simply mean yes and no
+//! respectively.
+//!
+//! In order to obtain a [`GPPString`] instance, several ways are possible.
+//!
+//! # Examples
+//!
+//! You can use the [`FromStr`] trait directly to try to parse a consent string:
+//!
+//! ```
+//! # use std::error::Error;
+//! #
+//! # fn main() -> Result<(), Box<dyn Error>> {
+//! use std::str::FromStr;
+//! use iab_gpp::v1::GPPString;
+//!
+//! let s = GPPString::from_str("DBABTA~1YNN")?;
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! You can also use [`str::parse`]:
+//!
+//! ```
+//! # use std::error::Error;
+//! #
+//! # fn main() -> Result<(), Box<dyn Error>> {
+//! use iab_gpp::v1::GPPString;
+//!
+//! let s: GPPString = "DBABTA~1YNN".parse()?;
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! If parsing fails, a [`GPPDecodeError`] will be returned instead.
+//!
 use crate::core::base64::DecodeError;
 use crate::core::{DataReader, DecodeExt};
 use crate::sections::{decode_section, DecodableSection, Section, SectionDecodeError, SectionId};
@@ -30,6 +84,13 @@ pub enum GPPDecodeError {
     SectionDecode(#[from] SectionDecodeError),
 }
 
+/// The representation of a parsed GPP consent string.
+///
+/// This structure gives access to the list of section IDs which it contains, as well as the raw
+/// section strings.
+///
+/// It also offers methods to decode either a specific section, or all sections at once.
+///
 #[derive(Debug)]
 pub struct GPPString {
     section_ids: Vec<SectionId>,
@@ -37,10 +98,25 @@ pub struct GPPString {
 }
 
 impl GPPString {
+    /// Returns a reference to a raw section contained in this GPP string.
+    ///
+    /// The method takes the section ID as parameter, and returns the reference
+    /// to the raw string representing that section.
+    ///
+    /// If the given section is not present within the GPP string, the method returns None.
+    ///
+    /// # Example
+    ///
+    /// ```
+    ///
+    /// ```
     pub fn section(&self, id: SectionId) -> Option<&str> {
         self.sections.get(&id).map(|s| s.as_str())
     }
 
+    /// Returns the list of section IDs present in this GPP string.
+    ///
+    /// The list is returned as a slice.
     pub fn section_ids(&self) -> &[SectionId] {
         &self.section_ids
     }
