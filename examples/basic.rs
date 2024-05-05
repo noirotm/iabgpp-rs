@@ -1,8 +1,9 @@
-use iab_gpp::v1::{GPPStr, SectionDecoder};
+use iab_gpp::v1::GPPString;
+use std::str::FromStr;
 
 fn main() {
     let s = "DBABM~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA";
-    let gpp_str = GPPStr::extract_from_str(s).expect("a valid GPP string");
+    let gpp_str = GPPString::from_str(s).expect("a valid GPP string");
 
     for &id in gpp_str.section_ids() {
         println!("Section id: {:?}", id);
