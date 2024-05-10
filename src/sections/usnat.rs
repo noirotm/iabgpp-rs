@@ -1,5 +1,7 @@
 use crate::core::{DataReader, FromDataReader};
-use crate::sections::{OptionalSegmentParser, SectionDecodeError, SegmentedStr};
+use crate::sections::{
+    DecodableSection, OptionalSegmentParser, SectionDecodeError, SectionId, SegmentedStr,
+};
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::{FromPrimitive, ToPrimitive};
 use std::str::FromStr;
@@ -170,6 +172,10 @@ impl ValidationError {
             field2: (field2, val2.to_u8().unwrap_or_default()),
         }
     }
+}
+
+impl DecodableSection for UsNat {
+    const ID: SectionId = SectionId::UsNat;
 }
 
 impl FromStr for UsNat {

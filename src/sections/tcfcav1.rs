@@ -1,5 +1,7 @@
 use crate::core::{DataReader, FromDataReader, GenericRange};
-use crate::sections::{IdSet, OptionalSegmentParser, SectionDecodeError, SegmentedStr};
+use crate::sections::{
+    DecodableSection, IdSet, OptionalSegmentParser, SectionDecodeError, SectionId, SegmentedStr,
+};
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 use std::str::FromStr;
@@ -13,6 +15,10 @@ pub struct TcfCaV1 {
     pub core: Core,
     pub disclosed_vendors: Option<IdSet>,
     pub publisher_purposes: Option<PublisherPurposes>,
+}
+
+impl DecodableSection for TcfCaV1 {
+    const ID: SectionId = SectionId::TcfCaV1;
 }
 
 impl FromStr for TcfCaV1 {

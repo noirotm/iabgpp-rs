@@ -1,4 +1,4 @@
-use crate::sections::SectionDecodeError;
+use crate::sections::{DecodableSection, SectionDecodeError, SectionId};
 use std::str::{Chars, FromStr};
 
 const USP_V1_VERSION: u8 = 1;
@@ -22,16 +22,20 @@ impl Char {
     }
 }
 
-type Notice = Char;
-type OptOut = Char;
-type Covered = Char;
+pub type Notice = Char;
+pub type OptOut = Char;
+pub type Covered = Char;
 
 // See https://github.com/InteractiveAdvertisingBureau/USPrivacy/blob/master/CCPA/US%20Privacy%20String.md#us-privacy-string-format
 #[derive(Debug, Eq, PartialEq)]
 pub struct UspV1 {
-    opt_out_notice: Notice,
-    opt_out_sale: OptOut,
-    lspa_covered: Covered,
+    pub opt_out_notice: Notice,
+    pub opt_out_sale: OptOut,
+    pub lspa_covered: Covered,
+}
+
+impl DecodableSection for UspV1 {
+    const ID: SectionId = SectionId::UspV1;
 }
 
 impl FromStr for UspV1 {

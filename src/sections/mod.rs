@@ -13,6 +13,7 @@ use crate::sections::usva::UsVa;
 use num_derive::{FromPrimitive, ToPrimitive};
 use std::collections::BTreeSet;
 use std::io;
+use std::str::FromStr;
 use strum_macros::Display;
 use thiserror::Error;
 
@@ -41,6 +42,10 @@ pub enum SectionId {
     UsCo = 10,
     UsUt = 11,
     UsCt = 12,
+}
+
+pub trait DecodableSection: FromStr<Err = SectionDecodeError> {
+    const ID: SectionId;
 }
 
 pub type IdSet = BTreeSet<u16>;

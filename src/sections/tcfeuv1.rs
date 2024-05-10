@@ -1,5 +1,5 @@
 use crate::core::{DataReader, FromDataReader};
-use crate::sections::{Base64EncodedStr, IdSet, SectionDecodeError};
+use crate::sections::{Base64EncodedStr, DecodableSection, IdSet, SectionDecodeError, SectionId};
 use std::collections::BTreeSet;
 use std::str::FromStr;
 
@@ -18,6 +18,10 @@ pub struct TcfEuV1 {
     pub vendor_list_version: u16,
     pub purposes_allowed: IdSet,
     pub vendor_consents: IdSet,
+}
+
+impl DecodableSection for TcfEuV1 {
+    const ID: SectionId = SectionId::TcfEuV1;
 }
 
 impl FromStr for TcfEuV1 {

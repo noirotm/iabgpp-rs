@@ -1,6 +1,6 @@
 use crate::core::base64::DecodeError;
 use crate::core::{DataReader, DecodeExt};
-use crate::sections::{decode_section, Section, SectionDecodeError, SectionId};
+use crate::sections::{decode_section, DecodableSection, Section, SectionDecodeError, SectionId};
 use fnv::FnvHashMap;
 use num_traits::FromPrimitive;
 use std::io;
@@ -57,6 +57,15 @@ impl GPPString {
             .section(id)
             .ok_or(SectionDecodeError::MissingSection(id))?;
         decode_section(id, s)
+    }
+
+    pub fn decode<T>(&self) -> Result<T, SectionDecodeError>
+    where
+        T: DecodableSection,
+    {
+        self.section(T::ID)
+            .ok_or(SectionDecodeError::MissingSection(T::ID))?
+            .parse()
     }
 
     pub fn decode_all_sections(&self) -> Vec<Result<Section, SectionDecodeError>> {
@@ -123,7 +132,18 @@ fn extract_gpp_sections_from_str(s: &str) -> Result<(Vec<SectionId>, Vec<&str>),
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::sections::uspv1::UspV1;
     use test_case::test_case;
+
+    #[test_case("DBABjw~BPXuQIAPXuQIAAfKABENB-CgAAAAAAAAAAAAAAAA.YAAAAAAAAAA~1YNN", SectionId::TcfCaV1 => Some("BPXuQIAPXuQIAAfKABENB-CgAAAAAAAAAAAAAAAA.YAAAAAAAAAA".to_string()) ; "tcf ca")]
+    #[test_case("DBABjw~BPXuQIAPXuQIAAfKABENB-CgAAAAAAAAAAAAAAAA.YAAAAAAAAAA~1YNN", SectionId::UspV1 => Some("1YNN".to_string()) ; "usp v1")]
+    #[test_case("DBABjw~BPXuQIAPXuQIAAfKABENB-CgAAAAAAAAAAAAAAAA.YAAAAAAAAAA~1YNN", SectionId::TcfEuV2 => None ; "tcf eu v2")]
+    fn gpp_string_section(s: &str, section_id: SectionId) -> Option<String> {
+        GPPString::from_str(s)
+            .unwrap()
+            .section(section_id)
+            .map(|s| s.to_string())
+    }
 
     #[test_case("DBABM~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA" => vec![SectionId::TcfEuV2] ; "single section")]
     #[test_case("DBACNY~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN" => vec![SectionId::TcfEuV2, SectionId::UspV1] ; "tcf eu and us sections")]
@@ -158,13 +178,37 @@ mod tests {
     #[test_case("DBABM~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA" => vec![SectionId::TcfEuV2] ; "single section")]
     #[test_case("DBACNY~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN" => vec![SectionId::TcfEuV2, SectionId::UspV1] ; "tcf eu and us sections")]
     #[test_case("DBABjw~BPXuQIAPXuQIAAfKABENB-CgAAAAAAAAAAAAAAAA.YAAAAAAAAAA~1YNN" => vec![SectionId::TcfCaV1, SectionId::UspV1] ; "tcf ca and us sections")]
-    fn gpp_str_decode_all(s: &str) -> Vec<SectionId> {
+    fn gpp_string_decode_all(s: &str) -> Vec<SectionId> {
         GPPString::from_str(s)
             .unwrap()
             .decode_all_sections()
             .into_iter()
             .map(|s| s.unwrap().id())
             .collect()
+    }
+
+    #[test_case("DBABTA~1YN-" => UspV1 {
+        opt_out_notice: crate::sections::uspv1::Notice::Yes,
+        opt_out_sale: crate::sections::uspv1::OptOut::No,
+        lspa_covered: crate::sections::uspv1::Covered::NotApplicable,
+    } ; "mix")]
+    #[test_case("DBABTA~1NNN" => UspV1 {
+        opt_out_notice: crate::sections::uspv1::Notice::No,
+        opt_out_sale: crate::sections::uspv1::OptOut::No,
+        lspa_covered: crate::sections::uspv1::Covered::No,
+    } ; "all no")]
+    #[test_case("DBABTA~1YYY" => UspV1 {
+        opt_out_notice: crate::sections::uspv1::Notice::Yes,
+        opt_out_sale: crate::sections::uspv1::OptOut::Yes,
+        lspa_covered: crate::sections::uspv1::Covered::Yes,
+    } ; "all yes")]
+    #[test_case("DBACNY~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN" => UspV1 {
+        opt_out_notice: crate::sections::uspv1::Notice::Yes,
+        opt_out_sale: crate::sections::uspv1::OptOut::No,
+        lspa_covered: crate::sections::uspv1::Covered::No,
+    } ; "with other section")]
+    fn gpp_string_decode_uspv1(s: &str) -> UspV1 {
+        GPPString::from_str(s).unwrap().decode().unwrap()
     }
 
     #[test]
