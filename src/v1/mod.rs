@@ -58,6 +58,8 @@ use crate::sections::{decode_section, DecodableSection, Section, SectionDecodeEr
 use fnv::FnvHashMap;
 use num_traits::FromPrimitive;
 use std::io;
+use std::iter::FusedIterator;
+use std::slice::Iter;
 use std::str::FromStr;
 use thiserror::Error;
 
@@ -117,15 +119,15 @@ impl GPPString {
     /// Returns the list of section IDs present in this GPP string.
     ///
     /// The list is returned as a slice.
-    pub fn section_ids(&self) -> &[SectionId] {
-        &self.section_ids
+    pub fn section_ids(&self) -> SectionIds {
+        SectionIds(self.section_ids.iter())
     }
 
-    pub fn sections(&self) -> Vec<&str> {
-        self.section_ids()
-            .iter()
-            .filter_map(|id| self.section(*id))
-            .collect()
+    pub fn sections(&self) -> Sections {
+        Sections {
+            gpp_str: self,
+            idx: 0,
+        }
     }
 
     pub fn decode_section(&self, id: SectionId) -> Result<Section, SectionDecodeError> {
@@ -145,7 +147,7 @@ impl GPPString {
     }
 
     pub fn decode_all_sections(&self) -> Vec<Result<Section, SectionDecodeError>> {
-        self.section_ids()
+        self.section_ids
             .iter()
             .map(|id| self.decode_section(*id))
             .collect()
@@ -205,6 +207,47 @@ fn extract_gpp_sections_from_str(s: &str) -> Result<(Vec<SectionId>, Vec<&str>),
     Ok((section_ids, sections))
 }
 
+pub struct Sections<'a> {
+    gpp_str: &'a GPPString,
+    idx: usize,
+}
+
+impl<'a> Iterator for Sections<'a> {
+    type Item = &'a str;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let section_id = self.gpp_str.section_ids.get(self.idx)?;
+        self.idx += 1;
+        self.gpp_str.section(*section_id)
+    }
+}
+
+impl<'a> ExactSizeIterator for Sections<'a> {
+    fn len(&self) -> usize {
+        self.gpp_str.section_ids.len()
+    }
+}
+
+impl<'a> FusedIterator for Sections<'a> {}
+
+pub struct SectionIds<'a>(Iter<'a, SectionId>);
+
+impl<'a> Iterator for SectionIds<'a> {
+    type Item = &'a SectionId;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next()
+    }
+}
+
+impl<'a> ExactSizeIterator for SectionIds<'a> {
+    fn len(&self) -> usize {
+        self.0.len()
+    }
+}
+
+impl<'a> FusedIterator for SectionIds<'a> {}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -235,7 +278,6 @@ mod tests {
         GPPString::from_str(s)
             .unwrap()
             .sections()
-            .iter()
             .map(|s| s.to_string())
             .collect()
     }
