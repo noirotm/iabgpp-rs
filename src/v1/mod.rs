@@ -23,34 +23,44 @@
 //!
 //! # Examples
 //!
-//! You can use the [`FromStr`] trait directly to try to parse a consent string:
+//! You can use the [`GPPString::parse_str`] method to try to parse a consent string:
 //!
 //! ```
-//! # use std::error::Error;
-//! #
-//! # fn main() -> Result<(), Box<dyn Error>> {
-//! use std::str::FromStr;
 //! use iab_gpp::v1::GPPString;
+//! use iab_gpp::v1::GPPDecodeError;
 //!
-//! let s = GPPString::from_str("DBABTA~1YNN")?;
-//! # Ok(())
-//! # }
+//! fn main() -> Result<(), GPPDecodeError> {
+//!     let s = GPPString::parse_str("DBABTA~1YNN")?;
+//!     Ok(())
+//! }
+//! ```
+//! Since [`GPPString`] implements the [`FromStr`] trait, you can use it directly to try to parse
+//! a consent string:
+//!
+//! ```
+//! use iab_gpp::v1::GPPString;
+//! use iab_gpp::v1::GPPDecodeError;
+//! use std::str::FromStr;
+//!
+//! fn main() -> Result<(), GPPDecodeError> {
+//!     let s = GPPString::from_str("DBABTA~1YNN")?;
+//!     Ok(())
+//! }
 //! ```
 //!
 //! You can also use [`str::parse`]:
 //!
 //! ```
-//! # use std::error::Error;
-//! #
-//! # fn main() -> Result<(), Box<dyn Error>> {
 //! use iab_gpp::v1::GPPString;
+//! use iab_gpp::v1::GPPDecodeError;
 //!
-//! let s: GPPString = "DBABTA~1YNN".parse()?;
-//! # Ok(())
-//! # }
+//! fn main() -> Result<(), GPPDecodeError> {
+//!     let s: GPPString = "DBABTA~1YNN".parse()?;
+//!     Ok(())
+//! }
 //! ```
 //!
-//! If parsing fails, a [`GPPDecodeError`] will be returned instead.
+//! If parsing fails, a [`GPPDecodeError`] is returned instead.
 //!
 pub use crate::core::base64::DecodeError;
 use crate::core::{DataReader, DecodeExt};
@@ -66,21 +76,35 @@ use thiserror::Error;
 const GPP_HEADER: u8 = 3;
 const GPP_VERSION: u8 = 1;
 
+/// The error type for GPP String decoding operations.
 #[derive(Error, Debug)]
 #[non_exhaustive]
 pub enum GPPDecodeError {
+    /// The string does not contain the mandatory header section.
     #[error("no header found")]
     NoHeaderFound,
+    /// The header section's Base64 representation cannot be decoded.
     #[error("unable to decode header")]
     DecodeHeader(#[from] DecodeError),
+    /// The header has an invalid type for this version of GPP.
     #[error("invalid header type (expected {GPP_HEADER}, found {found})")]
     InvalidHeaderType { found: u8 },
+    /// The header has an invalid GPP version.
+    ///
+    /// Note that there is currently only V1 of the standard.
+    /// If new versions are released, they will be implemented in other modules.
     #[error("invalid GPP version (expected {GPP_VERSION}, found {found})")]
     InvalidGPPVersion { found: u8 },
+    /// An I/O error occured while reading the string.
+    ///
+    /// This usually occurs if the input string is truncated.
     #[error("unable to read string")]
     Read(#[from] io::Error),
+    /// A section with an unknown or unsupported identifier is listed in the string header.
     #[error("unsupported section id {0}")]
     UnsupportedSectionId(u8),
+    /// The number of sections listed in the header does not match the number of actual sections
+    /// present in the string.
     #[error("ids do not match sections (number of ids {ids}, number of sections {sections}")]
     IdSectionMismatch { ids: usize, sections: usize },
 }
@@ -99,29 +123,97 @@ pub struct GPPString {
 }
 
 impl GPPString {
+    /// Parses a string and returns a [`GPPString`] if successful.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`GPPDecodeError`] if unable to parse the string.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use iab_gpp::v1::GPPString;
+    /// use iab_gpp::v1::GPPDecodeError;
+    ///
+    /// let r = GPPString::parse_str("DBABTA~1YNN");
+    ///
+    /// assert!(matches!(r, Ok(gpp_str)));
+    /// ```
+    ///
+    pub fn parse_str(s: &str) -> Result<Self, GPPDecodeError> {
+        s.parse()
+    }
+
     /// Returns a reference to a raw section contained in this GPP string.
     ///
     /// The method takes the section ID as parameter, and returns the reference
     /// to the raw string representing that section.
     ///
-    /// If the given section is not present within the GPP string, the method returns None.
+    /// If the given section is not present within the GPP string, the method returns [`None`].
     ///
     /// # Example
     ///
     /// ```
+    /// use std::str::FromStr;
+    /// use iab_gpp::sections::SectionId;
+    /// use iab_gpp::v1::GPPString;
+    /// use iab_gpp::v1::GPPDecodeError;
     ///
+    /// fn main() -> Result<(), GPPDecodeError> {
+    ///     let gpp_str = GPPString::from_str("DBABTA~1YNN")?;
+    ///     let s = gpp_str.section(SectionId::UspV1);
+    ///
+    ///     assert_eq!(s, Some("1YNN"));
+    ///
+    ///     Ok(())
+    /// }
     /// ```
     pub fn section(&self, id: SectionId) -> Option<&str> {
         self.sections.get(&id).map(|s| s.as_str())
     }
 
-    /// Returns the list of section IDs present in this GPP string.
+    /// Returns an iterator that yields the list of section IDs present in this GPP string.
     ///
-    /// The list is returned as a slice.
+    /// # Example
+    ///
+    /// ```
+    /// use iab_gpp::sections::SectionId;
+    /// use iab_gpp::v1::GPPString;
+    /// use iab_gpp::v1::GPPDecodeError;
+    ///
+    /// fn main() -> Result<(), GPPDecodeError> {
+    ///     let gpp_str = GPPString::parse_str("DBABTA~1YNN")?;
+    ///     let mut it = gpp_str.section_ids();
+    ///
+    ///     assert_eq!(it.next(), Some(&SectionId::UspV1));
+    ///     assert_eq!(it.next(), None);
+    ///
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn section_ids(&self) -> SectionIds {
         SectionIds(self.section_ids.iter())
     }
 
+    /// Returns an iterator that yields the list of raw section strings present in this GPP string.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use iab_gpp::sections::SectionId;
+    /// use iab_gpp::v1::GPPString;
+    /// use iab_gpp::v1::GPPDecodeError;
+    ///
+    /// fn main() -> Result<(), GPPDecodeError> {
+    ///     let gpp_str = GPPString::parse_str("DBABTA~1YNN")?;
+    ///     let mut it = gpp_str.sections();
+    ///
+    ///     assert_eq!(it.next(), Some("1YNN"));
+    ///     assert_eq!(it.next(), None);
+    ///
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn sections(&self) -> Sections {
         Sections {
             gpp_str: self,
@@ -129,6 +221,40 @@ impl GPPString {
         }
     }
 
+    /// Decodes and returns a single section of this GPP string.
+    ///
+    /// Takes the section ID to decode as parameter.
+    ///
+    /// The returned section is wrapped in a [`Section`] enum, meaning that it must be
+    /// explicitly matched. Therefore, this method is better used in loops, or when
+    /// the type of section to parse is not known by advance.
+    ///
+    /// If you know by advance which section type you want to decode, use the generic
+    /// [`decode`](GPPString::decode) method instead.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use iab_gpp::sections::SectionId;
+    /// use iab_gpp::sections::Section;
+    /// use iab_gpp::v1::GPPString;
+    /// use iab_gpp::v1::GPPDecodeError;
+    ///
+    /// fn main() -> Result<(), GPPDecodeError> {
+    ///     let gpp_str = GPPString::parse_str("DBABTA~1YNN")?;
+    ///     let r = gpp_str.decode_section(SectionId::UspV1);
+    ///
+    ///     assert!(matches!(r, Ok(Section::UspV1(_))));
+    ///
+    ///     Ok(())
+    /// }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`SectionDecodeError`] if decoding the section fails or if the section is not
+    /// present in the string.
+    ///
     pub fn decode_section(&self, id: SectionId) -> Result<Section, SectionDecodeError> {
         let s = self
             .section(id)
@@ -136,6 +262,38 @@ impl GPPString {
         decode_section(id, s)
     }
 
+    /// Decodes and returns a single section of this GPP string.
+    ///
+    /// Takes the section to return as a type parameter.
+    ///
+    /// As opposed to [`decode_section`](GPPString::decode_section), the returned section is
+    /// returned directly. This is the easiest method to use if you know which section you expect to
+    /// be present in the string.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use iab_gpp::sections::SectionId;
+    /// use iab_gpp::sections::Section;
+    /// use iab_gpp::sections::uspv1::UspV1;
+    /// use iab_gpp::v1::GPPString;
+    /// use iab_gpp::v1::GPPDecodeError;
+    ///
+    /// fn main() -> Result<(), GPPDecodeError> {
+    ///     let gpp_str = GPPString::parse_str("DBABTA~1YNN")?;
+    ///     let r = gpp_str.decode::<UspV1>();
+    ///
+    ///     assert!(matches!(r, Ok(UspV1{ .. })));
+    ///
+    ///     Ok(())
+    /// }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`SectionDecodeError`] if decoding the section fails or if the section is not
+    /// present in the string.
+    ///
     pub fn decode<T>(&self) -> Result<T, SectionDecodeError>
     where
         T: DecodableSection,
@@ -145,6 +303,34 @@ impl GPPString {
             .parse()
     }
 
+    /// Decodes and returns all sections present in this GPP string.
+    ///
+    /// This is a convenience method which tries to decode all sections, and returns them
+    /// in a [Vec] where each entry is either the decoded section or an error if decoding fails.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use iab_gpp::v1::GPPDecodeError;
+    /// use iab_gpp::v1::GPPString;
+    ///     
+    /// fn main() -> Result<(), GPPDecodeError> {
+    ///     let s = "DBACNY~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN";
+    ///     let gpp_string = GPPString::parse_str(s)?;
+    ///
+    ///     for r in gpp_string.decode_all_sections() {
+    ///         assert!(matches!(r, Ok(_)));
+    ///         println!("Section: {:?}", &r);
+    ///     }
+    ///
+    ///     Ok(())
+    /// }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`SectionDecodeError`] for each section which fails to decode.
+    ///
     pub fn decode_all_sections(&self) -> Vec<Result<Section, SectionDecodeError>> {
         self.section_ids
             .iter()
@@ -206,6 +392,7 @@ fn extract_gpp_sections_from_str(s: &str) -> Result<(Vec<SectionId>, Vec<&str>),
     Ok((section_ids, sections))
 }
 
+/// Created with the method [`sections`](GPPString::sections).
 pub struct Sections<'a> {
     gpp_str: &'a GPPString,
     idx: usize,
@@ -229,6 +416,7 @@ impl<'a> ExactSizeIterator for Sections<'a> {
 
 impl<'a> FusedIterator for Sections<'a> {}
 
+/// Created with the method [`section_ids`](GPPString::section_ids).
 pub struct SectionIds<'a>(Iter<'a, SectionId>);
 
 impl<'a> Iterator for SectionIds<'a> {

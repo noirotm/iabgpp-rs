@@ -1,3 +1,40 @@
+//! Traits, helpers, and type definitions for working with GPP sections.
+//!
+//! All supported section IDs are listed in the [`SectionId`] and [`Section`] enums.
+//!
+//! Implementation of each section is done in its corresponding submodule.
+//! Note that the GPP specification states that each section specification is supposed to be
+//! independent. As a consequence, there is a lot of duplication between implementations of
+//! these sections.
+//!
+//! A few sections are marked as deprecated in the official specification, and other sections
+//! should be used in their place. They are still implemented in this crate and will stay here
+//! for the time being.
+//!
+//! Similarly, if incompatible new versions of sections are added to the standard, they will
+//! be added here, and the previous versions will remain.
+//!
+//! If new versions are backward compatible with older ones, new fields will be added for the
+//! existing version (for example in TCF Canada v1.1 versus v1). For this reason, most of the
+//! section types are marked with the `#[non_exhaustive]` attribute to preserve minor version
+//! compatibility.
+//!
+//! # Supported sections
+//!
+//! | Section                                 | Reading | Writing |
+//! |-----------------------------------------|:-------:|:-------:|
+//! | [US Privacy v1](uspv1) (deprecated)     |    ✅    |    ❌    |
+//! | [EU TCF v2.2](tcfeuv2)                  |    ✅    |    ❌    |
+//! | [EU TCF v1](tcfeuv1) (deprecated)       |    ✅    |    ❌    |
+//! | [Canadian TCF v1](tcfcav1) (deprecated) |    ✅    |    ❌    |
+//! | [Canadian TCF v1.1](tcfcav1)            |    ✅    |    ❌    |
+//! | [US - National v1](usnat)               |    ✅    |    ❌    |
+//! | [US - California v1](usca)              |    ✅    |    ❌    |
+//! | [US - Virginia v1](usva)                |    ✅    |    ❌    |
+//! | [US - Colorado v1](usco)                |    ✅    |    ❌    |
+//! | [US - Utah v1](usut)                    |    ✅    |    ❌    |
+//! | [US - Connecticut v1](usct)             |    ✅    |    ❌    |
+//!
 use crate::core::base64::DecodeError;
 use crate::core::{DataReader, DecodeExt, FromDataReader};
 use crate::sections::tcfcav1::TcfCaV1;

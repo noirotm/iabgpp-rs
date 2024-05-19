@@ -10,7 +10,7 @@
 //!
 //! A GPP Consent String is made of a mandatory header and a list of optional sections.
 //!
-//! The [GPPString](v1/struct.GPPString.html) type is used to parse consent strings and decode
+//! The [`GPPString`](v1/struct.GPPString.html) type is used to parse consent strings and decode
 //! sections.
 //!
 //! ```
