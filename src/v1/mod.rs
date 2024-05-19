@@ -83,8 +83,6 @@ pub enum GPPDecodeError {
     UnsupportedSectionId(u8),
     #[error("ids do not match sections (number of ids {ids}, number of sections {sections}")]
     IdSectionMismatch { ids: usize, sections: usize },
-    #[error("unable to decode section")]
-    SectionDecode(#[from] SectionDecodeError),
 }
 
 /// The representation of a parsed GPP consent string.
