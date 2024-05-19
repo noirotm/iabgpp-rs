@@ -305,24 +305,24 @@ mod tests {
     }
 
     #[test_case("DBABTA~1YN-" => UspV1 {
-        opt_out_notice: crate::sections::uspv1::Notice::Yes,
-        opt_out_sale: crate::sections::uspv1::OptOut::No,
-        lspa_covered: crate::sections::uspv1::Covered::NotApplicable,
+        opt_out_notice: crate::sections::uspv1::Flag::Yes,
+        opt_out_sale: crate::sections::uspv1::Flag::No,
+        lspa_covered_transaction: crate::sections::uspv1::Flag::NotApplicable,
     } ; "mix")]
     #[test_case("DBABTA~1NNN" => UspV1 {
-        opt_out_notice: crate::sections::uspv1::Notice::No,
-        opt_out_sale: crate::sections::uspv1::OptOut::No,
-        lspa_covered: crate::sections::uspv1::Covered::No,
+        opt_out_notice: crate::sections::uspv1::Flag::No,
+        opt_out_sale: crate::sections::uspv1::Flag::No,
+        lspa_covered_transaction: crate::sections::uspv1::Flag::No,
     } ; "all no")]
     #[test_case("DBABTA~1YYY" => UspV1 {
-        opt_out_notice: crate::sections::uspv1::Notice::Yes,
-        opt_out_sale: crate::sections::uspv1::OptOut::Yes,
-        lspa_covered: crate::sections::uspv1::Covered::Yes,
+        opt_out_notice: crate::sections::uspv1::Flag::Yes,
+        opt_out_sale: crate::sections::uspv1::Flag::Yes,
+        lspa_covered_transaction: crate::sections::uspv1::Flag::Yes,
     } ; "all yes")]
     #[test_case("DBACNY~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA~1YNN" => UspV1 {
-        opt_out_notice: crate::sections::uspv1::Notice::Yes,
-        opt_out_sale: crate::sections::uspv1::OptOut::No,
-        lspa_covered: crate::sections::uspv1::Covered::No,
+        opt_out_notice: crate::sections::uspv1::Flag::Yes,
+        opt_out_sale: crate::sections::uspv1::Flag::No,
+        lspa_covered_transaction: crate::sections::uspv1::Flag::No,
     } ; "with other section")]
     fn gpp_string_decode_uspv1(s: &str) -> UspV1 {
         GPPString::from_str(s).unwrap().decode().unwrap()

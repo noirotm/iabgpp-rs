@@ -5,13 +5,13 @@ const USP_V1_VERSION: u8 = 1;
 const KIND: &str = "uspv1";
 
 #[derive(Debug, Eq, PartialEq)]
-pub enum Char {
+pub enum Flag {
     Yes,
     No,
     NotApplicable,
 }
 
-impl Char {
+impl Flag {
     fn from_char(c: char) -> Option<Self> {
         match c {
             'Y' => Some(Self::Yes),
@@ -22,16 +22,12 @@ impl Char {
     }
 }
 
-pub type Notice = Char;
-pub type OptOut = Char;
-pub type Covered = Char;
-
 // See https://github.com/InteractiveAdvertisingBureau/USPrivacy/blob/master/CCPA/US%20Privacy%20String.md#us-privacy-string-format
 #[derive(Debug, Eq, PartialEq)]
 pub struct UspV1 {
-    pub opt_out_notice: Notice,
-    pub opt_out_sale: OptOut,
-    pub lspa_covered: Covered,
+    pub opt_out_notice: Flag,
+    pub opt_out_sale: Flag,
+    pub lspa_covered_transaction: Flag,
 }
 
 impl DecodableSection for UspV1 {
@@ -64,19 +60,19 @@ impl FromStr for UspV1 {
         Ok(Self {
             opt_out_notice: parse_next_char(&mut chars, s)?,
             opt_out_sale: parse_next_char(&mut chars, s)?,
-            lspa_covered: parse_next_char(&mut chars, s)?,
+            lspa_covered_transaction: parse_next_char(&mut chars, s)?,
         })
     }
 }
 
-fn parse_next_char(chars: &mut Chars, original_str: &str) -> Result<Char, SectionDecodeError> {
+fn parse_next_char(chars: &mut Chars, original_str: &str) -> Result<Flag, SectionDecodeError> {
     let char = chars
         .next()
         .ok_or(SectionDecodeError::UnexpectedEndOfString(
             original_str.to_string(),
         ))?;
 
-    Char::from_char(char).ok_or(SectionDecodeError::InvalidCharacter {
+    Flag::from_char(char).ok_or(SectionDecodeError::InvalidCharacter {
         character: char,
         kind: KIND,
         s: original_str.to_string(),
@@ -89,19 +85,19 @@ mod tests {
     use test_case::test_case;
 
     #[test_case("1YN-" => UspV1 {
-        opt_out_notice: Notice::Yes,
-        opt_out_sale: OptOut::No,
-        lspa_covered: Covered::NotApplicable,
+        opt_out_notice: Flag::Yes,
+        opt_out_sale: Flag::No,
+        lspa_covered_transaction: Flag::NotApplicable,
     } ; "mix")]
     #[test_case("1NNN" => UspV1 {
-        opt_out_notice: Notice::No,
-        opt_out_sale: OptOut::No,
-        lspa_covered: Covered::No,
+        opt_out_notice: Flag::No,
+        opt_out_sale: Flag::No,
+        lspa_covered_transaction: Flag::No,
     } ; "all no")]
     #[test_case("1YYY" => UspV1 {
-        opt_out_notice: Notice::Yes,
-        opt_out_sale: OptOut::Yes,
-        lspa_covered: Covered::Yes,
+        opt_out_notice: Flag::Yes,
+        opt_out_sale: Flag::Yes,
+        lspa_covered_transaction: Flag::Yes,
     } ; "all yes")]
     fn parse(s: &str) -> UspV1 {
         UspV1::from_str(s).unwrap()
