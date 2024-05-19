@@ -1,10 +1,12 @@
 use bitstream_io::{BigEndian, BitWrite, BitWriter};
 use thiserror::Error;
 
+/// The error type that describes failures to decode Base64 encoded strings.
 #[derive(Error, Debug)]
 pub enum DecodeError {
-    #[error("invalid character {0}")]
-    InvalidCharacter(u8),
+    /// An invalid byte was found in the input. The offset and offending byte are provided.
+    #[error("invalid byte {1} at offset {0}")]
+    InvalidByte(usize, u8),
 }
 
 /// Custom base64 implementation, 6-bits aligned, no padding,
@@ -17,8 +19,8 @@ pub fn decode(s: &str) -> Result<Vec<u8>, DecodeError> {
     let mut bw = BitWriter::endian(&mut buffer, BigEndian);
 
     // write 6 bits for every decoded character
-    for b in s.bytes() {
-        let value = base64_value(b).ok_or(DecodeError::InvalidCharacter(b))?;
+    for (i, b) in s.bytes().enumerate() {
+        let value = base64_value(b).ok_or(DecodeError::InvalidByte(i, b))?;
         bw.write(6, value).expect("write into vec should not fail");
     }
 
@@ -67,8 +69,8 @@ mod tests {
         decode(s).unwrap()
     }
 
-    #[test_case("===" => matches DecodeError::InvalidCharacter(_) ; "equal signs")]
-    #[test_case("   " => matches DecodeError::InvalidCharacter(_) ; "whitespaces")]
+    #[test_case("===" => matches DecodeError::InvalidByte(0, b'=') ; "equal signs")]
+    #[test_case("a  " => matches DecodeError::InvalidByte(1, b' ') ; "whitespaces")]
     fn error(s: &str) -> DecodeError {
         decode(s).unwrap_err()
     }

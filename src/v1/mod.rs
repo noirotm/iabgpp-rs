@@ -52,7 +52,7 @@
 //!
 //! If parsing fails, a [`GPPDecodeError`] will be returned instead.
 //!
-use crate::core::base64::DecodeError;
+pub use crate::core::base64::DecodeError;
 use crate::core::{DataReader, DecodeExt};
 use crate::sections::{decode_section, DecodableSection, Section, SectionDecodeError, SectionId};
 use fnv::FnvHashMap;
