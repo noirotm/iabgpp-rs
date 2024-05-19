@@ -11,6 +11,7 @@ const TCF_EU_V2_DISCLOSED_VENDORS_SEGMENT_TYPE: u8 = 1;
 const TCF_EU_V2_PUBLISHER_PURPOSES_SEGMENT_TYPE: u8 = 3;
 
 #[derive(Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct TcfEuV2 {
     pub core: Core,
     pub disclosed_vendors: Option<IdSet>,
@@ -63,6 +64,7 @@ impl OptionalSegmentParser for TcfEuV2 {
 }
 
 #[derive(Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct Core {
     pub created: i64,
     pub last_updated: i64,
@@ -169,6 +171,7 @@ pub enum RestrictionType {
 }
 
 #[derive(Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct PublisherPurposes {
     pub consents: IdSet,
     pub legitimate_interests: IdSet,

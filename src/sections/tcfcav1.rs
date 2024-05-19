@@ -11,6 +11,7 @@ const TCF_CA_V1_DISCLOSED_VENDORS_SUB_SECTION_TYPE: u8 = 1;
 const TCF_CA_V1_PUBLISHER_PURPOSES_SUB_SECTION_TYPE: u8 = 3;
 
 #[derive(Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct TcfCaV1 {
     pub core: Core,
     pub disclosed_vendors: Option<IdSet>,
@@ -63,6 +64,7 @@ impl OptionalSegmentParser for TcfCaV1 {
 }
 
 #[derive(Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct Core {
     pub created: i64,
     pub last_updated: i64,
@@ -167,6 +169,7 @@ pub enum RestrictionType {
 }
 
 #[derive(Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct PublisherPurposes {
     pub purpose_express_consents: IdSet,
     pub purpose_implied_consents: IdSet,

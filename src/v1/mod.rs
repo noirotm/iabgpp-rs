@@ -67,6 +67,7 @@ const GPP_HEADER: u8 = 3;
 const GPP_VERSION: u8 = 1;
 
 #[derive(Error, Debug)]
+#[non_exhaustive]
 pub enum GPPDecodeError {
     #[error("no header found")]
     NoHeaderFound,

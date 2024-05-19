@@ -10,6 +10,7 @@ const US_CT_VERSION: u8 = 1;
 const US_CT_GPC_SEGMENT_TYPE: u8 = 1;
 
 #[derive(Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct UsCt {
     pub core: Core,
     pub gpc: Option<bool>,
@@ -164,6 +165,7 @@ impl OptionalSegmentParser for UsCt {
 }
 
 #[derive(Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct Core {
     pub sharing_notice: Notice,
     pub sale_opt_out_notice: Notice,
@@ -223,6 +225,7 @@ fn mspa_covered_transaction_to_bool(val: u8) -> Result<bool, SectionDecodeError>
 }
 
 #[derive(Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct SensitiveDataProcessing {
     pub racial_or_ethnic_origin: Consent,
     pub religious_beliefs: Consent,
@@ -260,6 +263,7 @@ impl FromDataReader for SensitiveDataProcessing {
 }
 
 #[derive(Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct KnownChildSensitiveDataConsents {
     pub process_sensitive_data_from_known_child: Consent,
     pub sell_personal_data_from_13_to_16: Consent,

@@ -10,6 +10,7 @@ const US_CA_VERSION: u8 = 1;
 const US_CA_GPC_SEGMENT_TYPE: u8 = 1;
 
 #[derive(Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct UsCa {
     pub core: Core,
     pub gpc: Option<bool>,
@@ -196,6 +197,7 @@ impl OptionalSegmentParser for UsCa {
 }
 
 #[derive(Debug, Eq, PartialEq)]
+#[non_exhaustive]
 /// The core sub-section must always be present. Where terms are capitalized in the ‘description’
 /// field they are defined terms in Cal. Civ. Code 1798.140.
 pub struct Core {
@@ -260,6 +262,7 @@ fn mspa_covered_transaction_to_bool(val: u8) -> Result<bool, SectionDecodeError>
 }
 
 #[derive(Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct SensitiveDataProcessing {
     /// Opt-Out of the Use or Disclosure of the Consumer's Sensitive Personal Information Which
     /// Reveals a Consumer's Social Security, Driver's License, State Identification Card, or
@@ -306,6 +309,7 @@ impl FromDataReader for SensitiveDataProcessing {
 }
 
 #[derive(Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct KnownChildSensitiveDataConsents {
     pub sell_personal_information: Consent,
     pub share_personal_information: Consent,

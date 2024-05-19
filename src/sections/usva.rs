@@ -7,6 +7,7 @@ use std::str::FromStr;
 const US_VA_VERSION: u8 = 1;
 
 #[derive(Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct UsVa {
     pub core: Core,
 }
@@ -136,6 +137,7 @@ impl FromDataReader for UsVa {
 }
 
 #[derive(Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct Core {
     pub sharing_notice: Notice,
     pub sale_opt_out_notice: Notice,
@@ -196,6 +198,7 @@ fn mspa_covered_transaction_to_bool(val: u8) -> Result<bool, SectionDecodeError>
 }
 
 #[derive(Debug, Eq, PartialEq)]
+#[non_exhaustive]
 pub struct SensitiveDataProcessing {
     pub racial_or_ethnic_origin: Consent,
     pub religious_or_philosophical_beliefs: Consent,

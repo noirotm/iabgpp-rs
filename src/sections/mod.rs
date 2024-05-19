@@ -29,6 +29,7 @@ pub mod usut;
 pub mod usva;
 
 #[derive(Clone, Copy, Debug, Display, Eq, PartialEq, Hash, FromPrimitive, ToPrimitive)]
+#[non_exhaustive]
 pub enum SectionId {
     TcfEuV1 = 1,
     TcfEuV2 = 2,
@@ -51,6 +52,7 @@ pub trait DecodableSection: FromStr<Err = SectionDecodeError> {
 pub type IdSet = BTreeSet<u16>;
 
 #[derive(Error, Debug)]
+#[non_exhaustive]
 pub enum SectionDecodeError {
     #[error("missing section {0}")]
     MissingSection(SectionId),
@@ -83,6 +85,7 @@ pub enum SectionDecodeError {
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum Section {
     TcfEuV1(TcfEuV1),
     TcfEuV2(TcfEuV2),
