@@ -1,7 +1,10 @@
 use crate::core::{DataReader, DecodeExt, FromDataReader};
+use crate::sections::us_common::{
+    is_notice_and_opt_out_combination_ok, mspa_covered_transaction_to_bool, Consent, MspaMode,
+    Notice, OptOut, ValidationError,
+};
 use crate::sections::{DecodableSection, SectionDecodeError, SectionId};
-use num_derive::{FromPrimitive, ToPrimitive};
-use num_traits::{FromPrimitive, ToPrimitive};
+use num_traits::FromPrimitive;
 use std::str::FromStr;
 
 const US_UT_VERSION: u8 = 1;
@@ -22,7 +25,7 @@ impl UsUt {
     pub fn validate(&self) -> Result<(), Vec<ValidationError>> {
         let mut errors = vec![];
 
-        if !Self::is_notice_and_opt_out_combination_ok(
+        if !is_notice_and_opt_out_combination_ok(
             &self.core.sale_opt_out_notice,
             &self.core.sale_opt_out,
         ) {
@@ -34,7 +37,7 @@ impl UsUt {
             ));
         }
 
-        if !Self::is_notice_and_opt_out_combination_ok(
+        if !is_notice_and_opt_out_combination_ok(
             &self.core.targeted_advertising_opt_out_notice,
             &self.core.targeted_advertising_opt_out,
         ) {
@@ -87,30 +90,6 @@ impl UsUt {
             Ok(())
         } else {
             Err(errors)
-        }
-    }
-
-    fn is_notice_and_opt_out_combination_ok(notice: &Notice, opt_out: &OptOut) -> bool {
-        *notice == Notice::NotApplicable && *opt_out == OptOut::NotApplicable
-            || *notice == Notice::Provided && *opt_out != OptOut::NotApplicable
-            || *notice == Notice::NotProvided && *opt_out == OptOut::OptedOut
-    }
-}
-
-pub struct ValidationError {
-    pub field1: (&'static str, u8),
-    pub field2: (&'static str, u8),
-}
-
-impl ValidationError {
-    fn new<T1, T2>(field1: &'static str, val1: &T1, field2: &'static str, val2: &T2) -> Self
-    where
-        T1: ToPrimitive,
-        T2: ToPrimitive,
-    {
-        Self {
-            field1: (field1, val1.to_u8().unwrap_or_default()),
-            field2: (field2, val2.to_u8().unwrap_or_default()),
         }
     }
 }
@@ -189,17 +168,6 @@ impl FromDataReader for Core {
     }
 }
 
-fn mspa_covered_transaction_to_bool(val: u8) -> Result<bool, SectionDecodeError> {
-    match val {
-        1 => Ok(true),
-        2 => Ok(false),
-        v => Err(SectionDecodeError::InvalidFieldValue {
-            expected: "1 or 2".to_string(),
-            found: v.to_string(),
-        }),
-    }
-}
-
 #[derive(Debug, Eq, PartialEq)]
 #[non_exhaustive]
 pub struct SensitiveDataProcessing {
@@ -236,34 +204,6 @@ impl FromDataReader for SensitiveDataProcessing {
                 .unwrap_or(Consent::NotApplicable),
         })
     }
-}
-
-#[derive(Debug, Eq, PartialEq, FromPrimitive, ToPrimitive)]
-pub enum Notice {
-    NotApplicable = 0,
-    Provided = 1,
-    NotProvided = 2,
-}
-
-#[derive(Debug, Eq, PartialEq, FromPrimitive, ToPrimitive)]
-pub enum OptOut {
-    NotApplicable = 0,
-    OptedOut = 1,
-    DidNotOptOut = 2,
-}
-
-#[derive(Debug, Eq, PartialEq, FromPrimitive, ToPrimitive)]
-pub enum Consent {
-    NotApplicable = 0,
-    NoConsent = 1,
-    Consent = 2,
-}
-
-#[derive(Debug, Eq, PartialEq, FromPrimitive, ToPrimitive)]
-pub enum MspaMode {
-    NotApplicable = 0,
-    Yes = 1,
-    No = 2,
 }
 
 #[cfg(test)]
