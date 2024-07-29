@@ -34,6 +34,10 @@
 //! | [US - Colorado v1](usco)                |    ✅    |    ❌    |
 //! | [US - Utah v1](usut)                    |    ✅    |    ❌    |
 //! | [US - Connecticut v1](usct)             |    ✅    |    ❌    |
+//! | [US - Florida v1](usfl)                 |    ❌    |    ❌    |
+//! | [US - Montana v1](usmt)                 |    ❌    |    ❌    |
+//! | [US - Oregon v1](usor)                  |    ❌    |    ❌    |
+//! | [US - Texas v1](ustx)                   |    ❌    |    ❌    |
 //!
 use crate::core::base64::DecodeError;
 use crate::core::{DataReader, DecodeExt, FromDataReader};

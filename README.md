@@ -69,6 +69,10 @@ Legend:
 | US - Colorado v1             |    ✅    |    ❌    |
 | US - Utah v1                 |    ✅    |    ❌    |
 | US - Connecticut v1          |    ✅    |    ❌    |
+| US - Florida v1              |    ❌    |    ❌    |
+| US - Montana v1              |    ❌    |    ❌    |
+| US - Oregon v1               |    ❌    |    ❌    |
+| US - Texas v1                |    ❌    |    ❌    |
 
 ## Development status
 
