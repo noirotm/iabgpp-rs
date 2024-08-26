@@ -189,7 +189,7 @@ where
 }
 
 /// A trait representing an operation to parse segments for a Base64-URL encoded string
-/// using '.' as separators into a type composed of a mandatory code segment and an arbitrary
+/// using '.' as separators into a type composed of a mandatory core segment and an arbitrary
 /// number of optional segments.
 ///
 /// This guarantees a given segment cannot appear twice.
