@@ -1,26 +1,6 @@
-[package]
-name = "iab-gpp"
-version = "0.1.0"
-edition = "2021"
-authors = ["Marc Noirot <marc.noirot@gmail.com>"]
-description = "IAB GPP Consent String implementation"
-homepage = "https://github.com/noirotm/iabgpp-rs"
-repository = "https://github.com/noirotm/iabgpp-rs"
-license = "Apache-2.0"
-keywords = ["tcf", "iab", "gpp", "decode"]
-categories = ["parser-implementations"]
-documentation = "https://docs.rs/iab_gpp/"
-readme = "README.md"
-
-[dependencies]
-bitstream-io = "2.5.3"
-fnv = "1.0.7"
-num-derive = "0.4.0"
-num-iter = "0.1.43"
-num-traits = "0.2.16"
-strum = "0.26.2"
-strum_macros = "0.26.2"
-thiserror = "1.0.44"
-
-[dev-dependencies]
-test-case = "3.2.1"
+[workspace]
+members = [
+    "iab_gpp",
+    "iab_gpp_derive"
+]
+resolver = "2"

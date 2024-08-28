@@ -1,0 +1,21 @@
+[package]
+name = "iab_gpp_derive"
+version = "0.1.0"
+edition = "2021"
+authors = ["Marc Noirot <marc.noirot@gmail.com>"]
+description = "Macros for the IAB GPP Consent String implementation"
+homepage = "https://github.com/noirotm/iabgpp-rs"
+repository = "https://github.com/noirotm/iabgpp-rs"
+license = "Apache-2.0"
+keywords = ["tcf", "iab", "gpp", "decode"]
+categories = ["parser-implementations"]
+documentation = "https://docs.rs/iab_gpp/"
+readme = "README.md"
+
+[dependencies]
+proc-macro2 = "1.0.86"
+quote = "1.0.37"
+syn = "2.0.76"
+
+[lib]
+proc-macro = true
