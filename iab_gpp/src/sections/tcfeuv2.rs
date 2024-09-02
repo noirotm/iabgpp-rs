@@ -1,66 +1,22 @@
 use crate::core::{DataReader, FromDataReader, Range};
-use crate::sections::{
-    DecodableSection, IdSet, OptionalSegmentParser, SectionDecodeError, SectionId, SegmentedStr,
-};
+use crate::sections::{IdSet, SectionDecodeError, SegmentedStr};
+use iab_gpp_derive::GPPSection;
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
-use std::str::FromStr;
 
 const TCF_EU_V2_VERSION: u8 = 2;
 const TCF_EU_V2_DISCLOSED_VENDORS_SEGMENT_TYPE: u8 = 1;
 const TCF_EU_V2_PUBLISHER_PURPOSES_SEGMENT_TYPE: u8 = 3;
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, GPPSection)]
 #[non_exhaustive]
+#[gpp(with_optional_segments)]
 pub struct TcfEuV2 {
     pub core: Core,
+    #[gpp(optional_segment_type = 1, optimized_integer_range)]
     pub disclosed_vendors: Option<IdSet>,
+    #[gpp(optional_segment_type = 3)]
     pub publisher_purposes: Option<PublisherPurposes>,
-}
-
-impl DecodableSection for TcfEuV2 {
-    const ID: SectionId = SectionId::TcfEuV2;
-}
-
-impl FromStr for TcfEuV2 {
-    type Err = SectionDecodeError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        s.parse_segmented_str()
-    }
-}
-
-impl FromDataReader for TcfEuV2 {
-    type Err = SectionDecodeError;
-
-    fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
-        Ok(Self {
-            core: r.parse()?,
-            disclosed_vendors: None,
-            publisher_purposes: None,
-        })
-    }
-}
-
-impl OptionalSegmentParser for TcfEuV2 {
-    fn parse_optional_segment(
-        segment_type: u8,
-        r: &mut DataReader,
-        into: &mut Self,
-    ) -> Result<(), SectionDecodeError> {
-        match segment_type {
-            TCF_EU_V2_DISCLOSED_VENDORS_SEGMENT_TYPE => {
-                into.disclosed_vendors = Some(r.read_optimized_integer_range()?);
-            }
-            TCF_EU_V2_PUBLISHER_PURPOSES_SEGMENT_TYPE => {
-                into.publisher_purposes = Some(r.parse()?);
-            }
-            n => {
-                return Err(SectionDecodeError::UnknownSegmentType { segment_type: n });
-            }
-        }
-        Ok(())
-    }
 }
 
 #[derive(Debug, Eq, PartialEq)]
@@ -201,6 +157,7 @@ impl FromDataReader for PublisherPurposes {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::str::FromStr;
     use test_case::test_case;
 
     #[test]

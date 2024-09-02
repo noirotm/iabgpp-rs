@@ -1,12 +1,12 @@
 use crate::core::DataReader;
-use crate::sections::{IdSet, SectionDecodeError, SectionId};
+use crate::sections::{IdSet, SectionDecodeError};
 use iab_gpp_derive::GPPSection;
 use std::collections::BTreeSet;
 
 // See https://github.com/InteractiveAdvertisingBureau/GDPR-Transparency-and-Consent-Framework/blob/master/Consent%20string%20and%20vendor%20list%20formats%20v1.1%20Final.md
 #[derive(Debug, Eq, PartialEq, GPPSection)]
 pub struct TcfEuV1 {
-    #[gpp(section_version = 1, fixed_integer(6))]
+    #[gpp(expect_section_version = 1, fixed_integer(6))]
     pub version: u8,
     #[gpp(datetime_as_unix_timestamp)]
     pub created: i64,
