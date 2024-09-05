@@ -1,3 +1,4 @@
+use crate::core::DataReader;
 use crate::sections::SectionDecodeError;
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::ToPrimitive;
@@ -59,7 +60,10 @@ pub enum MspaMode {
     No = 2,
 }
 
-pub(crate) fn mspa_covered_transaction_to_bool(val: u8) -> Result<bool, SectionDecodeError> {
+pub(crate) fn mspa_covered_transaction_to_bool(
+    r: &mut DataReader,
+) -> Result<bool, SectionDecodeError> {
+    let val = r.read_fixed_integer(2)?;
     match val {
         1 => Ok(true),
         2 => Ok(false),

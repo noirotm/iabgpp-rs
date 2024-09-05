@@ -254,7 +254,7 @@ impl FromDataReader for Core {
             known_child_sensitive_data_consents: r.parse()?,
             personal_data_consent: Consent::from_u8(r.read_fixed_integer(2)?)
                 .unwrap_or(Consent::NotApplicable),
-            mspa_covered_transaction: mspa_covered_transaction_to_bool(r.read_fixed_integer(2)?)?,
+            mspa_covered_transaction: mspa_covered_transaction_to_bool(r)?,
             mspa_opt_out_option_mode: MspaMode::from_u8(r.read_fixed_integer(2)?)
                 .unwrap_or(MspaMode::NotApplicable),
             mspa_service_provider_mode: MspaMode::from_u8(r.read_fixed_integer(2)?)
