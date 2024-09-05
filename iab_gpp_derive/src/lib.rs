@@ -16,7 +16,8 @@ pub fn derive_from_data_reader(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
     if let Data::Struct(s) = input.data {
-        derive_struct_from_data_reader(&s, &input.ident).into()
+        let attr = GPPStructHelperAttribute::new(&input.attrs).expect("attribute parsing failed");
+        derive_struct_from_data_reader(&s, &input.ident, &attr).into()
     } else {
         TokenStream::new()
     }
@@ -41,14 +42,14 @@ pub fn derive_gpp_section(input: TokenStream) -> TokenStream {
             GPPStructKind::Base64Data => {
                 // simple FromDataReader impl that read all fields in sequence
                 // it's the default one
-                impl_base64_gpp_section(ident, s, stream)
+                impl_base64_gpp_section(ident, s, &attr, stream)
             }
             GPPStructKind::WithOptionalSegments => {
                 // FromDataReader impl is altered, we have a mandatory segment
                 // followed by optional ones.
                 // The impl reads the first segment, then fills the rest with Nones
                 // we then add a OptionalSegmentParser impl which reads the rest.
-                impl_segmented_gpp_section(ident, s, stream)
+                impl_segmented_gpp_section(ident, s, &attr, stream)
             }
         }
     } else {
@@ -60,6 +61,7 @@ pub fn derive_gpp_section(input: TokenStream) -> TokenStream {
 fn impl_base64_gpp_section(
     ident: Ident,
     s: DataStruct,
+    attr: &GPPStructHelperAttribute,
     mut stream: proc_macro2::TokenStream,
 ) -> TokenStream {
     // FromStr impl which parses the given string using Base64
@@ -74,7 +76,7 @@ fn impl_base64_gpp_section(
         }
     });
 
-    stream.append_all(derive_struct_from_data_reader(&s, &ident));
+    stream.append_all(derive_struct_from_data_reader(&s, &ident, attr));
 
     stream.into()
 }
@@ -82,6 +84,7 @@ fn impl_base64_gpp_section(
 fn impl_segmented_gpp_section(
     ident: Ident,
     s: DataStruct,
+    attr: &GPPStructHelperAttribute,
     mut stream: proc_macro2::TokenStream,
 ) -> TokenStream {
     // FromStr impl which parses the given string as a sequence of segments
@@ -96,7 +99,7 @@ fn impl_segmented_gpp_section(
         }
     });
 
-    stream.append_all(derive_struct_from_data_reader(&s, &ident));
+    stream.append_all(derive_struct_from_data_reader(&s, &ident, attr));
 
     // OptionalSegmentParser impl
     stream.append_all(derive_optional_segment_parser(&s, &ident));

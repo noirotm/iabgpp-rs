@@ -5,22 +5,17 @@ use std::collections::BTreeSet;
 
 // See https://github.com/InteractiveAdvertisingBureau/GDPR-Transparency-and-Consent-Framework/blob/master/Consent%20string%20and%20vendor%20list%20formats%20v1.1%20Final.md
 #[derive(Debug, Eq, PartialEq, GPPSection)]
+#[gpp(section_version = 1)]
 pub struct TcfEuV1 {
-    #[gpp(expect_section_version = 1, fixed_integer(6))]
-    pub version: u8,
     #[gpp(datetime_as_unix_timestamp)]
     pub created: i64,
     #[gpp(datetime_as_unix_timestamp)]
     pub last_updated: i64,
-    #[gpp(fixed_integer(12))]
     pub cmp_id: u16,
-    #[gpp(fixed_integer(12))]
     pub cmp_version: u16,
-    #[gpp(fixed_integer(6))]
     pub consent_screen: u8,
     #[gpp(string(2))]
     pub consent_language: String,
-    #[gpp(fixed_integer(12))]
     pub vendor_list_version: u16,
     #[gpp(fixed_bitfield(24))]
     pub purposes_allowed: IdSet,
@@ -60,7 +55,6 @@ mod tests {
     fn success() {
         let actual = TcfEuV1::from_str("BOEFEAyOEFEAyAHABDENAI4AAAB9vABAASA").unwrap();
         let expected = TcfEuV1 {
-            version: 1,
             created: 1510082155,
             last_updated: 1510082155,
             cmp_id: 7,

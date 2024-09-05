@@ -25,7 +25,7 @@ pub fn derive_optional_segment_parser(
         let attr = GPPFieldHelperAttribute::new(&field.attrs).expect("attribute parsing failed");
 
         if let Some(segment_type) = attr.optional_segment_type {
-            let expr = attr.parser_expr();
+            let expr = attr.parser.to_token_stream();
             parse_match_arms.push(quote! {
                 #segment_type => {
                     into.#name = Some(#expr?);

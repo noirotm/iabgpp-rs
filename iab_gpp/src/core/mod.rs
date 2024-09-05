@@ -26,6 +26,30 @@ pub trait FromDataReader: Sized {
     fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err>;
 }
 
+impl FromDataReader for bool {
+    type Err = io::Error;
+
+    fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
+        r.read_bool()
+    }
+}
+
+impl FromDataReader for u8 {
+    type Err = io::Error;
+
+    fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
+        r.read_fixed_integer(6)
+    }
+}
+
+impl FromDataReader for u16 {
+    type Err = io::Error;
+
+    fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
+        r.read_fixed_integer(12)
+    }
+}
+
 pub struct DataReader<'a> {
     bit_reader: BitReader<&'a [u8], BigEndian>,
 }

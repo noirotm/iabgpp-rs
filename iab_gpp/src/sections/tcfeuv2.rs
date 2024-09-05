@@ -1,12 +1,8 @@
-use crate::core::{DataReader, FromDataReader, Range};
-use crate::sections::{IdSet, SectionDecodeError, SegmentedStr};
-use iab_gpp_derive::GPPSection;
+use crate::core::{DataReader, Range};
+use crate::sections::{IdSet, SectionDecodeError};
+use iab_gpp_derive::{FromDataReader, GPPSection};
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
-
-const TCF_EU_V2_VERSION: u8 = 2;
-const TCF_EU_V2_DISCLOSED_VENDORS_SEGMENT_TYPE: u8 = 1;
-const TCF_EU_V2_PUBLISHER_PURPOSES_SEGMENT_TYPE: u8 = 3;
 
 #[derive(Debug, Eq, PartialEq, GPPSection)]
 #[non_exhaustive]
@@ -19,85 +15,47 @@ pub struct TcfEuV2 {
     pub publisher_purposes: Option<PublisherPurposes>,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, FromDataReader)]
 #[non_exhaustive]
+#[gpp(section_version = 2)]
 pub struct Core {
+    #[gpp(datetime_as_unix_timestamp)]
     pub created: i64,
+    #[gpp(datetime_as_unix_timestamp)]
     pub last_updated: i64,
     pub cmp_id: u16,
     pub cmp_version: u16,
     pub consent_screen: u8,
+    #[gpp(string(2))]
     pub consent_language: String,
     pub vendor_list_version: u16,
     pub policy_version: u8,
     pub is_service_specific: bool,
     pub use_non_standard_stacks: bool,
+    #[gpp(fixed_bitfield(12))]
     pub special_feature_optins: IdSet,
+    #[gpp(fixed_bitfield(24))]
     pub purpose_consents: IdSet,
+    #[gpp(fixed_bitfield(24))]
     pub purpose_legitimate_interests: IdSet,
     pub purpose_one_treatment: bool,
+    #[gpp(string(2))]
     pub publisher_country_code: String,
+    #[gpp(optimized_integer_range)]
     pub vendor_consents: IdSet,
+    #[gpp(optimized_integer_range)]
     pub vendor_legitimate_interests: IdSet,
+    #[gpp(parse_with = parse_publisher_restrictions)]
     pub publisher_restrictions: Vec<PublisherRestriction>,
 }
 
-impl FromDataReader for Core {
-    type Err = SectionDecodeError;
-
-    fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
-        let version = r.read_fixed_integer(6)?;
-        if version != TCF_EU_V2_VERSION {
-            return Err(SectionDecodeError::InvalidSegmentVersion {
-                expected: TCF_EU_V2_VERSION,
-                found: version,
-            });
-        }
-
-        let created = r.read_datetime_as_unix_timestamp()?;
-        let last_updated = r.read_datetime_as_unix_timestamp()?;
-        let cmp_id = r.read_fixed_integer(12)?;
-        let cmp_version = r.read_fixed_integer(12)?;
-        let consent_screen = r.read_fixed_integer(6)?;
-        let consent_language = r.read_string(2)?;
-        let vendor_list_version = r.read_fixed_integer(12)?;
-        let policy_version = r.read_fixed_integer(6)?;
-        let is_service_specific = r.read_bool()?;
-        let use_non_standard_stacks = r.read_bool()?;
-        let special_feature_optins = r.read_fixed_bitfield(12)?;
-        let purpose_consents = r.read_fixed_bitfield(24)?;
-        let purpose_legitimate_interests = r.read_fixed_bitfield(24)?;
-        let purpose_one_treatment = r.read_bool()?;
-        let publisher_country_code = r.read_string(2)?;
-        let vendor_consents = r.read_optimized_integer_range()?;
-        let vendor_legitimate_interests = r.read_optimized_integer_range()?;
-        let publisher_restrictions = r
-            .read_array_of_ranges()?
-            .into_iter()
-            .map(PublisherRestriction::from)
-            .collect();
-
-        Ok(Self {
-            created,
-            last_updated,
-            cmp_id,
-            cmp_version,
-            consent_screen,
-            consent_language,
-            vendor_list_version,
-            policy_version,
-            is_service_specific,
-            use_non_standard_stacks,
-            special_feature_optins,
-            purpose_consents,
-            purpose_legitimate_interests,
-            purpose_one_treatment,
-            publisher_country_code,
-            vendor_consents,
-            vendor_legitimate_interests,
-            publisher_restrictions,
-        })
-    }
+fn parse_publisher_restrictions(
+    r: &mut DataReader,
+) -> Result<Vec<PublisherRestriction>, SectionDecodeError> {
+    Ok(r.read_array_of_ranges()?
+        .into_iter()
+        .map(PublisherRestriction::from)
+        .collect())
 }
 
 #[derive(Debug, Eq, PartialEq)]
@@ -126,32 +84,17 @@ pub enum RestrictionType {
     Undefined = 3,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, FromDataReader)]
 #[non_exhaustive]
 pub struct PublisherPurposes {
+    #[gpp(fixed_bitfield(24))]
     pub consents: IdSet,
+    #[gpp(fixed_bitfield(24))]
     pub legitimate_interests: IdSet,
+    #[gpp(fixed_bitfield(n as usize), where(n = fixed_integer(6)))]
     pub custom_consents: IdSet,
+    #[gpp(fixed_bitfield(n as usize))]
     pub custom_legitimate_interests: IdSet,
-}
-
-impl FromDataReader for PublisherPurposes {
-    type Err = SectionDecodeError;
-
-    fn from_data_reader(r: &mut DataReader) -> Result<Self, SectionDecodeError> {
-        let consents = r.read_fixed_bitfield(24)?;
-        let legitimate_interests = r.read_fixed_bitfield(24)?;
-        let custom_purposes_num = r.read_fixed_integer::<u8>(6)? as usize;
-        let custom_consents = r.read_fixed_bitfield(custom_purposes_num)?;
-        let custom_legitimate_interests = r.read_fixed_bitfield(custom_purposes_num)?;
-
-        Ok(Self {
-            consents,
-            legitimate_interests,
-            custom_consents,
-            custom_legitimate_interests,
-        })
-    }
 }
 
 #[cfg(test)]
@@ -324,10 +267,10 @@ mod tests {
 
     #[test_case("CPX" => matches SectionDecodeError::Read(_) ; "decode error")]
     #[test_case("" => matches SectionDecodeError::Read(_) ; "empty string")]
-    #[test_case("IFoEUQQgAIQwgIwQABAEAAAAOIAACAIAAAAQAIAgEAACEAAAAAgAQBAAAAAAAGBAAgAAAAAAAFAAECAAAgAAQARAEQAAAAAJAAIAAgAAAYQEAAAQmAgBC3ZAYzUw" => matches SectionDecodeError::InvalidSegmentVersion { .. } ; "disclosed vendors only")]
-    #[test_case("ZAAgH9794ulA" => matches SectionDecodeError::InvalidSegmentVersion { .. } ; "publisher purposes only")]
-    #[test_case("IFoEUQQgAIQwgIwQABAEAAAAOIAACAIAAAAQAIAgEAACEAAAAAgAQBAAAAAAAGBAAgAAAAAAAFAAECAAAgAAQARAEQAAAAAJAAIAAgAAAYQEAAAQmAgBC3ZAYzUw.ZAAgH9794ulA" => matches SectionDecodeError::InvalidSegmentVersion { .. } ; "disclosed vendors and publisher purposes")]
-    #[test_case("ZAAgH9794ulA.IFoEUQQgAIQwgIwQABAEAAAAOIAACAIAAAAQAIAgEAACEAAAAAgAQBAAAAAAAGBAAgAAAAAAAFAAECAAAgAAQARAEQAAAAAJAAIAAgAAAYQEAAAQmAgBC3ZAYzUw" => matches SectionDecodeError::InvalidSegmentVersion { .. } ; "publisher purposes and disclosed vendors")]
+    #[test_case("IFoEUQQgAIQwgIwQABAEAAAAOIAACAIAAAAQAIAgEAACEAAAAAgAQBAAAAAAAGBAAgAAAAAAAFAAECAAAgAAQARAEQAAAAAJAAIAAgAAAYQEAAAQmAgBC3ZAYzUw" => matches SectionDecodeError::InvalidSectionVersion { .. } ; "disclosed vendors only")]
+    #[test_case("ZAAgH9794ulA" => matches SectionDecodeError::InvalidSectionVersion { .. } ; "publisher purposes only")]
+    #[test_case("IFoEUQQgAIQwgIwQABAEAAAAOIAACAIAAAAQAIAgEAACEAAAAAgAQBAAAAAAAGBAAgAAAAAAAFAAECAAAgAAQARAEQAAAAAJAAIAAgAAAYQEAAAQmAgBC3ZAYzUw.ZAAgH9794ulA" => matches SectionDecodeError::InvalidSectionVersion { .. } ; "disclosed vendors and publisher purposes")]
+    #[test_case("ZAAgH9794ulA.IFoEUQQgAIQwgIwQABAEAAAAOIAACAIAAAAQAIAgEAACEAAAAAgAQBAAAAAAAGBAAgAAAAAAAFAAECAAAgAAQARAEQAAAAAJAAIAAgAAAYQEAAAQmAgBC3ZAYzUw" => matches SectionDecodeError::InvalidSectionVersion { .. } ; "publisher purposes and disclosed vendors")]
     fn error(s: &str) -> SectionDecodeError {
         TcfEuV2::from_str(s).unwrap_err()
     }
