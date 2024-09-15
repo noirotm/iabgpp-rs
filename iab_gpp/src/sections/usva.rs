@@ -1,6 +1,6 @@
 use crate::core::{DataReader, DecodeExt, FromDataReader};
 use crate::sections::us_common::{
-    is_notice_and_opt_out_combination_ok, mspa_covered_transaction_to_bool, Consent, MspaMode,
+    is_notice_and_opt_out_combination_ok, parse_mspa_covered_transaction, Consent, MspaMode,
     Notice, OptOut, ValidationError,
 };
 use crate::sections::{DecodableSection, SectionDecodeError, SectionId};
@@ -156,7 +156,7 @@ impl FromDataReader for Core {
             sensitive_data_processing: r.parse()?,
             known_child_sensitive_data_consents: Consent::from_u8(r.read_fixed_integer(2)?)
                 .unwrap_or(Consent::NotApplicable),
-            mspa_covered_transaction: mspa_covered_transaction_to_bool(r)?,
+            mspa_covered_transaction: parse_mspa_covered_transaction(r)?,
             mspa_opt_out_option_mode: MspaMode::from_u8(r.read_fixed_integer(2)?)
                 .unwrap_or(MspaMode::NotApplicable),
             mspa_service_provider_mode: MspaMode::from_u8(r.read_fixed_integer(2)?)

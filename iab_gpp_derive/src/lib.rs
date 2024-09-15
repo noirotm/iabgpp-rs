@@ -44,7 +44,7 @@ pub fn derive_gpp_section(input: TokenStream) -> TokenStream {
                 // it's the default one
                 impl_base64_gpp_section(ident, s, &attr, stream)
             }
-            GPPStructKind::WithOptionalSegments => {
+            GPPStructKind::WithOptionalSegments(_) => {
                 // FromDataReader impl is altered, we have a mandatory segment
                 // followed by optional ones.
                 // The impl reads the first segment, then fills the rest with Nones
@@ -102,7 +102,7 @@ fn impl_segmented_gpp_section(
     stream.append_all(derive_struct_from_data_reader(&s, &ident, attr));
 
     // OptionalSegmentParser impl
-    stream.append_all(derive_optional_segment_parser(&s, &ident));
+    stream.append_all(derive_optional_segment_parser(&s, &ident, attr));
 
     stream.into()
 }

@@ -1,9 +1,9 @@
 use crate::find_gpp_attr;
-use syn::{parse, Attribute, LitInt};
+use syn::{parse, token, Attribute, LitInt};
 
 pub enum GPPStructKind {
     Base64Data,
-    WithOptionalSegments,
+    WithOptionalSegments(u32),
 }
 
 pub struct GPPStructHelperAttribute {
@@ -21,8 +21,27 @@ impl GPPStructHelperAttribute {
         if let Some(attr) = find_gpp_attr(attrs) {
             attr.parse_nested_meta(|meta| {
                 // #[gpp(with_optional_segments)]
+                // #[gpp(with_optional_segments(bits = N)]
                 if meta.path.is_ident("with_optional_segments") {
-                    gpp_attr.kind = GPPStructKind::WithOptionalSegments;
+                    // default value is 3 bits (as seen in TCF EU & CA)
+                    let mut bits = 3;
+
+                    if meta.input.peek(token::Paren) {
+                        meta.parse_nested_meta(|meta| {
+                            if meta.path.is_ident("bits") {
+                                let value = meta.value()?; // parses the `=`
+                                let s = value.parse::<LitInt>()?;
+                                bits = s.base10_parse()?;
+
+                                return Ok(());
+                            }
+
+                            Err(meta.error("unrecognized with_optional_segments parameter"))
+                        })?;
+                    }
+
+                    gpp_attr.kind = GPPStructKind::WithOptionalSegments(bits);
+
                     return Ok(());
                 }
 
@@ -31,6 +50,7 @@ impl GPPStructHelperAttribute {
                     let value = meta.value()?; // parses the `=`
                     let s = value.parse::<LitInt>()?;
                     gpp_attr.section_version = Some(s.base10_parse()?);
+
                     return Ok(());
                 }
 

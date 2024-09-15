@@ -1,4 +1,5 @@
 use crate::field_attr::GPPFieldHelperAttribute;
+use crate::struct_attr::{GPPStructHelperAttribute, GPPStructKind};
 use proc_macro2::Ident;
 use quote::quote;
 use syn::{DataStruct, Visibility};
@@ -6,6 +7,7 @@ use syn::{DataStruct, Visibility};
 pub fn derive_optional_segment_parser(
     input: &DataStruct,
     ident: &Ident,
+    struct_attr: &GPPStructHelperAttribute,
 ) -> proc_macro2::TokenStream {
     let mut parse_match_arms = vec![];
 
@@ -34,8 +36,20 @@ pub fn derive_optional_segment_parser(
         }
     }
 
+    let read_segment_type_override = match struct_attr.kind {
+        GPPStructKind::WithOptionalSegments(3) => None,
+        GPPStructKind::WithOptionalSegments(n) => Some(quote! {
+            fn read_segment_type(r: &mut crate::core::DataReader) -> Result<u8, crate::sections::SectionDecodeError> {
+                Ok(r.read_fixed_integer(#n)?)
+            }
+        }),
+        _ => None,
+    };
+
     quote! {
         impl crate::sections::OptionalSegmentParser for #ident {
+            #read_segment_type_override
+
             fn parse_optional_segment(
                 segment_type: u8,
                 r: &mut crate::core::DataReader,
