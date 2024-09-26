@@ -1,7 +1,8 @@
-use crate::core::DataReader;
+use crate::core::{DataReader, FromDataReader};
 use crate::sections::SectionDecodeError;
 use num_derive::{FromPrimitive, ToPrimitive};
-use num_traits::ToPrimitive;
+use num_traits::{FromPrimitive, ToPrimitive};
+use std::io;
 
 pub struct ValidationError {
     pub field1: (&'static str, u8),
@@ -39,11 +40,27 @@ pub enum Notice {
     NotProvided = 2,
 }
 
+impl FromDataReader for Notice {
+    type Err = io::Error;
+
+    fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
+        Ok(Self::from_u8(r.read_fixed_integer(2)?).unwrap_or(Self::NotApplicable))
+    }
+}
+
 #[derive(Debug, Eq, PartialEq, FromPrimitive, ToPrimitive)]
 pub enum OptOut {
     NotApplicable = 0,
     OptedOut = 1,
     DidNotOptOut = 2,
+}
+
+impl FromDataReader for OptOut {
+    type Err = io::Error;
+
+    fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
+        Ok(Self::from_u8(r.read_fixed_integer(2)?).unwrap_or(Self::NotApplicable))
+    }
 }
 
 #[derive(Debug, Eq, PartialEq, FromPrimitive, ToPrimitive)]
@@ -53,6 +70,14 @@ pub enum Consent {
     Consent = 2,
 }
 
+impl FromDataReader for Consent {
+    type Err = io::Error;
+
+    fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
+        Ok(Self::from_u8(r.read_fixed_integer(2)?).unwrap_or(Self::NotApplicable))
+    }
+}
+
 #[derive(Debug, Eq, PartialEq, FromPrimitive, ToPrimitive)]
 pub enum MspaMode {
     NotApplicable = 0,
@@ -60,7 +85,15 @@ pub enum MspaMode {
     No = 2,
 }
 
-pub(crate) fn mspa_covered_transaction_to_bool(
+impl FromDataReader for MspaMode {
+    type Err = io::Error;
+
+    fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
+        Ok(Self::from_u8(r.read_fixed_integer(2)?).unwrap_or(Self::NotApplicable))
+    }
+}
+
+pub(crate) fn parse_mspa_covered_transaction(
     r: &mut DataReader,
 ) -> Result<bool, SectionDecodeError> {
     let val = r.read_fixed_integer(2)?;

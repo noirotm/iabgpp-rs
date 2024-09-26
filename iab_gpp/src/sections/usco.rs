@@ -1,21 +1,15 @@
-use crate::core::{DataReader, FromDataReader};
 use crate::sections::us_common::{
-    is_notice_and_opt_out_combination_ok, mspa_covered_transaction_to_bool, Consent, MspaMode,
+    is_notice_and_opt_out_combination_ok, parse_mspa_covered_transaction, Consent, MspaMode,
     Notice, OptOut, ValidationError,
 };
-use crate::sections::{
-    DecodableSection, OptionalSegmentParser, SectionDecodeError, SectionId, SegmentedStr,
-};
-use num_traits::FromPrimitive;
-use std::str::FromStr;
+use iab_gpp_derive::{FromDataReader, GPPSection};
 
-const US_CO_VERSION: u8 = 1;
-const US_CO_GPC_SEGMENT_TYPE: u8 = 1;
-
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, GPPSection)]
 #[non_exhaustive]
+#[gpp(with_optional_segments(bits = 2))]
 pub struct UsCo {
     pub core: Core,
+    #[gpp(optional_segment_type = 1)]
     pub gpc: Option<bool>,
 }
 
@@ -98,53 +92,9 @@ impl UsCo {
     }
 }
 
-impl DecodableSection for UsCo {
-    const ID: SectionId = SectionId::UsCo;
-}
-
-impl FromStr for UsCo {
-    type Err = SectionDecodeError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        s.parse_segmented_str()
-    }
-}
-
-impl FromDataReader for UsCo {
-    type Err = SectionDecodeError;
-
-    fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
-        Ok(Self {
-            core: r.parse()?,
-            gpc: None,
-        })
-    }
-}
-
-impl OptionalSegmentParser for UsCo {
-    fn read_segment_type(r: &mut DataReader) -> Result<u8, SectionDecodeError> {
-        Ok(r.read_fixed_integer(2)?)
-    }
-
-    fn parse_optional_segment(
-        segment_type: u8,
-        r: &mut DataReader,
-        into: &mut Self,
-    ) -> Result<(), SectionDecodeError> {
-        match segment_type {
-            US_CO_GPC_SEGMENT_TYPE => {
-                into.gpc = Some(r.read_bool()?);
-            }
-            n => {
-                return Err(SectionDecodeError::UnknownSegmentType { segment_type: n });
-            }
-        }
-        Ok(())
-    }
-}
-
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, FromDataReader)]
 #[non_exhaustive]
+#[gpp(section_version = 1)]
 pub struct Core {
     pub sharing_notice: Notice,
     pub sale_opt_out_notice: Notice,
@@ -153,47 +103,13 @@ pub struct Core {
     pub targeted_advertising_opt_out: OptOut,
     pub sensitive_data_processing: SensitiveDataProcessing,
     pub known_child_sensitive_data_consents: Consent,
+    #[gpp(parse_with = parse_mspa_covered_transaction)]
     pub mspa_covered_transaction: bool,
     pub mspa_opt_out_option_mode: MspaMode,
     pub mspa_service_provider_mode: MspaMode,
 }
 
-impl FromDataReader for Core {
-    type Err = SectionDecodeError;
-
-    fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
-        let version = r.read_fixed_integer(6)?;
-        if version != US_CO_VERSION {
-            return Err(SectionDecodeError::InvalidSegmentVersion {
-                expected: US_CO_VERSION,
-                found: version,
-            });
-        }
-
-        Ok(Self {
-            sharing_notice: Notice::from_u8(r.read_fixed_integer(2)?)
-                .unwrap_or(Notice::NotApplicable),
-            sale_opt_out_notice: Notice::from_u8(r.read_fixed_integer(2)?)
-                .unwrap_or(Notice::NotApplicable),
-            targeted_advertising_opt_out_notice: Notice::from_u8(r.read_fixed_integer(2)?)
-                .unwrap_or(Notice::NotApplicable),
-            sale_opt_out: OptOut::from_u8(r.read_fixed_integer(2)?)
-                .unwrap_or(OptOut::NotApplicable),
-            targeted_advertising_opt_out: OptOut::from_u8(r.read_fixed_integer(2)?)
-                .unwrap_or(OptOut::NotApplicable),
-            sensitive_data_processing: r.parse()?,
-            known_child_sensitive_data_consents: Consent::from_u8(r.read_fixed_integer(2)?)
-                .unwrap_or(Consent::NotApplicable),
-            mspa_covered_transaction: mspa_covered_transaction_to_bool(r)?,
-            mspa_opt_out_option_mode: MspaMode::from_u8(r.read_fixed_integer(2)?)
-                .unwrap_or(MspaMode::NotApplicable),
-            mspa_service_provider_mode: MspaMode::from_u8(r.read_fixed_integer(2)?)
-                .unwrap_or(MspaMode::NotApplicable),
-        })
-    }
-}
-
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, FromDataReader)]
 #[non_exhaustive]
 pub struct SensitiveDataProcessing {
     pub racial_or_ethnic_origin: Consent,
@@ -205,50 +121,17 @@ pub struct SensitiveDataProcessing {
     pub biometric_unique_identification: Consent,
 }
 
-impl FromDataReader for SensitiveDataProcessing {
-    type Err = SectionDecodeError;
-
-    fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
-        Ok(Self {
-            racial_or_ethnic_origin: Consent::from_u8(r.read_fixed_integer(2)?)
-                .unwrap_or(Consent::NotApplicable),
-            religious_beliefs: Consent::from_u8(r.read_fixed_integer(2)?)
-                .unwrap_or(Consent::NotApplicable),
-            health_condition_or_diagnosis: Consent::from_u8(r.read_fixed_integer(2)?)
-                .unwrap_or(Consent::NotApplicable),
-            sex_life_or_sexual_orientation: Consent::from_u8(r.read_fixed_integer(2)?)
-                .unwrap_or(Consent::NotApplicable),
-            citizenship_data: Consent::from_u8(r.read_fixed_integer(2)?)
-                .unwrap_or(Consent::NotApplicable),
-            genetic_unique_identification: Consent::from_u8(r.read_fixed_integer(2)?)
-                .unwrap_or(Consent::NotApplicable),
-            biometric_unique_identification: Consent::from_u8(r.read_fixed_integer(2)?)
-                .unwrap_or(Consent::NotApplicable),
-        })
-    }
-}
-
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, FromDataReader)]
 pub struct KnownChildSensitiveDataConsents {
     pub from_13_to_16: Consent,
     pub under_13: Consent,
 }
 
-impl FromDataReader for KnownChildSensitiveDataConsents {
-    type Err = SectionDecodeError;
-
-    fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
-        Ok(Self {
-            from_13_to_16: Consent::from_u8(r.read_fixed_integer(2)?)
-                .unwrap_or(Consent::NotApplicable),
-            under_13: Consent::from_u8(r.read_fixed_integer(2)?).unwrap_or(Consent::NotApplicable),
-        })
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::sections::SectionDecodeError;
+    use std::str::FromStr;
     use test_case::test_case;
 
     #[test]
@@ -342,8 +225,8 @@ mod tests {
     }
 
     #[test_case("" => matches SectionDecodeError::Read(_) ; "empty string")]
-    #[test_case("123" => matches SectionDecodeError::InvalidSegmentVersion { .. } ; "decode error")]
-    #[test_case("CVVVVVg.YA" => matches SectionDecodeError::InvalidSegmentVersion { .. } ; "invalid segment version")]
+    #[test_case("123" => matches SectionDecodeError::InvalidSectionVersion { .. } ; "decode error")]
+    #[test_case("CVVVVVg.YA" => matches SectionDecodeError::InvalidSectionVersion { .. } ; "invalid section version")]
     #[test_case("BVVVVVg.AA" => matches SectionDecodeError::UnknownSegmentType { .. } ; "unknown segment version")]
     fn error(s: &str) -> SectionDecodeError {
         UsCo::from_str(s).unwrap_err()

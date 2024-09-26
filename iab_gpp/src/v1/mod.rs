@@ -544,7 +544,7 @@ mod tests {
             .decode_all_sections();
         assert!(matches!(
             r[0],
-            Err(SectionDecodeError::InvalidSegmentVersion {
+            Err(SectionDecodeError::InvalidSectionVersion {
                 expected: 1,
                 found: 2,
             })
