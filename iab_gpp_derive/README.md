@@ -1,7 +1,5 @@
-# iabgpp-rs
+# iab_gpp_derive
 
-Rust implementation of the IAB Global Privacy Platform (GPP)
-[consent string specification](https://github.com/InteractiveAdvertisingBureau/Global-Privacy-Platform/blob/main/Core/Consent%20String%20Specification.md).
+This crate contains procedural macros used to derive implementations for the various GPP payloads.
 
-⚠️ This is work in progress.
-
+See [../README.md](../README.md) for the main project documentation.

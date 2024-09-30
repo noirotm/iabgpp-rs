@@ -19,26 +19,6 @@
 //! section types are marked with the `#[non_exhaustive]` attribute to preserve minor version
 //! compatibility.
 //!
-//! # Supported sections
-//!
-//! | Section                                 | Reading | Writing |
-//! |-----------------------------------------|:-------:|:-------:|
-//! | [US Privacy v1](uspv1) (deprecated)     |    ✅    |    ❌    |
-//! | [EU TCF v2.2](tcfeuv2)                  |    ✅    |    ❌    |
-//! | [EU TCF v1](tcfeuv1) (deprecated)       |    ✅    |    ❌    |
-//! | [Canadian TCF v1](tcfcav1) (deprecated) |    ✅    |    ❌    |
-//! | [Canadian TCF v1.1](tcfcav1)            |    ✅    |    ❌    |
-//! | [US - National v1](usnat)               |    ✅    |    ❌    |
-//! | [US - California v1](usca)              |    ✅    |    ❌    |
-//! | [US - Virginia v1](usva)                |    ✅    |    ❌    |
-//! | [US - Colorado v1](usco)                |    ✅    |    ❌    |
-//! | [US - Utah v1](usut)                    |    ✅    |    ❌    |
-//! | [US - Connecticut v1](usct)             |    ✅    |    ❌    |
-//! | [US - Florida v1](usfl)                 |    ❌    |    ❌    |
-//! | [US - Montana v1](usmt)                 |    ❌    |    ❌    |
-//! | [US - Oregon v1](usor)                  |    ❌    |    ❌    |
-//! | [US - Texas v1](ustx)                   |    ❌    |    ❌    |
-//!
 use crate::core::base64::DecodeError;
 use crate::core::{DataReader, DecodeExt, FromDataReader};
 use crate::sections::tcfcav1::TcfCaV1;

@@ -28,7 +28,7 @@ use std::error::Error;
 use std::str::FromStr;
 use iab_gpp::v1::GPPString;
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() {
     let s = "DBABM~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA";
     let gpp_str = GPPString::from_str(s).expect("a valid GPP string");
 
@@ -63,16 +63,22 @@ Legend:
 | EU TCF v1 (deprecated)       |    ✅    |    ❌    |
 | Canadian TCF v1 (deprecated) |    ✅    |    ❌    |
 | Canadian TCF v1.1            |    ✅    |    ❌    |
-| US - National v1             |    ✅    |    ❌    |
-| US - California v1           |    ✅    |    ❌    |
-| US - Virginia v1             |    ✅    |    ❌    |
-| US - Colorado v1             |    ✅    |    ❌    |
-| US - Utah v1                 |    ✅    |    ❌    |
-| US - Connecticut v1          |    ✅    |    ❌    |
-| US - Florida v1              |    ❌    |    ❌    |
-| US - Montana v1              |    ❌    |    ❌    |
-| US - Oregon v1               |    ❌    |    ❌    |
-| US - Texas v1                |    ❌    |    ❌    |
+| US - National                |    ✅    |    ❌    |
+| US - California              |    ✅    |    ❌    |
+| US - Virginia                |    ✅    |    ❌    |
+| US - Colorado                |    ✅    |    ❌    |
+| US - Utah                    |    ✅    |    ❌    |
+| US - Connecticut             |    ✅    |    ❌    |
+| US - Florida                 |    ❌    |    ❌    |
+| US - Montana                 |    ❌    |    ❌    |
+| US - Oregon                  |    ❌    |    ❌    |
+| US - Texas                   |    ❌    |    ❌    |
+| US - Delaware                |    ❌    |    ❌    |
+| US - Iowa                    |    ❌    |    ❌    |
+| US - Nebraska                |    ❌    |    ❌    |
+| US - New Hampshire           |    ❌    |    ❌    |
+| US - New Jersey              |    ❌    |    ❌    |
+| US - Tennessee               |    ❌    |    ❌    |
 
 ## Development status
 
