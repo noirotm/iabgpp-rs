@@ -10,7 +10,7 @@ license = "Apache-2.0"
 keywords = ["tcf", "iab", "gpp", "decode"]
 categories = ["parser-implementations"]
 documentation = "https://docs.rs/iab_gpp/"
-readme = "README.md"
+readme = "crates-io.md"
 
 [dependencies]
 bitstream-io = "2.5.3"
