@@ -121,12 +121,6 @@ pub struct SensitiveDataProcessing {
     pub biometric_unique_identification: Consent,
 }
 
-#[derive(Debug, Eq, PartialEq, FromDataReader)]
-pub struct KnownChildSensitiveDataConsents {
-    pub from_13_to_16: Consent,
-    pub under_13: Consent,
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
