@@ -70,7 +70,7 @@ Legend:
 | US - Utah                    |    ✅    |    ❌    |
 | US - Connecticut             |    ✅    |    ❌    |
 | US - Florida                 |   🧪    |    ❌    |
-| US - Montana                 |    ❌    |    ❌    |
+| US - Montana                 |   🧪    |    ❌    |
 | US - Oregon                  |    ❌    |    ❌    |
 | US - Texas                   |    ❌    |    ❌    |
 | US - Delaware                |    ❌    |    ❌    |
