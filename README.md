@@ -69,7 +69,7 @@ Legend:
 | US - Colorado                |    ✅    |    ❌    |
 | US - Utah                    |    ✅    |    ❌    |
 | US - Connecticut             |    ✅    |    ❌    |
-| US - Florida                 |    ❌    |    ❌    |
+| US - Florida                 |   🧪    |    ❌    |
 | US - Montana                 |    ❌    |    ❌    |
 | US - Oregon                  |    ❌    |    ❌    |
 | US - Texas                   |    ❌    |    ❌    |
