@@ -30,6 +30,7 @@ use crate::sections::usct::UsCt;
 use crate::sections::usfl::UsFl;
 use crate::sections::usmt::UsMt;
 use crate::sections::usnat::UsNat;
+use crate::sections::usor::UsOr;
 use crate::sections::uspv1::UspV1;
 use crate::sections::usut::UsUt;
 use crate::sections::usva::UsVa;
@@ -50,6 +51,7 @@ pub mod usct;
 pub mod usfl;
 pub mod usmt;
 pub mod usnat;
+pub mod usor;
 pub mod uspv1;
 pub mod usut;
 pub mod usva;
@@ -71,6 +73,7 @@ pub enum SectionId {
     UsCt = 12,
     UsFl = 13,
     UsMt = 14,
+    UsOr = 15,
 }
 
 pub trait DecodableSection: FromStr<Err = SectionDecodeError> {
@@ -127,6 +130,7 @@ pub enum Section {
     UsCt(UsCt),
     UsFl(UsFl),
     UsMt(UsMt),
+    UsOr(UsOr),
 }
 
 impl Section {
@@ -144,6 +148,7 @@ impl Section {
             Section::UsCt(_) => SectionId::UsCt,
             Section::UsFl(_) => SectionId::UsFl,
             Section::UsMt(_) => SectionId::UsMt,
+            Section::UsOr(_) => SectionId::UsOr,
         }
     }
 }
@@ -162,6 +167,7 @@ pub(crate) fn decode_section(id: SectionId, s: &str) -> Result<Section, SectionD
         SectionId::UsCt => Section::UsCt(s.parse()?),
         SectionId::UsFl => Section::UsFl(s.parse()?),
         SectionId::UsMt => Section::UsMt(s.parse()?),
+        SectionId::UsOr => Section::UsOr(s.parse()?),
         id => Err(SectionDecodeError::UnsupportedSectionId(id))?,
     })
 }

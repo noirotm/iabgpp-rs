@@ -71,7 +71,7 @@ Legend:
 | US - Connecticut             |    ✅    |    ❌    |
 | US - Florida                 |   🧪    |    ❌    |
 | US - Montana                 |   🧪    |    ❌    |
-| US - Oregon                  |    ❌    |    ❌    |
+| US - Oregon                  |   🧪    |    ❌    |
 | US - Texas                   |    ❌    |    ❌    |
 | US - Delaware                |    ❌    |    ❌    |
 | US - Iowa                    |    ❌    |    ❌    |
