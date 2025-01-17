@@ -72,7 +72,7 @@ Legend:
 | US - Florida                 |   🧪    |    ❌    |
 | US - Montana                 |   🧪    |    ❌    |
 | US - Oregon                  |   🧪    |    ❌    |
-| US - Texas                   |    ❌    |    ❌    |
+| US - Texas                   |   🧪    |    ❌    |
 | US - Delaware                |    ❌    |    ❌    |
 | US - Iowa                    |    ❌    |    ❌    |
 | US - Nebraska                |    ❌    |    ❌    |
