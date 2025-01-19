@@ -73,7 +73,7 @@ Legend:
 | US - Montana                 |   🧪    |    ❌    |
 | US - Oregon                  |   🧪    |    ❌    |
 | US - Texas                   |   🧪    |    ❌    |
-| US - Delaware                |    ❌    |    ❌    |
+| US - Delaware                |   🧪    |    ❌    |
 | US - Iowa                    |    ❌    |    ❌    |
 | US - Nebraska                |    ❌    |    ❌    |
 | US - New Hampshire           |    ❌    |    ❌    |
