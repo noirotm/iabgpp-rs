@@ -75,7 +75,7 @@ Legend:
 | US - Texas                   |   🧪    |    ❌    |
 | US - Delaware                |   🧪    |    ❌    |
 | US - Iowa                    |   🧪    |    ❌    |
-| US - Nebraska                |    ❌    |    ❌    |
+| US - Nebraska                |   🧪    |    ❌    |
 | US - New Hampshire           |    ❌    |    ❌    |
 | US - New Jersey              |    ❌    |    ❌    |
 | US - Tennessee               |    ❌    |    ❌    |
