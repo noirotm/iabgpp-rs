@@ -78,7 +78,7 @@ Legend:
 | US - Nebraska                |   🧪    |    ❌    |
 | US - New Hampshire           |   🧪    |    ❌    |
 | US - New Jersey              |   🧪    |    ❌    |
-| US - Tennessee               |    ❌    |    ❌    |
+| US - Tennessee               |   🧪    |    ❌    |
 
 ## Development status
 
