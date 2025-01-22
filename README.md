@@ -9,7 +9,6 @@ Rust implementation of the IAB Global Privacy Platform (GPP)
 
 - Eager or lazy decoding of GPP sections
 - Owning type (GPPString)
-- Reference type (GPPStr)
 - Read support for all current GPP sections
 
 ## Usage example
@@ -63,7 +62,8 @@ Legend:
 | EU TCF v1 (deprecated)       |    ✅    |    ❌    |
 | Canadian TCF v1 (deprecated) |    ✅    |    ❌    |
 | Canadian TCF v1.1            |    ✅    |    ❌    |
-| US - National                |    ✅    |    ❌    |
+| US - National v1             |    ✅    |    ❌    |
+| US - National v2             |    ❌    |    ❌    |
 | US - California              |    ✅    |    ❌    |
 | US - Virginia                |    ✅    |    ❌    |
 | US - Colorado                |    ✅    |    ❌    |
