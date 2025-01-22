@@ -550,4 +550,25 @@ mod tests {
             })
         ));
     }
+
+    macro_rules! assert_implements {
+        ($type:ty, [$($trait:path),+]) => {
+            {
+                $(const _: fn() = || {
+                    fn _assert_impl<T: $trait>() {}
+                    _assert_impl::<$type>();
+                };)+
+            }
+        };
+    }
+
+    #[test]
+    fn gpp_string_implements_traits() {
+        assert_implements!(GPPString, [Send, Sync]);
+    }
+
+    #[test]
+    fn section_implements_traits() {
+        assert_implements!(Section, [Send, Sync]);
+    }
 }
