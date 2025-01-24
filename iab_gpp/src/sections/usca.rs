@@ -288,9 +288,9 @@ mod tests {
     }
 
     #[test_case("" => matches SectionDecodeError::Read(_) ; "empty string")]
-    #[test_case("123" => matches SectionDecodeError::InvalidSectionVersion { .. } ; "decode error")]
-    #[test_case("CVVVVVVVVWA.YA" => matches SectionDecodeError::InvalidSectionVersion { .. } ; "invalid section version")]
-    #[test_case("BVVVVVVVVWA.AA" => matches SectionDecodeError::UnknownSegmentType { .. } ; "unknown segment version")]
+    #[test_case("123" => matches SectionDecodeError::UnknownSegmentVersion { .. } ; "decode error")]
+    #[test_case("CVVVVVVVVWA.YA" => matches SectionDecodeError::UnknownSegmentVersion { .. } ; "unknown segment version")]
+    #[test_case("BVVVVVVVVWA.AA" => matches SectionDecodeError::UnknownSegmentType { .. } ; "unknown segment type")]
     fn error(s: &str) -> SectionDecodeError {
         UsCa::from_str(s).unwrap_err()
     }

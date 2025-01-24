@@ -1,4 +1,4 @@
-use crate::from_data_reader::derive_struct_from_data_reader;
+use crate::from_data_reader::{derive_enum_from_data_reader, derive_struct_from_data_reader};
 use crate::optional_segment_parser::derive_optional_segment_parser;
 use crate::struct_attr::{GPPStructHelperAttribute, GPPStructKind};
 use proc_macro::TokenStream;
@@ -6,6 +6,7 @@ use proc_macro2::Ident;
 use quote::{quote, TokenStreamExt};
 use syn::{parse_macro_input, Attribute, Data, DataStruct, DeriveInput};
 
+mod enum_variant_attr;
 mod field_attr;
 mod from_data_reader;
 mod optional_segment_parser;
@@ -15,11 +16,17 @@ mod struct_attr;
 pub fn derive_from_data_reader(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
-    if let Data::Struct(s) = input.data {
-        let attr = GPPStructHelperAttribute::new(&input.attrs).expect("attribute parsing failed");
-        derive_struct_from_data_reader(&s, &input.ident, &attr).into()
-    } else {
-        TokenStream::new()
+    match input.data {
+        Data::Struct(s) => {
+            let attr =
+                GPPStructHelperAttribute::new(&input.attrs).expect("attribute parsing failed");
+            derive_struct_from_data_reader(&s, &input.ident, &attr).into()
+        }
+        Data::Enum(e) => {
+            // we don't support enum-level attributes
+            derive_enum_from_data_reader(&e, &input.ident).into()
+        }
+        _ => TokenStream::new(),
     }
 }
 

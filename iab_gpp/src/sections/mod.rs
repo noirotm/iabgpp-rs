@@ -124,8 +124,8 @@ pub enum SectionDecodeError {
     InvalidSectionVersion { expected: u8, found: u8 },
     #[error("unable to decode segment")]
     DecodeSegment(#[from] DecodeError),
-    #[error("invalid segment version (expected {expected}, found {found})")]
-    InvalidSegmentVersion { expected: u8, found: u8 },
+    #[error("invalid segment version ({segment_version})")]
+    UnknownSegmentVersion { segment_version: u8 },
     #[error("unknown segment type {segment_type}")]
     UnknownSegmentType { segment_type: u8 },
     #[error("duplicate segment type {segment_type}")]
