@@ -1,6 +1,5 @@
 use crate::sections::us_common::{
-    is_notice_and_opt_out_combination_ok, parse_mspa_covered_transaction, Consent, MspaMode,
-    Notice, OptOut, ValidationError,
+    parse_mspa_covered_transaction, Consent, MspaMode, Notice, OptOut,
 };
 use iab_gpp_derive::{FromDataReader, GPPSection};
 
@@ -8,85 +7,6 @@ use iab_gpp_derive::{FromDataReader, GPPSection};
 #[non_exhaustive]
 pub struct UsVa {
     pub core: Core,
-}
-
-impl UsVa {
-    /// Checks the consistency of values in the already populated fields.
-    ///
-    /// This is based on the code found in <https://iabgpp.com/js/3.2.0/cmpapi/encoder/segment/UsVaV1CoreSegment.js>.
-    ///
-    /// While CMPs shouldn't be able to generate invalid combinations, the binary wire format
-    /// does not prevent it.
-    pub fn validate(&self) -> Result<(), Vec<ValidationError>> {
-        let mut errors = vec![];
-
-        if !is_notice_and_opt_out_combination_ok(
-            &self.core.sale_opt_out_notice,
-            &self.core.sale_opt_out,
-        ) {
-            errors.push(ValidationError::new(
-                "sale_opt_out_notice",
-                &self.core.sale_opt_out_notice,
-                "sale_opt_out",
-                &self.core.sale_opt_out,
-            ));
-        }
-
-        if !is_notice_and_opt_out_combination_ok(
-            &self.core.targeted_advertising_opt_out_notice,
-            &self.core.targeted_advertising_opt_out,
-        ) {
-            errors.push(ValidationError::new(
-                "targeted_advertising_opt_out_notice",
-                &self.core.targeted_advertising_opt_out_notice,
-                "targeted_advertising_opt_out_opt_out",
-                &self.core.targeted_advertising_opt_out,
-            ));
-        }
-
-        if self.core.mspa_service_provider_mode == MspaMode::NotApplicable {
-            if self.core.sale_opt_out_notice != Notice::NotApplicable {
-                errors.push(ValidationError::new(
-                    "mspa_service_provider_mode",
-                    &self.core.mspa_service_provider_mode,
-                    "sale_opt_out_notice",
-                    &self.core.sale_opt_out_notice,
-                ));
-            }
-        } else if self.core.mspa_service_provider_mode == MspaMode::Yes {
-            if self.core.mspa_opt_out_option_mode != MspaMode::No {
-                errors.push(ValidationError::new(
-                    "mspa_service_provider_mode",
-                    &self.core.mspa_service_provider_mode,
-                    "mspa_opt_out_option_mode",
-                    &self.core.mspa_opt_out_option_mode,
-                ));
-            }
-            if self.core.sale_opt_out_notice != Notice::NotApplicable {
-                errors.push(ValidationError::new(
-                    "mspa_service_provider_mode",
-                    &self.core.mspa_service_provider_mode,
-                    "sale_opt_out_notice",
-                    &self.core.sale_opt_out_notice,
-                ));
-            }
-        } else if self.core.mspa_service_provider_mode == MspaMode::No
-            && self.core.mspa_opt_out_option_mode != MspaMode::Yes
-        {
-            errors.push(ValidationError::new(
-                "mspa_service_provider_mode",
-                &self.core.mspa_service_provider_mode,
-                "mspa_opt_out_option_mode",
-                &self.core.mspa_opt_out_option_mode,
-            ));
-        }
-
-        if errors.is_empty() {
-            Ok(())
-        } else {
-            Err(errors)
-        }
-    }
 }
 
 #[derive(Debug, Eq, PartialEq, FromDataReader)]
@@ -186,7 +106,6 @@ mod tests {
         for (s, expected) in test_cases {
             let actual = UsVa::from_str(s).unwrap();
             assert_eq!(actual, expected);
-            assert!(actual.validate().is_ok());
         }
     }
 

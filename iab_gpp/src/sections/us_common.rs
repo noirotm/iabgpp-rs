@@ -1,37 +1,8 @@
 use crate::core::{DataReader, FromDataReader};
 use crate::sections::SectionDecodeError;
 use num_derive::{FromPrimitive, ToPrimitive};
-use num_traits::{FromPrimitive, ToPrimitive};
+use num_traits::FromPrimitive;
 use std::io;
-
-pub struct ValidationError {
-    pub field1: (&'static str, u8),
-    pub field2: (&'static str, u8),
-}
-
-impl ValidationError {
-    pub(crate) fn new<T1, T2>(
-        field1: &'static str,
-        val1: &T1,
-        field2: &'static str,
-        val2: &T2,
-    ) -> Self
-    where
-        T1: ToPrimitive,
-        T2: ToPrimitive,
-    {
-        Self {
-            field1: (field1, val1.to_u8().unwrap_or_default()),
-            field2: (field2, val2.to_u8().unwrap_or_default()),
-        }
-    }
-}
-
-pub(crate) fn is_notice_and_opt_out_combination_ok(notice: &Notice, opt_out: &OptOut) -> bool {
-    *notice == Notice::NotApplicable && *opt_out == OptOut::NotApplicable
-        || *notice == Notice::Provided && *opt_out != OptOut::NotApplicable
-        || *notice == Notice::NotProvided && *opt_out == OptOut::OptedOut
-}
 
 #[derive(Debug, Eq, PartialEq, FromPrimitive, ToPrimitive)]
 pub enum Notice {
