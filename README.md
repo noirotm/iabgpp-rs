@@ -63,7 +63,7 @@ Legend:
 | Canadian TCF v1 (deprecated) |    ✅    |    ❌    |
 | Canadian TCF v1.1            |    ✅    |    ❌    |
 | US - National v1             |    ✅    |    ❌    |
-| US - National v2             |    ❌    |    ❌    |
+| US - National v2             |   🧪    |    ❌    |
 | US - California              |    ✅    |    ❌    |
 | US - Virginia                |    ✅    |    ❌    |
 | US - Colorado                |    ✅    |    ❌    |
