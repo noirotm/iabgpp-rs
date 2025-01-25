@@ -548,6 +548,13 @@ mod tests {
         ));
     }
 
+    #[test]
+    fn invalid_tcfeuv2_section() {
+        let r = GPPString::from_str("DBABMA~CQLvHAAQLvHAAAKA4DENBaFsAP_gAEPgAAwIKxtX_G9_bXlr8X736ftkeY1f99h77sQxBhZBk-4FzLvW_JwX32E7NA36tqYKmRIAu3TBIQNlHJDURVCgaogVrTDMaEyUoTtKJ6BkiFMRY2dYCFxvm4tjeQCY5vr991d52R-tbdrs3dzyy4hnv3a9_-S1WJCdA5-tDfv9bROb89IO5_x8v4v4_N7pE2_eT1l_tWvp7D9-ctv_9XX99_fbff9Pn_-uB_-_X__f_H37grAAQYCABAEAQICAAAAAQAAEAAEABAAAAAAACgAABEEAAEDAAAQAIAQAAABAABAAAAIAAAAAgACAAAAAEAgAAAACgADAAAAAAAYAAAMAEgIAAAAAQACmABAIFAAEJAFAEACEAEEAIQAABAEACAEABRwBAACBAoAAAQAAEAAAFgIDgAQEpAgACIgEAAAIAEAggAAEQjYACCAASCqqBAiiCAQLBoQFPaQAkgBACDgmQAgABQAHAAsA.f_gAAAAAAAAA").unwrap()
+            .decode_all_sections();
+        assert!(matches!(r[0], Err(SectionDecodeError::Read { .. })));
+    }
+
     macro_rules! assert_implements {
         ($type:ty, [$($trait:path),+]) => {
             {
