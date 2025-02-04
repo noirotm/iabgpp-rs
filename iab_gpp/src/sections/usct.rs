@@ -2,8 +2,11 @@ use crate::sections::us_common::{
     parse_mspa_covered_transaction, Consent, MspaMode, Notice, OptOut,
 };
 use iab_gpp_derive::{FromDataReader, GPPSection};
+#[cfg(feature = "serde")]
+use serde::Serialize;
 
 #[derive(Debug, Eq, PartialEq, GPPSection)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 #[non_exhaustive]
 #[gpp(with_optional_segments(bits = 2))]
 pub struct UsCt {
@@ -13,6 +16,7 @@ pub struct UsCt {
 }
 
 #[derive(Debug, Eq, PartialEq, FromDataReader)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 #[non_exhaustive]
 #[gpp(section_version = 1)]
 pub struct Core {
@@ -30,6 +34,7 @@ pub struct Core {
 }
 
 #[derive(Debug, Eq, PartialEq, FromDataReader)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 #[non_exhaustive]
 pub struct SensitiveDataProcessing {
     pub racial_or_ethnic_origin: Consent,
@@ -43,6 +48,7 @@ pub struct SensitiveDataProcessing {
 }
 
 #[derive(Debug, Eq, PartialEq, FromDataReader)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 #[non_exhaustive]
 pub struct KnownChildSensitiveDataConsents {
     pub process_sensitive_data_from_known_child: Consent,

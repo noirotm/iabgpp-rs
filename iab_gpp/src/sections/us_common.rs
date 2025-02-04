@@ -2,9 +2,12 @@ use crate::core::{DataReader, FromDataReader};
 use crate::sections::SectionDecodeError;
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::FromPrimitive;
+#[cfg(feature = "serde")]
+use serde::Serialize;
 use std::io;
 
 #[derive(Debug, Eq, PartialEq, FromPrimitive, ToPrimitive)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 pub enum Notice {
     NotApplicable = 0,
     Provided = 1,
@@ -20,6 +23,7 @@ impl FromDataReader for Notice {
 }
 
 #[derive(Debug, Eq, PartialEq, FromPrimitive, ToPrimitive)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 pub enum OptOut {
     NotApplicable = 0,
     OptedOut = 1,
@@ -35,6 +39,7 @@ impl FromDataReader for OptOut {
 }
 
 #[derive(Debug, Eq, PartialEq, FromPrimitive, ToPrimitive)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 pub enum Consent {
     NotApplicable = 0,
     NoConsent = 1,
@@ -50,6 +55,7 @@ impl FromDataReader for Consent {
 }
 
 #[derive(Debug, Eq, PartialEq, FromPrimitive, ToPrimitive)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 pub enum MspaMode {
     NotApplicable = 0,
     Yes = 1,

@@ -2,8 +2,11 @@ use crate::sections::us_common::{
     parse_mspa_covered_transaction, Consent, MspaMode, Notice, OptOut,
 };
 use iab_gpp_derive::{FromDataReader, GPPSection};
+#[cfg(feature = "serde")]
+use serde::Serialize;
 
 #[derive(Debug, Eq, PartialEq, GPPSection)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 #[non_exhaustive]
 #[gpp(with_optional_segments(bits = 2))]
 pub struct UsCa {
@@ -13,6 +16,7 @@ pub struct UsCa {
 }
 
 #[derive(Debug, Eq, PartialEq, FromDataReader)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 #[non_exhaustive]
 #[gpp(section_version = 1)]
 /// The core sub-section must always be present. Where terms are capitalized in the ‘description’
@@ -33,6 +37,7 @@ pub struct Core {
 }
 
 #[derive(Debug, Eq, PartialEq, FromDataReader)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 #[non_exhaustive]
 pub struct SensitiveDataProcessing {
     /// Opt-Out of the Use or Disclosure of the Consumer's Sensitive Personal Information Which
@@ -54,6 +59,7 @@ pub struct SensitiveDataProcessing {
 }
 
 #[derive(Debug, Eq, PartialEq, FromDataReader)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 #[non_exhaustive]
 pub struct KnownChildSensitiveDataConsents {
     pub sell_personal_information: Consent,

@@ -42,6 +42,8 @@ use crate::sections::ustx::UsTx;
 use crate::sections::usut::UsUt;
 use crate::sections::usva::UsVa;
 use num_derive::{FromPrimitive, ToPrimitive};
+#[cfg(feature = "serde")]
+use serde::Serialize;
 use std::collections::BTreeSet;
 use std::io;
 use std::str::FromStr;
@@ -134,7 +136,8 @@ pub enum SectionDecodeError {
     InvalidFieldValue { expected: String, found: String },
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 #[non_exhaustive]
 pub enum Section {
     TcfEuV1(TcfEuV1),

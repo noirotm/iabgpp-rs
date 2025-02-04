@@ -19,9 +19,15 @@ iab_gpp_derive = { version = "0", path = "../iab_gpp_derive" }
 num-derive = "0.4.0"
 num-iter = "0.1.43"
 num-traits = "0.2.16"
+serde = { version = "1.0.217", features = ["derive"], optional = true }
 strum = "0.26.2"
 strum_macros = "0.26.2"
 thiserror = "1.0.44"
 
 [dev-dependencies]
 test-case = "3.2.1"
+serde = "1.0.217"
+serde_json = "1.0.137"
+
+[features]
+serde = ["dep:serde"]
