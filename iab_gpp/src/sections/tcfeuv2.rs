@@ -14,6 +14,8 @@ pub struct TcfEuV2 {
     pub core: Core,
     #[gpp(optional_segment_type = 1, optimized_integer_range)]
     pub disclosed_vendors: Option<IdSet>,
+    #[gpp(optional_segment_type = 2, optimized_integer_range)]
+    pub allowed_vendors: Option<IdSet>,
     #[gpp(optional_segment_type = 3)]
     pub publisher_purposes: Option<PublisherPurposes>,
 }
@@ -135,6 +137,7 @@ mod tests {
                 publisher_restrictions: vec![],
             },
             disclosed_vendors: None,
+            allowed_vendors: None,
             publisher_purposes: None,
         };
         assert_eq!(actual, expected);
@@ -166,6 +169,49 @@ mod tests {
                 publisher_restrictions: vec![],
             },
             disclosed_vendors: Some(
+                [
+                    2, 6, 8, 12, 18, 23, 37, 42, 47, 48, 53, 61, 65, 66, 72, 88, 98, 127, 128, 129,
+                    133, 153, 163, 192, 205, 215, 224, 243, 248, 281, 294, 304, 350, 351, 358, 371,
+                    422, 424, 440, 447, 467, 486, 498, 502, 512, 516, 553, 556, 571, 587, 612, 613,
+                    618, 626, 648, 653, 656, 657, 665, 676, 681, 683, 684, 686, 687, 688, 690, 691,
+                    694, 702, 703, 707, 708, 711, 712, 714, 716, 719, 720,
+                ]
+                .into(),
+            ),
+            allowed_vendors: None,
+            publisher_purposes: None,
+        };
+
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn with_allowed_vendors() {
+        let actual = TcfEuV2::from_str("COvFyGBOvFyGBAbAAAENAPCAAOAAAAAAAAAAAEEUACCKAAA.QFoEUQQgAIQwgIwQABAEAAAAOIAACAIAAAAQAIAgEAACEAAAAAgAQBAAAAAAAGBAAgAAAAAAAFAAECAAAgAAQARAEQAAAAAJAAIAAgAAAYQEAAAQmAgBC3ZAYzUw").unwrap();
+
+        let expected = TcfEuV2 {
+            core: Core {
+                created: 1582243059,
+                last_updated: 1582243059,
+                cmp_id: 27,
+                cmp_version: 0,
+                consent_screen: 0,
+                consent_language: "EN".to_string(),
+                vendor_list_version: 15,
+                policy_version: 2,
+                is_service_specific: false,
+                use_non_standard_stacks: false,
+                special_feature_optins: Default::default(),
+                purpose_consents: [1, 2, 3].into(),
+                purpose_legitimate_interests: Default::default(),
+                purpose_one_treatment: false,
+                publisher_country_code: "AA".to_string(),
+                vendor_consents: [2, 6, 8].into(),
+                vendor_legitimate_interests: [2, 6, 8].into(),
+                publisher_restrictions: vec![],
+            },
+            disclosed_vendors: None,
+            allowed_vendors: Some(
                 [
                     2, 6, 8, 12, 18, 23, 37, 42, 47, 48, 53, 61, 65, 66, 72, 88, 98, 127, 128, 129,
                     133, 153, 163, 192, 205, 215, 224, 243, 248, 281, 294, 304, 350, 351, 358, 371,
@@ -209,6 +255,7 @@ mod tests {
                 publisher_restrictions: vec![],
             },
             disclosed_vendors: None,
+            allowed_vendors: None,
             publisher_purposes: Some(PublisherPurposes {
                 consents: [3, 16].into(),
                 legitimate_interests: [
@@ -257,6 +304,7 @@ mod tests {
                 ]
                 .into(),
             ),
+            allowed_vendors: None,
             publisher_purposes: Some(PublisherPurposes {
                 consents: [3, 16].into(),
                 legitimate_interests: [
