@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "gpptool",
     "iab_gpp",
     "iab_gpp_derive"
 ]

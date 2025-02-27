@@ -1,0 +1,20 @@
+[package]
+name = "gpptool"
+version = "0.1.0"
+edition = "2021"
+authors = ["Marc Noirot <marc.noirot@gmail.com>"]
+description = "IAB GPP Consent String implementation"
+homepage = "https://github.com/noirotm/iabgpp-rs"
+repository = "https://github.com/noirotm/iabgpp-rs"
+license = "Apache-2.0"
+keywords = ["tcf", "iab", "gpp", "decode"]
+categories = ["parser-implementations"]
+documentation = "https://docs.rs/iab_gpp/"
+
+[dependencies]
+clap = { version = "4.5.28", features = ["derive"] }
+colored_json = "5.0.0"
+iab_gpp = { path = "../iab_gpp", features = ["serde"] }
+serde = { version = "1.0.217", features = ["derive"] }
+serde_json = "1.0.138"
+num-traits = "0.2.19"
