@@ -130,8 +130,6 @@ pub enum SectionDecodeError {
     UnknownSegmentType { segment_type: u8 },
     #[error("duplicate segment type {segment_type}")]
     DuplicateSegmentType { segment_type: u8 },
-    #[error("missing core segment")]
-    MissingCoreSegment,
     #[error("invalid field value (expected {expected}, found {found})")]
     InvalidFieldValue { expected: String, found: String },
 }
