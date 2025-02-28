@@ -46,6 +46,11 @@ pub fn derive_struct_from_data_reader(
 
         let attr = GPPFieldHelperAttribute::new(&field.attrs).expect("attribute parsing failed");
 
+        // debug next field
+        /*parse_statements.push(quote! {
+            println!("Parsing field: {}", stringify!(#name));
+        });*/
+
         // Handle where attribute
         if let Some(where_spec) = attr.where_spec {
             let name = where_spec.name;

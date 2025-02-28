@@ -12,6 +12,7 @@ mod from_data_reader;
 mod optional_segment_parser;
 mod struct_attr;
 
+/// Derive the FromDataReader trait
 #[proc_macro_derive(FromDataReader, attributes(gpp))]
 pub fn derive_from_data_reader(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);

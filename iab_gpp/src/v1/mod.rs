@@ -555,6 +555,34 @@ mod tests {
         assert!(matches!(r[0], Err(SectionDecodeError::Read { .. })));
     }
 
+    #[test]
+    fn very_large_string() {
+        let s = "DBACMYA~CQMC4oAQMC4oAPoABABGBaEAAP_gAP_gAAqIKxtX_G__bXlv-X736ftkeY1f99h77sQxBhbJs-4FzLvW_JwX32E7NE36tqYKmRIAu3TBIQNtHJjURVChaogVrTDsaEyUoTtKJ-BkiHMRY2dYCFxvm4tjeQCZ5vr_91d52R_t7dr-3dzyy5hnv3a9_-S1WJidK5-tHfv9bROb-_I-9_x-_4v4_N7pE2_eT1t_tWvt739-8tv_9__99__7_f______3_-_f__f____grG1f8b_9teW_5fvfp-2R5jV_32HvuxDEGFsmz7gXMu9b8nBffYTs0Tfq2pgqZEgC7dMEhA20cmNRFUKFqiBWtMOxoTJShO0on4GSIcxFjZ1gIXG-bi2N5AJnm-v_3V3nZH-3t2v7d3PLLmGe_dr3_5LVYmJ0rn60d-_1tE5v78j73_H7_i_j83ukTb95PW3-1a-3vf37y2__3__33__v9_______f_79__9____-AAA.QKxtX_G__bXlv-X736ftkeY1f99h77sQxBhbJs-4FzLvW_JwX32E7NE36tqYKmRIAu3TBIQNtHJjURVChaogVrTDsaEyUoTtKJ-BkiHMRY2dYCFxvm4tjeQCZ5vr_91d52R_t7dr-3dzyy5hnv3a9_-S1WJidK5-tHfv9bROb-_I-9_x-_4v4_N7pE2_eT1t_tWvt739-8tv_9__99__7_f______3_-_f__f____gAA.IKxtX_G__bXlv-X736ftkeY1f99h77sQxBhbJs-4FzLvW_JwX32E7NE36tqYKmRIAu3TBIQNtHJjURVChaogVrTDsaEyUoTtKJ-BkiHMRY2dYCFxvm4tjeQCZ5vr_91d52R_t7dr-3dzyy5hnv3a9_-S1WJidK5-tHfv9bROb-_I-9_x-_4v4_N7pE2_eT1t_tWvt739-8tv_9__99__7_f______3_-_f__f____gAA~BQMC4oAQMC4oAPoABABGB0CYAf8AAf8AAAqdA-AAUABwAFQALQAaABLACgAF0ANoAdwA_QCCAIQARQAnwBWgC3AGUANMAc4A7gCAQElASYAnYBPwDFAGaAM6AZ8A14B_AEngJyAT-Ao8BUQCpQFvALhAXQAvcBf4DBwGYANNAbUA3EBxoDxAHmgPkAgIBCQCNwEpYJgAmCBNUCa4E5gJ-AUmApYBU4FToHwACgAOAAqABaADQAJYAUAAugBtADuAH6AQQBCACKAE-AK0AW4AygBpgDnAHcAQCAkoCTAE7AJ-AYoAzQBnQDPgGvAP4Ak8BOQCfwFHgKiAVKAt4BcIC6AF7gL_AYOAzABpoDagG4gONAeIA80B8gEBAISARuAlLBMAEwQJqgTXAnMBPwCkwFLAKnAAAA.YAAAAAAAAAA";
+        let r = GPPString::from_str(s);
+        assert!(matches!(r, Ok(GPPString { .. })));
+
+        let gpp = r.unwrap();
+
+        assert_eq!(
+            gpp.section_ids,
+            vec![SectionId::TcfEuV2, SectionId::TcfCaV1]
+        );
+
+        let tcfeuv2 = gpp.decode_section(SectionId::TcfEuV2);
+        assert!(
+            matches!(tcfeuv2, Ok(Section::TcfEuV2(_))),
+            "got {:?}",
+            tcfeuv2
+        );
+
+        let tcfcav1 = gpp.decode_section(SectionId::TcfCaV1);
+        assert!(
+            matches!(tcfcav1, Ok(Section::TcfCaV1(_))),
+            "got {:?}",
+            tcfcav1
+        );
+    }
+
     macro_rules! assert_implements {
         ($type:ty, [$($trait:path),+]) => {
             {
