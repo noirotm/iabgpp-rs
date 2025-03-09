@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use colored_json::ToColoredJson;
+use colored_json::{Color, ColorMode, Output, Styler, ToColoredJson};
 use iab_gpp::sections::SectionId;
 use iab_gpp::v1::GPPString;
 use num_traits::cast::FromPrimitive;
@@ -61,7 +61,8 @@ fn parse_gpp_string(s: &str) -> Result<(), Box<dyn std::error::Error>> {
 
     println!(
         "{}",
-        serde_json::to_string_pretty(&sections)?.to_colored_json_auto()?
+        serde_json::to_string_pretty(&sections)?
+            .to_colored_json_with_styler(ColorMode::Auto(Output::StdOut), json_color_styler())?
     );
 
     Ok(())
@@ -74,7 +75,8 @@ fn parse_gpp_string_section(s: &str, id: u32) -> Result<(), Box<dyn std::error::
 
     println!(
         "{}",
-        serde_json::to_string_pretty(&section)?.to_colored_json_auto()?
+        serde_json::to_string_pretty(&section)?
+            .to_colored_json_with_styler(ColorMode::Auto(Output::StdOut), json_color_styler())?
     );
 
     Ok(())
@@ -88,4 +90,16 @@ fn list_sections(s: &str) -> Result<(), Box<dyn std::error::Error>> {
     }
 
     Ok(())
+}
+
+fn json_color_styler() -> Styler {
+    Styler {
+        key: Color::Green.foreground(),
+        string_value: Color::Blue.bold(),
+        integer_value: Color::Magenta.bold(),
+        float_value: Color::Magenta.italic(),
+        object_brackets: Color::Yellow.bold(),
+        array_brackets: Color::Cyan.bold(),
+        ..Default::default()
+    }
 }
