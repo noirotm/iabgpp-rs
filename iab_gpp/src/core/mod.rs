@@ -210,20 +210,15 @@ impl<'a> DataReader<'a> {
 
     pub fn read_array_of_ranges(&mut self) -> io::Result<Vec<Range>> {
         let n = self.read_fixed_integer::<u16>(12)? as usize;
-        let mut ranges = vec![];
-
-        for _ in 0..n {
-            let key = self.read_fixed_integer(6)?;
-            let range_type = self.read_fixed_integer(2)?;
-            let ids = self.read_optimized_integer_range()?;
-            ranges.push(Range {
-                key,
-                range_type,
-                ids,
-            });
-        }
-
-        Ok(ranges)
+        repeat_with(|| {
+            Ok(Range {
+                key: self.read_fixed_integer(6)?,
+                range_type: self.read_fixed_integer(2)?,
+                ids: self.read_optimized_integer_range()?,
+            })
+        })
+        .take(n)
+        .collect()
     }
 
     pub fn read_n_array_of_ranges<X, Y>(
@@ -236,20 +231,15 @@ impl<'a> DataReader<'a> {
         Y: Numeric,
     {
         let n = self.read_fixed_integer::<u16>(12)? as usize;
-        let mut ranges = vec![];
-
-        for _ in 0..n {
-            let key = self.read_fixed_integer::<X>(x)?;
-            let range_type = self.read_fixed_integer::<Y>(y)?;
-            let ids = self.read_optimized_range()?;
-            ranges.push(GenericRange {
-                key,
-                range_type,
-                ids,
-            });
-        }
-
-        Ok(ranges)
+        repeat_with(|| {
+            Ok(GenericRange {
+                key: self.read_fixed_integer::<X>(x)?,
+                range_type: self.read_fixed_integer::<Y>(y)?,
+                ids: self.read_optimized_range()?,
+            })
+        })
+        .take(n)
+        .collect()
     }
 }
 
