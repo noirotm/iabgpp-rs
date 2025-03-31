@@ -84,8 +84,11 @@ pub enum GPPDecodeError {
     #[error("no header found")]
     NoHeaderFound,
     /// The header section's Base64 representation cannot be decoded.
-    #[error("unable to decode header")]
-    DecodeHeader(#[from] DecodeError),
+    #[error("unable to decode header: {source}")]
+    DecodeHeader {
+        #[from]
+        source: DecodeError,
+    },
     /// The header has an invalid type for this version of GPP.
     #[error("invalid header type (expected {GPP_HEADER}, found {found})")]
     InvalidHeaderType { found: u8 },
@@ -98,8 +101,11 @@ pub enum GPPDecodeError {
     /// An I/O error occured while reading the string.
     ///
     /// This usually occurs if the input string is truncated.
-    #[error("unable to read string")]
-    Read(#[from] io::Error),
+    #[error("unable to read string: {source}")]
+    Read {
+        #[from]
+        source: io::Error,
+    },
     /// A section with an unknown or unsupported identifier is listed in the string header.
     #[error("unsupported section id {0}")]
     UnsupportedSectionId(u8),

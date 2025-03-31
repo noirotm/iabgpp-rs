@@ -19,7 +19,6 @@
 //! section types are marked with the `#[non_exhaustive]` attribute to preserve minor version
 //! compatibility.
 //!
-use crate::core::base64::DecodeError;
 use crate::core::{DataReader, DecodeExt, FromDataReader};
 use crate::sections::tcfcav1::TcfCaV1;
 use crate::sections::tcfeuv1::TcfEuV1;
@@ -41,6 +40,7 @@ use crate::sections::ustn::UsTn;
 use crate::sections::ustx::UsTx;
 use crate::sections::usut::UsUt;
 use crate::sections::usva::UsVa;
+use crate::v1::DecodeError;
 use num_derive::{FromPrimitive, ToPrimitive};
 #[cfg(feature = "serde")]
 use serde::Serialize;
@@ -112,8 +112,11 @@ pub enum SectionDecodeError {
     MissingSection(SectionId),
     #[error("unsupported section id {0}")]
     UnsupportedSectionId(SectionId),
-    #[error("unable to read string")]
-    Read(#[from] io::Error),
+    #[error("unable to read string: {source}")]
+    Read {
+        #[from]
+        source: io::Error,
+    },
     #[error("unexpected end of string in {0}")]
     UnexpectedEndOfString(String),
     #[error("invalid character {character:?} in {kind} string {s:?}")]
@@ -124,8 +127,11 @@ pub enum SectionDecodeError {
     },
     #[error("invalid section version (expected {expected}, found {found})")]
     InvalidSectionVersion { expected: u8, found: u8 },
-    #[error("unable to decode segment")]
-    DecodeSegment(#[from] DecodeError),
+    #[error("unable to decode segment: {source}")]
+    DecodeSegment {
+        #[from]
+        source: DecodeError,
+    },
     #[error("invalid segment version ({segment_version})")]
     UnknownSegmentVersion { segment_version: u8 },
     #[error("unknown segment type {segment_type}")]

@@ -72,8 +72,8 @@ mod tests {
         assert_eq!(actual, expected);
     }
 
-    #[test_case("BO5a1L7O5a1L7AAABBENC2-AAAAtH" => matches SectionDecodeError::Read(_) ; "missing data")]
-    #[test_case("" => matches SectionDecodeError::Read(_) ; "empty string")]
+    #[test_case("BO5a1L7O5a1L7AAABBENC2-AAAAtH" => matches SectionDecodeError::Read { .. } ; "missing data")]
+    #[test_case("" => matches SectionDecodeError::Read { .. } ; "empty string")]
     #[test_case("DOEFEAyOEFEAyAHABDENAI4AAAB9vABAASA" => matches SectionDecodeError::UnknownSegmentVersion { segment_version: 3 } ; "unknown segment version")]
     fn error(s: &str) -> SectionDecodeError {
         TcfEuV1::from_str(s).unwrap_err()

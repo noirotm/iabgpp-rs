@@ -180,7 +180,7 @@ mod tests {
         }
     }
 
-    #[test_case("" => matches SectionDecodeError::Read(_) ; "empty string")]
+    #[test_case("" => matches SectionDecodeError::Read { .. } ; "empty string")]
     #[test_case("123" => matches SectionDecodeError::UnknownSegmentVersion { .. } ; "decode error")]
     #[test_case("CVVVVVVVVWA.YA" => matches SectionDecodeError::UnknownSegmentVersion { .. } ; "unknown segment version")]
     #[test_case("BVVVVVVVVWA.AA" => matches SectionDecodeError::UnknownSegmentType { .. } ; "unknown segment type")]

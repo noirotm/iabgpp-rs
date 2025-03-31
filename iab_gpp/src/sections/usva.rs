@@ -114,7 +114,7 @@ mod tests {
         }
     }
 
-    #[test_case("" => matches SectionDecodeError::Read(_) ; "empty string")]
+    #[test_case("" => matches SectionDecodeError::Read { .. } ; "empty string")]
     #[test_case("123" => matches SectionDecodeError::UnknownSegmentVersion { .. } ; "decode error")]
     #[test_case("CVVVVVVVVWA" => matches SectionDecodeError::UnknownSegmentVersion { .. } ; "unknown segment version")]
     fn error(s: &str) -> SectionDecodeError {
