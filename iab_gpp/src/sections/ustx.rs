@@ -8,8 +8,11 @@ use serde::Serialize;
 #[derive(Debug, Eq, PartialEq, GPPSection)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 #[non_exhaustive]
+#[gpp(with_optional_segments(bits = 2))]
 pub struct UsTx {
     pub core: Core,
+    #[gpp(optional_segment_type = 1)]
+    pub gpc: Option<bool>,
 }
 
 #[derive(Debug, Eq, PartialEq, FromDataReader)]
