@@ -21,16 +21,11 @@ pub fn decode(s: &str) -> Result<Vec<u8>, DecodeError> {
     // write 6 bits for every decoded character
     for (i, b) in s.bytes().enumerate() {
         let value = base64_value(b).ok_or(DecodeError::InvalidByte(i, b))?;
-        bw.write(6, value).expect("write into vec should not fail");
+        _ = bw.write::<6, u8>(value);
     }
 
     // write remaining value if we're not 8-bit aligned at this point
-    let (n, value) = bw.into_unwritten();
-    if n > 0 {
-        let n = 8 - n;
-        let value = value << n;
-        buffer.push(value);
-    }
+    _ = bw.byte_align();
 
     Ok(buffer)
 }

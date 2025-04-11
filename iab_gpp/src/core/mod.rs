@@ -1,6 +1,6 @@
 use crate::core::fibonacci::fibonacci_iterator;
 use base64::DecodeError;
-use bitstream_io::{BigEndian, BitRead, BitReader, Numeric};
+use bitstream_io::{BigEndian, BitRead, BitReader, UnsignedInteger};
 use num_iter::range_inclusive;
 use num_traits::{CheckedAdd, Num, NumAssignOps, ToPrimitive};
 use std::collections::BTreeSet;
@@ -81,8 +81,8 @@ impl<'a> DataReader<'a> {
         self.bit_reader.read_bit()
     }
 
-    pub fn read_fixed_integer<N: Numeric>(&mut self, bits: u32) -> io::Result<N> {
-        self.bit_reader.read(bits)
+    pub fn read_fixed_integer<N: UnsignedInteger>(&mut self, bits: u32) -> io::Result<N> {
+        self.bit_reader.read_unsigned_var(bits)
     }
 
     pub fn read_fibonacci_integer<T>(&mut self) -> io::Result<T>
@@ -118,8 +118,8 @@ impl<'a> DataReader<'a> {
             .collect::<Result<String, _>>()
     }
 
-    pub fn read_datetime_as_unix_timestamp(&mut self) -> io::Result<i64> {
-        Ok(self.read_fixed_integer::<i64>(36)? / 10) // seconds
+    pub fn read_datetime_as_unix_timestamp(&mut self) -> io::Result<u64> {
+        Ok(self.read_fixed_integer::<u64>(36)? / 10) // seconds
     }
 
     pub fn read_fixed_bitfield(&mut self, bits: usize) -> io::Result<BTreeSet<u16>> {
@@ -227,8 +227,8 @@ impl<'a> DataReader<'a> {
         y: u32,
     ) -> io::Result<Vec<GenericRange<X, Y>>>
     where
-        X: Numeric,
-        Y: Numeric,
+        X: UnsignedInteger,
+        Y: UnsignedInteger,
     {
         let n = self.read_fixed_integer::<u16>(12)? as usize;
         repeat_with(|| {
@@ -298,7 +298,7 @@ mod tests {
 
     #[test_case("001111101100100110001110010001011101" => 1685434479)]
     #[test_case("000000000000000000000000000000000000" => 0)]
-    fn read_datetime_as_unix_timestamp(s: &str) -> i64 {
+    fn read_datetime_as_unix_timestamp(s: &str) -> u64 {
         DataReader::new(&b(s))
             .read_datetime_as_unix_timestamp()
             .unwrap()

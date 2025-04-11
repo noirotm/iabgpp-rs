@@ -13,7 +13,7 @@ documentation = "https://docs.rs/iab_gpp/"
 readme = "crates-io.md"
 
 [dependencies]
-bitstream-io = "2.5.3"
+bitstream-io = "3.1.0"
 fnv = "1.0.7"
 iab_gpp_derive = { version = "0", path = "../iab_gpp_derive" }
 num-derive = "0.4.0"

@@ -73,7 +73,7 @@ impl FromDataReader for MspaMode {
 pub(crate) fn parse_mspa_covered_transaction(
     r: &mut DataReader,
 ) -> Result<bool, SectionDecodeError> {
-    let val = r.read_fixed_integer(2)?;
+    let val = r.read_fixed_integer::<u8>(2)?;
     match val {
         1 => Ok(true),
         2 => Ok(false),

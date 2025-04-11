@@ -26,9 +26,9 @@ pub struct TcfEuV2 {
 #[gpp(section_version = 2)]
 pub struct Core {
     #[gpp(datetime_as_unix_timestamp)]
-    pub created: i64,
+    pub created: u64,
     #[gpp(datetime_as_unix_timestamp)]
-    pub last_updated: i64,
+    pub last_updated: u64,
     pub cmp_id: u16,
     pub cmp_version: u16,
     pub consent_screen: u8,
