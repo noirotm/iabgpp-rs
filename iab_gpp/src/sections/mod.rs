@@ -112,7 +112,7 @@ pub enum SectionDecodeError {
     MissingSection(SectionId),
     #[error("unsupported section id {0}")]
     UnsupportedSectionId(SectionId),
-    #[error("unable to read string: {source}")]
+    #[error("unable to read section: {source}")]
     Read {
         #[from]
         source: io::Error,
