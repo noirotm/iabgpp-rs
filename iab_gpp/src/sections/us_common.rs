@@ -1,5 +1,5 @@
-use crate::core::{DataReader, FromDataReader};
 use crate::sections::SectionDecodeError;
+use bitstream_io::{BitRead, FromBitStream};
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::FromPrimitive;
 #[cfg(feature = "serde")]
@@ -14,11 +14,14 @@ pub enum Notice {
     NotProvided = 2,
 }
 
-impl FromDataReader for Notice {
-    type Err = io::Error;
+impl FromBitStream for Notice {
+    type Error = io::Error;
 
-    fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
-        Ok(Self::from_u8(r.read_fixed_integer(2)?).unwrap_or(Self::NotApplicable))
+    fn from_reader<R: BitRead + ?Sized>(r: &mut R) -> Result<Self, Self::Error>
+    where
+        Self: Sized,
+    {
+        Ok(Self::from_u8(r.read_unsigned::<2, u8>()?).unwrap_or(Self::NotApplicable))
     }
 }
 
@@ -30,11 +33,14 @@ pub enum OptOut {
     DidNotOptOut = 2,
 }
 
-impl FromDataReader for OptOut {
-    type Err = io::Error;
+impl FromBitStream for OptOut {
+    type Error = io::Error;
 
-    fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
-        Ok(Self::from_u8(r.read_fixed_integer(2)?).unwrap_or(Self::NotApplicable))
+    fn from_reader<R: BitRead + ?Sized>(r: &mut R) -> Result<Self, Self::Error>
+    where
+        Self: Sized,
+    {
+        Ok(Self::from_u8(r.read_unsigned::<2, u8>()?).unwrap_or(Self::NotApplicable))
     }
 }
 
@@ -46,11 +52,14 @@ pub enum Consent {
     Consent = 2,
 }
 
-impl FromDataReader for Consent {
-    type Err = io::Error;
+impl FromBitStream for Consent {
+    type Error = io::Error;
 
-    fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
-        Ok(Self::from_u8(r.read_fixed_integer(2)?).unwrap_or(Self::NotApplicable))
+    fn from_reader<R: BitRead + ?Sized>(r: &mut R) -> Result<Self, Self::Error>
+    where
+        Self: Sized,
+    {
+        Ok(Self::from_u8(r.read_unsigned::<2, u8>()?).unwrap_or(Self::NotApplicable))
     }
 }
 
@@ -62,18 +71,21 @@ pub enum MspaMode {
     No = 2,
 }
 
-impl FromDataReader for MspaMode {
-    type Err = io::Error;
+impl FromBitStream for MspaMode {
+    type Error = io::Error;
 
-    fn from_data_reader(r: &mut DataReader) -> Result<Self, Self::Err> {
-        Ok(Self::from_u8(r.read_fixed_integer(2)?).unwrap_or(Self::NotApplicable))
+    fn from_reader<R: BitRead + ?Sized>(r: &mut R) -> Result<Self, Self::Error>
+    where
+        Self: Sized,
+    {
+        Ok(Self::from_u8(r.read_unsigned::<2, u8>()?).unwrap_or(Self::NotApplicable))
     }
 }
 
-pub(crate) fn parse_mspa_covered_transaction(
-    r: &mut DataReader,
+pub(crate) fn parse_mspa_covered_transaction<R: BitRead + ?Sized>(
+    r: &mut R,
 ) -> Result<bool, SectionDecodeError> {
-    let val = r.read_fixed_integer::<u8>(2)?;
+    let val = r.read_unsigned::<2, u8>()?;
     match val {
         1 => Ok(true),
         2 => Ok(false),

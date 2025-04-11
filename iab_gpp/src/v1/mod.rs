@@ -63,11 +63,13 @@
 //! If parsing fails, a [`GPPDecodeError`] is returned instead.
 //!
 pub use crate::core::base64::DecodeError;
-use crate::core::{DataReader, DecodeExt};
+use crate::core::{data_reader, DataRead, DecodeExt};
 use crate::sections::{decode_section, DecodableSection, Section, SectionDecodeError, SectionId};
+use bitstream_io::BitRead;
 use fnv::FnvHashMap;
 use num_traits::FromPrimitive;
 use std::io;
+use std::io::Cursor;
 use std::iter::FusedIterator;
 use std::slice::Iter;
 use std::str::FromStr;
@@ -369,14 +371,14 @@ fn extract_gpp_sections_from_str(s: &str) -> Result<(Vec<SectionId>, Vec<&str>),
 
     let header_str = sections_iter.next().ok_or(GPPDecodeError::NoHeaderFound)?;
     let header = header_str.decode_base64_url()?;
-    let mut reader = DataReader::new(&header);
+    let mut reader = data_reader(Cursor::new(&header));
 
-    let header_type = reader.read_fixed_integer(6)?;
+    let header_type = reader.read_unsigned::<6, u8>()?;
     if header_type != GPP_HEADER {
         return Err(GPPDecodeError::InvalidHeaderType { found: header_type });
     }
 
-    let gpp_version = reader.read_fixed_integer(6)?;
+    let gpp_version = reader.read_unsigned::<6, u8>()?;
     if gpp_version != GPP_VERSION {
         return Err(GPPDecodeError::InvalidGPPVersion { found: gpp_version });
     }

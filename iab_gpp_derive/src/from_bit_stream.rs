@@ -5,22 +5,22 @@ use proc_macro2::Ident;
 use quote::quote;
 use syn::{DataEnum, DataStruct, Visibility};
 
-pub fn derive_struct_from_data_reader(
+pub fn derive_struct_from_bit_stream(
     input: &DataStruct,
     ident: &Ident,
     struct_attr: &GPPStructHelperAttribute,
 ) -> proc_macro2::TokenStream {
-    // generate FromReader impl block
+    // generate FromBitStream impl block
     // - check version first if needed
     // # loop over all fields
-    // - by default call a FromReader implementation
-    // - use DataReader methods if specified
+    // - by default call a FromBitStream implementation
+    // - use BitRead methods if specified
     let mut parse_statements = vec![];
     let mut field_names = vec![];
 
     if let Some(version) = struct_attr.section_version {
         parse_statements.push(quote! {
-            let version = r.read_fixed_integer(6)?;
+            let version = r.read_unsigned::<6, u8>()?;
             if version != #version {
                 return Err(crate::sections::SectionDecodeError::UnknownSegmentVersion {
                     segment_version: version,
@@ -44,7 +44,8 @@ pub fn derive_struct_from_data_reader(
         let name = name.unwrap();
         field_names.push(name.clone());
 
-        let attr = GPPFieldHelperAttribute::new(&field.attrs).expect("attribute parsing failed");
+        let attr = GPPFieldHelperAttribute::new(&field.attrs, &field.ty)
+            .expect("attribute parsing failed");
 
         // debug next field
         /*parse_statements.push(quote! {
@@ -74,10 +75,15 @@ pub fn derive_struct_from_data_reader(
     }
 
     quote! {
-        impl crate::core::FromDataReader for #ident {
-            type Err = crate::sections::SectionDecodeError;
+        impl bitstream_io::read::FromBitStream for #ident {
+            type Error = crate::sections::SectionDecodeError;
 
-            fn from_data_reader(r: &mut crate::core::DataReader) -> Result<Self, Self::Err> {
+            fn from_reader<R: bitstream_io::read::BitRead + ?core::marker::Sized>(
+                mut r: &mut R,
+            ) -> Result<Self, Self::Error>
+            where
+                Self: core::marker::Sized
+            {
                 #(#parse_statements)*
 
                 Ok(Self{
@@ -88,7 +94,7 @@ pub fn derive_struct_from_data_reader(
     }
 }
 
-pub fn derive_enum_from_data_reader(input: &DataEnum, ident: &Ident) -> proc_macro2::TokenStream {
+pub fn derive_enum_from_bit_stream(input: &DataEnum, ident: &Ident) -> proc_macro2::TokenStream {
     // generate FromReader impl block
     // # loop over all variants
     // - read version attribute
@@ -110,11 +116,16 @@ pub fn derive_enum_from_data_reader(input: &DataEnum, ident: &Ident) -> proc_mac
     }
 
     quote! {
-        impl crate::core::FromDataReader for #ident {
-            type Err = crate::sections::SectionDecodeError;
+        impl bitstream_io::read::FromBitStream for #ident {
+            type Error = crate::sections::SectionDecodeError;
 
-            fn from_data_reader(r: &mut crate::core::DataReader) -> Result<Self, Self::Err> {
-                let version = r.read_fixed_integer(6)?;
+            fn from_reader<R: bitstream_io::read::BitRead + ?core::marker::Sized>(
+                mut r: &mut R,
+            ) -> Result<Self, Self::Error>
+            where
+                Self: core::marker::Sized
+            {
+                let version = r.read_unsigned::<6, u8>()?;
                 match version {
                     #(#versions)*
                     v => Err(crate::sections::SectionDecodeError::UnknownSegmentVersion { segment_version: v }),

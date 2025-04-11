@@ -4,10 +4,16 @@ use quote::{format_ident, quote};
 use syn::meta::ParseNestedMeta;
 use syn::parse::ParseStream;
 use syn::punctuated::Punctuated;
-use syn::{parenthesized, parse, token, Attribute, Expr, ExprCall, LitInt};
+use syn::{
+    parenthesized, parse, token, Attribute, Expr, ExprCall, GenericArgument, LitInt, PathArguments,
+    Type,
+};
 
 pub enum GPPFieldParser {
-    FromDataReader,
+    FromBitStream,
+    Bool,
+    U8,
+    U16,
     ReaderCall(ExprCall),
     Function(Ident),
 }
@@ -15,8 +21,17 @@ pub enum GPPFieldParser {
 impl GPPFieldParser {
     pub fn to_token_stream(&self) -> proc_macro2::TokenStream {
         match &self {
-            GPPFieldParser::FromDataReader => quote! {
+            GPPFieldParser::FromBitStream => quote! {
                 r.parse()
+            },
+            GPPFieldParser::Bool => quote! {
+                r.read_bit()
+            },
+            GPPFieldParser::U8 => quote! {
+                r.read_unsigned::<6, u8>()
+            },
+            GPPFieldParser::U16 => quote! {
+                r.read_unsigned::<12, u16>()
             },
             GPPFieldParser::ReaderCall(c) => quote! {
                 r.#c
@@ -40,12 +55,30 @@ pub struct WhereSpec {
 }
 
 impl GPPFieldHelperAttribute {
-    pub fn new(attrs: &[Attribute]) -> parse::Result<Self> {
+    pub fn new(attrs: &[Attribute], ty: &Type) -> parse::Result<Self> {
         let mut gpp_attr = Self {
             optional_segment_type: None,
             where_spec: None,
-            parser: GPPFieldParser::FromDataReader,
+            parser: GPPFieldParser::FromBitStream,
         };
+
+        // if we're in an optional segment, we need to strip the Option from the type first
+        let ty = Self::extract_option_inner_type(ty).unwrap_or(ty);
+
+        // special handling for bool, u8, u16 which have default representation
+        match ty {
+            Type::Path(type_path) if type_path.path.is_ident("bool") => {
+                gpp_attr.parser = GPPFieldParser::Bool;
+            }
+            Type::Path(type_path) if type_path.path.is_ident("u8") => {
+                gpp_attr.parser = GPPFieldParser::U8;
+            }
+            Type::Path(type_path) if type_path.path.is_ident("u16") => {
+                gpp_attr.parser = GPPFieldParser::U16;
+            }
+            _ => {}
+        }
+
         if let Some(attr) = find_gpp_attr(attrs) {
             attr.parse_nested_meta(|meta| {
                 // #[gpp(optional_segment_type = N)]
@@ -71,7 +104,7 @@ impl GPPFieldHelperAttribute {
                 if meta.path.is_ident("where") {
                     meta.parse_nested_meta(|where_meta| {
                         gpp_attr.where_spec = Self::parse_where_meta(where_meta)?;
-                        return Ok(());
+                        Ok(())
                     })?;
 
                     return Ok(());
@@ -97,11 +130,26 @@ impl GPPFieldHelperAttribute {
         Ok(gpp_attr)
     }
 
+    fn extract_option_inner_type(ty: &Type) -> Option<&Type> {
+        if let Type::Path(type_path) = ty {
+            if let Some(segment) = type_path.path.segments.last() {
+                if segment.ident == "Option" {
+                    if let PathArguments::AngleBracketed(args) = &segment.arguments {
+                        if let Some(GenericArgument::Type(inner_ty)) = args.args.first() {
+                            return Some(inner_ty);
+                        }
+                    }
+                }
+            }
+        }
+        None
+    }
+
     fn parse_where_meta(meta: ParseNestedMeta) -> Result<Option<WhereSpec>, syn::Error> {
         if let Some(ident) = meta.path.get_ident() {
             let mut where_spec = WhereSpec {
                 name: ident.clone(),
-                parser: GPPFieldParser::FromDataReader,
+                parser: GPPFieldParser::FromBitStream,
             };
 
             let value = meta.value()?;

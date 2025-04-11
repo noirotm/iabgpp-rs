@@ -19,7 +19,7 @@
 //! section types are marked with the `#[non_exhaustive]` attribute to preserve minor version
 //! compatibility.
 //!
-use crate::core::{DataReader, DecodeExt, FromDataReader};
+use crate::core::{data_reader, DecodeExt};
 use crate::sections::tcfcav1::TcfCaV1;
 use crate::sections::tcfeuv1::TcfEuV1;
 use crate::sections::tcfeuv2::TcfEuV2;
@@ -41,11 +41,13 @@ use crate::sections::ustx::UsTx;
 use crate::sections::usut::UsUt;
 use crate::sections::usva::UsVa;
 use crate::v1::DecodeError;
+use bitstream_io::{BitRead, FromBitStream};
 use num_derive::{FromPrimitive, ToPrimitive};
 #[cfg(feature = "serde")]
 use serde::Serialize;
 use std::collections::BTreeSet;
 use std::io;
+use std::io::Cursor;
 use std::str::FromStr;
 use strum_macros::Display;
 use thiserror::Error;
@@ -227,11 +229,11 @@ pub(crate) trait Base64EncodedStr<T> {
 
 impl<T> Base64EncodedStr<T> for str
 where
-    T: FromDataReader<Err = SectionDecodeError>,
+    T: FromBitStream<Error = SectionDecodeError>,
 {
     fn parse_base64_str(&self) -> Result<T, SectionDecodeError> {
         let r = self.decode_base64_url()?;
-        DataReader::new(&r).parse()
+        data_reader(Cursor::new(&r)).parse()
     }
 }
 
@@ -256,14 +258,14 @@ where
             .next()
             .ok_or_else(|| SectionDecodeError::UnexpectedEndOfString(self.to_string()))?
             .decode_base64_url()?;
-        let mut r = DataReader::new(&core);
+        let mut r = data_reader(Cursor::new(&core));
         let mut output = r.parse()?;
         let mut segments = BTreeSet::new();
 
         // parse each optional segment and fill the output
         for s in sections_iter {
             let b = s.decode_base64_url()?;
-            let mut r = DataReader::new(&b);
+            let mut r = data_reader(Cursor::new(&b));
 
             let segment_type = T::read_segment_type(&mut r)?;
             T::parse_optional_segment(segment_type, &mut r, &mut output)?;
@@ -280,15 +282,15 @@ where
 
 /// A trait representing an operation to parse optional segments for a Base64-URL encoded string
 pub(crate) trait OptionalSegmentParser:
-    Sized + FromDataReader<Err = SectionDecodeError>
+    FromBitStream<Error = SectionDecodeError> + Sized
 {
-    fn read_segment_type(r: &mut DataReader) -> Result<u8, SectionDecodeError> {
-        Ok(r.read_fixed_integer(3)?)
+    fn read_segment_type<R: BitRead>(r: &mut R) -> Result<u8, SectionDecodeError> {
+        Ok(r.read_unsigned::<3, u8>()?)
     }
 
-    fn parse_optional_segment(
+    fn parse_optional_segment<R: BitRead>(
         segment_type: u8,
-        r: &mut DataReader,
+        r: &mut R,
         into: &mut Self,
     ) -> Result<(), SectionDecodeError>;
 }

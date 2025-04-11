@@ -1,6 +1,7 @@
-use crate::core::{DataReader, Range};
+use crate::core::{DataRead, Range};
 use crate::sections::{IdSet, SectionDecodeError};
-use iab_gpp_derive::{FromDataReader, GPPSection};
+use bitstream_io::BitRead;
+use iab_gpp_derive::{FromBitStream, GPPSection};
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 #[cfg(feature = "serde")]
@@ -20,7 +21,7 @@ pub struct TcfEuV2 {
     pub publisher_purposes: Option<PublisherPurposes>,
 }
 
-#[derive(Debug, Eq, PartialEq, FromDataReader)]
+#[derive(Debug, Eq, PartialEq, FromBitStream)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 #[non_exhaustive]
 #[gpp(section_version = 2)]
@@ -55,8 +56,8 @@ pub struct Core {
     pub publisher_restrictions: Vec<PublisherRestriction>,
 }
 
-fn parse_publisher_restrictions(
-    r: &mut DataReader,
+fn parse_publisher_restrictions<R: BitRead + ?Sized>(
+    mut r: &mut R,
 ) -> Result<Vec<PublisherRestriction>, SectionDecodeError> {
     Ok(r.read_array_of_ranges()?
         .into_iter()
@@ -92,7 +93,7 @@ pub enum RestrictionType {
     Undefined = 3,
 }
 
-#[derive(Debug, Eq, PartialEq, FromDataReader)]
+#[derive(Debug, Eq, PartialEq, FromBitStream)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 #[non_exhaustive]
 pub struct PublisherPurposes {
@@ -100,7 +101,7 @@ pub struct PublisherPurposes {
     pub consents: IdSet,
     #[gpp(fixed_bitfield(24))]
     pub legitimate_interests: IdSet,
-    #[gpp(fixed_bitfield(n as usize), where(n = fixed_integer(6)))]
+    #[gpp(fixed_bitfield(n as usize), where(n = unsigned_var(6)))]
     pub custom_consents: IdSet,
     #[gpp(fixed_bitfield(n as usize))]
     pub custom_legitimate_interests: IdSet,

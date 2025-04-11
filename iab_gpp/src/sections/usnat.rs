@@ -1,7 +1,7 @@
 use crate::sections::us_common::{
     parse_mspa_covered_transaction, Consent, MspaMode, Notice, OptOut,
 };
-use iab_gpp_derive::{FromDataReader, GPPSection};
+use iab_gpp_derive::{FromBitStream, GPPSection};
 #[cfg(feature = "serde")]
 use serde::Serialize;
 
@@ -15,7 +15,7 @@ pub struct UsNat {
     pub gpc: Option<bool>,
 }
 
-#[derive(Debug, Eq, PartialEq, FromDataReader)]
+#[derive(Debug, Eq, PartialEq, FromBitStream)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 #[non_exhaustive]
 pub enum Core {
@@ -25,7 +25,7 @@ pub enum Core {
     V2(CoreV2),
 }
 
-#[derive(Debug, Eq, PartialEq, FromDataReader)]
+#[derive(Debug, Eq, PartialEq, FromBitStream)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 #[non_exhaustive]
 pub struct CoreV1 {
@@ -47,7 +47,7 @@ pub struct CoreV1 {
     pub mspa_service_provider_mode: MspaMode,
 }
 
-#[derive(Debug, Eq, PartialEq, FromDataReader)]
+#[derive(Debug, Eq, PartialEq, FromBitStream)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 #[non_exhaustive]
 pub struct SensitiveDataProcessingV1 {
@@ -65,7 +65,7 @@ pub struct SensitiveDataProcessingV1 {
     pub mail_email_or_text_messages: Consent,
 }
 
-#[derive(Debug, Eq, PartialEq, FromDataReader)]
+#[derive(Debug, Eq, PartialEq, FromBitStream)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 #[non_exhaustive]
 pub struct KnownChildSensitiveDataConsentsV1 {
@@ -73,7 +73,7 @@ pub struct KnownChildSensitiveDataConsentsV1 {
     pub under_13: Consent,
 }
 
-#[derive(Debug, Eq, PartialEq, FromDataReader)]
+#[derive(Debug, Eq, PartialEq, FromBitStream)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 #[non_exhaustive]
 pub struct CoreV2 {
@@ -95,7 +95,7 @@ pub struct CoreV2 {
     pub mspa_service_provider_mode: MspaMode,
 }
 
-#[derive(Debug, Eq, PartialEq, FromDataReader)]
+#[derive(Debug, Eq, PartialEq, FromBitStream)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 #[non_exhaustive]
 pub struct SensitiveDataProcessingV2 {
@@ -117,7 +117,7 @@ pub struct SensitiveDataProcessingV2 {
     pub transgender_or_nonbinary_status: Consent,
 }
 
-#[derive(Debug, Eq, PartialEq, FromDataReader)]
+#[derive(Debug, Eq, PartialEq, FromBitStream)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 #[non_exhaustive]
 pub struct KnownChildSensitiveDataConsentsV2 {

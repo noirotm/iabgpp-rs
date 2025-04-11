@@ -1,5 +1,6 @@
-use crate::core::DataReader;
+use crate::core::DataRead;
 use crate::sections::{IdSet, SectionDecodeError};
+use bitstream_io::BitRead;
 use iab_gpp_derive::GPPSection;
 #[cfg(feature = "serde")]
 use serde::Serialize;
@@ -26,12 +27,12 @@ pub struct TcfEuV1 {
     pub vendor_consents: IdSet,
 }
 
-fn parse_vendor_consents(r: &mut DataReader) -> Result<IdSet, SectionDecodeError> {
-    let max_vendor_id = r.read_fixed_integer(16)?;
-    let is_range = r.read_bool()?;
+fn parse_vendor_consents<R: BitRead + ?Sized>(mut r: &mut R) -> Result<IdSet, SectionDecodeError> {
+    let max_vendor_id = r.read_unsigned::<16, u16>()?;
+    let is_range = r.read_bit()?;
     Ok(if is_range {
         // range section
-        let default_consent = r.read_bool()?;
+        let default_consent = r.read_bit()?;
         let ids = BTreeSet::from_iter(r.read_integer_range()?);
 
         // create final vendor list based on the default consent:

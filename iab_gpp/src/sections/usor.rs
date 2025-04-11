@@ -1,7 +1,7 @@
 use crate::sections::us_common::{
     parse_mspa_covered_transaction, Consent, MspaMode, Notice, OptOut,
 };
-use iab_gpp_derive::{FromDataReader, GPPSection};
+use iab_gpp_derive::{FromBitStream, GPPSection};
 #[cfg(feature = "serde")]
 use serde::Serialize;
 
@@ -15,7 +15,7 @@ pub struct UsOr {
     pub gpc: Option<bool>,
 }
 
-#[derive(Debug, Eq, PartialEq, FromDataReader)]
+#[derive(Debug, Eq, PartialEq, FromBitStream)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 #[non_exhaustive]
 #[gpp(section_version = 1)]
@@ -34,7 +34,7 @@ pub struct Core {
     pub mspa_service_provider_mode: MspaMode,
 }
 
-#[derive(Debug, Eq, PartialEq, FromDataReader)]
+#[derive(Debug, Eq, PartialEq, FromBitStream)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 #[non_exhaustive]
 pub struct SensitiveDataProcessing {
@@ -51,7 +51,7 @@ pub struct SensitiveDataProcessing {
     pub precise_geolocation_data: Consent,
 }
 
-#[derive(Debug, Eq, PartialEq, FromDataReader)]
+#[derive(Debug, Eq, PartialEq, FromBitStream)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 #[non_exhaustive]
 pub struct KnownChildSensitiveDataConsents {
