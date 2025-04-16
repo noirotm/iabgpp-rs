@@ -62,14 +62,12 @@
 //!
 //! If parsing fails, a [`GPPDecodeError`] is returned instead.
 //!
-pub use crate::core::base64::DecodeError;
-use crate::core::{data_reader, DataRead, DecodeExt};
+use crate::core::{base64_bit_reader, DataRead};
 use crate::sections::{decode_section, DecodableSection, Section, SectionDecodeError, SectionId};
 use bitstream_io::BitRead;
 use fnv::FnvHashMap;
 use num_traits::FromPrimitive;
 use std::io;
-use std::io::Cursor;
 use std::iter::FusedIterator;
 use std::slice::Iter;
 use std::str::FromStr;
@@ -85,12 +83,6 @@ pub enum GPPDecodeError {
     /// The string does not contain the mandatory header section.
     #[error("no header found")]
     NoHeaderFound,
-    /// The header section's Base64 representation cannot be decoded.
-    #[error("unable to decode header: {source}")]
-    DecodeHeader {
-        #[from]
-        source: DecodeError,
-    },
     /// The header has an invalid type for this version of GPP.
     #[error("invalid header type (expected {GPP_HEADER}, found {found})")]
     InvalidHeaderType { found: u8 },
@@ -370,20 +362,19 @@ fn extract_gpp_sections_from_str(s: &str) -> Result<(Vec<SectionId>, Vec<&str>),
     let mut sections_iter = s.split('~');
 
     let header_str = sections_iter.next().ok_or(GPPDecodeError::NoHeaderFound)?;
-    let header = header_str.decode_base64_url()?;
-    let mut reader = data_reader(Cursor::new(&header));
+    let mut bit_reader = base64_bit_reader(header_str.as_bytes());
 
-    let header_type = reader.read_unsigned::<6, u8>()?;
+    let header_type = bit_reader.read_unsigned::<6, u8>()?;
     if header_type != GPP_HEADER {
         return Err(GPPDecodeError::InvalidHeaderType { found: header_type });
     }
 
-    let gpp_version = reader.read_unsigned::<6, u8>()?;
+    let gpp_version = bit_reader.read_unsigned::<6, u8>()?;
     if gpp_version != GPP_VERSION {
         return Err(GPPDecodeError::InvalidGPPVersion { found: gpp_version });
     }
 
-    let section_ids = reader
+    let section_ids = bit_reader
         .read_fibonacci_range()?
         .into_iter()
         .map(|id| SectionId::from_u8(id).ok_or(GPPDecodeError::UnsupportedSectionId(id)))

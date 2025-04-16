@@ -19,7 +19,7 @@
 //! section types are marked with the `#[non_exhaustive]` attribute to preserve minor version
 //! compatibility.
 //!
-use crate::core::{data_reader, DecodeExt};
+use crate::core::base64_bit_reader;
 use crate::sections::tcfcav1::TcfCaV1;
 use crate::sections::tcfeuv1::TcfEuV1;
 use crate::sections::tcfeuv2::TcfEuV2;
@@ -40,14 +40,12 @@ use crate::sections::ustn::UsTn;
 use crate::sections::ustx::UsTx;
 use crate::sections::usut::UsUt;
 use crate::sections::usva::UsVa;
-use crate::v1::DecodeError;
 use bitstream_io::{BitRead, FromBitStream};
 use num_derive::{FromPrimitive, ToPrimitive};
 #[cfg(feature = "serde")]
 use serde::Serialize;
 use std::collections::BTreeSet;
 use std::io;
-use std::io::Cursor;
 use std::str::FromStr;
 use strum_macros::Display;
 use thiserror::Error;
@@ -129,11 +127,6 @@ pub enum SectionDecodeError {
     },
     #[error("invalid section version (expected {expected}, found {found})")]
     InvalidSectionVersion { expected: u8, found: u8 },
-    #[error("unable to decode segment: {source}")]
-    DecodeSegment {
-        #[from]
-        source: DecodeError,
-    },
     #[error("invalid segment version ({segment_version})")]
     UnknownSegmentVersion { segment_version: u8 },
     #[error("unknown segment type {segment_type}")]
@@ -223,20 +216,6 @@ pub(crate) fn decode_section(id: SectionId, s: &str) -> Result<Section, SectionD
     })
 }
 
-pub(crate) trait Base64EncodedStr<T> {
-    fn parse_base64_str(&self) -> Result<T, SectionDecodeError>;
-}
-
-impl<T> Base64EncodedStr<T> for str
-where
-    T: FromBitStream<Error = SectionDecodeError>,
-{
-    fn parse_base64_str(&self) -> Result<T, SectionDecodeError> {
-        let r = self.decode_base64_url()?;
-        data_reader(Cursor::new(&r)).parse()
-    }
-}
-
 /// A trait representing an operation to parse segments for a Base64-URL encoded string
 /// using '.' as separators into a type composed of a mandatory core segment and an arbitrary
 /// number of optional segments.
@@ -256,16 +235,15 @@ where
         // first mandatory section is the core segment
         let core = sections_iter
             .next()
-            .ok_or_else(|| SectionDecodeError::UnexpectedEndOfString(self.to_string()))?
-            .decode_base64_url()?;
-        let mut r = data_reader(Cursor::new(&core));
+            .ok_or_else(|| SectionDecodeError::UnexpectedEndOfString(self.to_string()))?;
+
+        let mut r = base64_bit_reader(core.as_bytes());
         let mut output = r.parse()?;
         let mut segments = BTreeSet::new();
 
         // parse each optional segment and fill the output
         for s in sections_iter {
-            let b = s.decode_base64_url()?;
-            let mut r = data_reader(Cursor::new(&b));
+            let mut r = base64_bit_reader(s.as_bytes());
 
             let segment_type = T::read_segment_type(&mut r)?;
             T::parse_optional_segment(segment_type, &mut r, &mut output)?;

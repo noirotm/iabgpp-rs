@@ -1,5 +1,5 @@
+use crate::core::base64::Base64Reader;
 use crate::core::fibonacci::fibonacci_iterator;
-use base64::DecodeError;
 use bitstream_io::{BigEndian, BitRead, BitReader, UnsignedInteger};
 use num_iter::range_inclusive;
 use num_traits::{CheckedAdd, Num, NumAssignOps, ToPrimitive};
@@ -8,18 +8,8 @@ use std::io;
 use std::io::Read;
 use std::iter::repeat_with;
 
-pub mod base64;
+mod base64;
 mod fibonacci;
-
-pub trait DecodeExt {
-    fn decode_base64_url(&self) -> Result<Vec<u8>, DecodeError>;
-}
-
-impl DecodeExt for &str {
-    fn decode_base64_url(&self) -> Result<Vec<u8>, DecodeError> {
-        base64::decode(self)
-    }
-}
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct GenericRange<X, Y> {
@@ -230,8 +220,9 @@ where
     }
 }
 
-pub fn data_reader<R: Read>(r: R) -> BitReader<R, BigEndian> {
-    BitReader::endian(r, BigEndian)
+pub(crate) fn base64_bit_reader<R: Read>(r: R) -> BitReader<impl Read, BigEndian> {
+    let base64_reader = Base64Reader::new(r);
+    BitReader::endian(base64_reader, BigEndian)
 }
 
 #[cfg(test)]
@@ -255,6 +246,10 @@ mod tests {
             .unwrap_or(vec![])
     }
 
+    fn r<R: Read>(r: R) -> BitReader<impl Read, BigEndian> {
+        BitReader::endian(r, BigEndian)
+    }
+
     #[test_case("00000001 00000010 00000011" => vec![1, 2, 3])]
     #[test_case("000000 010000 001000 000011" => vec![1, 2, 3])]
     #[test_case("000000 010000 001000 000011 1000" => vec![1, 2, 3, 128])]
@@ -273,21 +268,19 @@ mod tests {
     #[test_case("01011" => 7)]
     #[test_case("0100000000001011" => 2 ; "overflow for u8")] // ignore bits we can't encode
     fn read_fibonacci(s: &str) -> u8 {
-        data_reader(Cursor::new(b(s)))
-            .read_fibonacci_integer()
-            .unwrap()
+        r(Cursor::new(b(s))).read_fibonacci_integer().unwrap()
     }
 
     #[test_case("101010", 1 => "k")]
     #[test_case("101010 101011", 2 => "kl")]
     fn read_string(s: &str, chars: usize) -> String {
-        data_reader(Cursor::new(b(s))).read_string(chars).unwrap()
+        r(Cursor::new(b(s))).read_string(chars).unwrap()
     }
 
     #[test_case("001111101100100110001110010001011101" => 1685434479)]
     #[test_case("000000000000000000000000000000000000" => 0)]
     fn read_datetime_as_unix_timestamp(s: &str) -> u64 {
-        data_reader(Cursor::new(b(s)))
+        r(Cursor::new(b(s)))
             .read_datetime_as_unix_timestamp()
             .unwrap()
     }
@@ -296,45 +289,35 @@ mod tests {
     #[test_case("101010", 6 => BTreeSet::from_iter([1, 3, 5]))]
     #[test_case("101010", 0 => BTreeSet::from_iter([]))]
     fn read_fixed_bitfield(s: &str, bits: usize) -> BTreeSet<u16> {
-        data_reader(Cursor::new(b(s)))
-            .read_fixed_bitfield(bits)
-            .unwrap()
+        r(Cursor::new(b(s))).read_fixed_bitfield(bits).unwrap()
     }
 
     #[test_case("0000000000000101 10101" => BTreeSet::from_iter([1, 3, 5]))]
     fn read_variable_bitfield(s: &str) -> BTreeSet<u16> {
-        data_reader(Cursor::new(b(s)))
-            .read_variable_bitfield()
-            .unwrap()
+        r(Cursor::new(b(s))).read_variable_bitfield().unwrap()
     }
 
     #[test_case("000000000010 0 0000000000000011 1 0000000000000101 0000000000001000" => vec![3, 5, 6, 7, 8] ; "test1")]
     fn read_integer_range(s: &str) -> Vec<u16> {
-        data_reader(Cursor::new(b(s))).read_integer_range().unwrap()
+        r(Cursor::new(b(s))).read_integer_range().unwrap()
     }
 
     #[test_case("000000000010 0 0011 1 011 0011" => vec![3, 5, 6, 7, 8])]
     #[test_case("000000000010 0 011 0 1011" => vec![2, 6])]
     fn read_fibonacci_range(s: &str) -> Vec<u8> {
-        data_reader(Cursor::new(b(s)))
-            .read_fibonacci_range()
-            .unwrap()
+        r(Cursor::new(b(s))).read_fibonacci_range().unwrap()
     }
 
     #[test_case("1 000000000010 0 0011 1 011 0011" => BTreeSet::from_iter([3, 5, 6, 7, 8]))]
     #[test_case("0 0000000000000101 10101" => BTreeSet::from_iter([1, 3, 5]))]
     fn read_optimized_range(s: &str) -> BTreeSet<u16> {
-        data_reader(Cursor::new(b(s)))
-            .read_optimized_range()
-            .unwrap()
+        r(Cursor::new(b(s))).read_optimized_range().unwrap()
     }
 
     #[test_case("0000000000000000 1 000000000010 0 0000000000000011 1 0000000000000101 0000000000001000" => BTreeSet::from_iter([3, 5, 6, 7, 8]) ; "test1")]
     #[test_case("0000000000000101 0 10101" => BTreeSet::from_iter([1, 3, 5]) ; "test2")]
     fn read_optimized_int_range(s: &str) -> BTreeSet<u16> {
-        data_reader(Cursor::new(b(s)))
-            .read_optimized_integer_range()
-            .unwrap()
+        r(Cursor::new(b(s))).read_optimized_integer_range().unwrap()
     }
 
     #[test_case("000000000000" => Vec::<Range>::new() ; "empty")]
@@ -358,9 +341,7 @@ mod tests {
         },
     ] ; "2 elements")]
     fn read_array_of_ranges(s: &str) -> Vec<Range> {
-        data_reader(Cursor::new(b(s)))
-            .read_array_of_ranges()
-            .unwrap()
+        r(Cursor::new(b(s))).read_array_of_ranges().unwrap()
     }
 
     #[test_case("000000000000" => Vec::<GenericRange<u8, u8>>::new() ; "empty")]
@@ -384,7 +365,7 @@ mod tests {
         },
     ] ; "2 elements")]
     fn read_n_array_of_ranges(s: &str) -> Vec<GenericRange<u8, u8>> {
-        data_reader(Cursor::new(b(s)))
+        r(Cursor::new(b(s)))
             .read_n_array_of_ranges::<u8, u8>(6, 2)
             .unwrap()
     }

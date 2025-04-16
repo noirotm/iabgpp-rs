@@ -78,8 +78,9 @@ fn impl_base64_gpp_section(
             type Err = crate::sections::SectionDecodeError;
 
             fn from_str(s: &str) -> Result<Self, Self::Err> {
-                use crate::sections::Base64EncodedStr;
-                s.parse_base64_str()
+                use bitstream_io::BitRead;
+
+                crate::core::base64_bit_reader(s.as_bytes()).parse()
             }
         }
     });
