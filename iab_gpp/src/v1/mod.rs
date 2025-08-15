@@ -191,7 +191,7 @@ impl GPPString {
     ///     Ok(())
     /// }
     /// ```
-    pub fn section_ids(&self) -> SectionIds {
+    pub fn section_ids(&self) -> SectionIds<'_> {
         SectionIds(self.section_ids.iter())
     }
 
@@ -214,7 +214,7 @@ impl GPPString {
     ///     Ok(())
     /// }
     /// ```
-    pub fn sections(&self) -> Sections {
+    pub fn sections(&self) -> Sections<'_> {
         Sections {
             gpp_str: self,
             idx: 0,
