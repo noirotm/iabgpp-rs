@@ -1,0 +1,33 @@
+DBABVg~BVVVVVVg.YA
+[
+  {
+    "UsCt": {
+      "core": {
+        "known_child_sensitive_data_consents": {
+          "process_personal_data_from_13_to_16": "NoConsent",
+          "process_sensitive_data_from_known_child": "NoConsent",
+          "sell_personal_data_from_13_to_16": "NoConsent"
+        },
+        "mspa_covered_transaction": true,
+        "mspa_opt_out_option_mode": "Yes",
+        "mspa_service_provider_mode": "No",
+        "sale_opt_out": "OptedOut",
+        "sale_opt_out_notice": "Provided",
+        "sensitive_data_processing": {
+          "biometric_unique_identification": "NoConsent",
+          "citizenship_or_immigration_status": "NoConsent",
+          "genetic_unique_identification": "NoConsent",
+          "health_condition_or_diagnosis": "NoConsent",
+          "precise_geolocation_data": "NoConsent",
+          "racial_or_ethnic_origin": "NoConsent",
+          "religious_beliefs": "NoConsent",
+          "sex_life_or_sexual_orientation": "NoConsent"
+        },
+        "sharing_notice": "Provided",
+        "targeted_advertising_opt_out": "OptedOut",
+        "targeted_advertising_opt_out_notice": "Provided"
+      },
+      "gpc": true
+    }
+  }
+]

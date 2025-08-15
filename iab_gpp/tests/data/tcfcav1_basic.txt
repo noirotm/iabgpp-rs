@@ -1,0 +1,26 @@
+DBABDA~BPXuQIAPXuQIAAfKABENB-CgAAAAAAAAAAAAAAAA
+[
+  {
+    "TcfCaV1": {
+      "core": {
+        "cmp_id": 31,
+        "cmp_version": 640,
+        "consent_language": "EN",
+        "consent_screen": 1,
+        "created": 1650412800,
+        "last_updated": 1650412800,
+        "policy_version": 2,
+        "pub_restrictions": [],
+        "purpose_express_consents": [],
+        "purpose_implied_consents": [],
+        "special_feature_express_consents": [],
+        "use_non_standard_stacks": true,
+        "vendor_express_consents": [],
+        "vendor_implied_consents": [],
+        "vendor_list_version": 126
+      },
+      "disclosed_vendors": null,
+      "publisher_purposes": null
+    }
+  }
+]

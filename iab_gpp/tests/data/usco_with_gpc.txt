@@ -1,0 +1,28 @@
+DBABJg~BVVVVVg.YA
+[
+  {
+    "UsCo": {
+      "core": {
+        "known_child_sensitive_data_consents": "NoConsent",
+        "mspa_covered_transaction": true,
+        "mspa_opt_out_option_mode": "Yes",
+        "mspa_service_provider_mode": "No",
+        "sale_opt_out": "OptedOut",
+        "sale_opt_out_notice": "Provided",
+        "sensitive_data_processing": {
+          "biometric_unique_identification": "NoConsent",
+          "citizenship_data": "NoConsent",
+          "genetic_unique_identification": "NoConsent",
+          "health_condition_or_diagnosis": "NoConsent",
+          "racial_or_ethnic_origin": "NoConsent",
+          "religious_beliefs": "NoConsent",
+          "sex_life_or_sexual_orientation": "NoConsent"
+        },
+        "sharing_notice": "Provided",
+        "targeted_advertising_opt_out": "OptedOut",
+        "targeted_advertising_opt_out_notice": "Provided"
+      },
+      "gpc": true
+    }
+  }
+]

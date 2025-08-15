@@ -55,24 +55,6 @@ mod tests {
     use std::str::FromStr;
     use test_case::test_case;
 
-    #[test]
-    fn success() {
-        let actual = TcfEuV1::from_str("BOEFEAyOEFEAyAHABDENAI4AAAB9vABAASA").unwrap();
-        let expected = TcfEuV1 {
-            created: 1510082155,
-            last_updated: 1510082155,
-            cmp_id: 7,
-            cmp_version: 1,
-            consent_screen: 3,
-            consent_language: "EN".to_string(),
-            vendor_list_version: 8,
-            purposes_allowed: [1, 2, 3].into(),
-            vendor_consents: (1..=2011).filter(|&id| id != 9).collect(),
-        };
-
-        assert_eq!(actual, expected);
-    }
-
     #[test_case("BO5a1L7O5a1L7AAABBENC2-AAAAtH" => matches SectionDecodeError::Read { .. } ; "missing data")]
     #[test_case("" => matches SectionDecodeError::Read { .. } ; "empty string")]
     #[test_case("DOEFEAyOEFEAyAHABDENAI4AAAB9vABAASA" => matches SectionDecodeError::UnknownSegmentVersion { segment_version: 3 } ; "unknown segment version")]

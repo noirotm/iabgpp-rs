@@ -1,0 +1,34 @@
+DBABBg~BAAAAACA
+[
+  {
+    "UsCa": {
+      "core": {
+        "known_child_sensitive_data_consents": {
+          "sell_personal_information": "NotApplicable",
+          "share_personal_information": "NotApplicable"
+        },
+        "mspa_covered_transaction": false,
+        "mspa_opt_out_option_mode": "NotApplicable",
+        "mspa_service_provider_mode": "NotApplicable",
+        "personal_data_consent": "NotApplicable",
+        "sale_opt_out": "NotApplicable",
+        "sale_opt_out_notice": "NotApplicable",
+        "sensitive_data_limit_use_notice": "NotApplicable",
+        "sensitive_data_processing": {
+          "biometric_unique_identification": "NotApplicable",
+          "financial_data": "NotApplicable",
+          "genetic_data": "NotApplicable",
+          "health_data": "NotApplicable",
+          "identification_documents": "NotApplicable",
+          "mail_email_or_text_messages": "NotApplicable",
+          "origin_beliefs_or_union": "NotApplicable",
+          "precise_geolocation": "NotApplicable",
+          "sex_life_or_sexual_orientation": "NotApplicable"
+        },
+        "sharing_opt_out": "NotApplicable",
+        "sharing_opt_out_notice": "NotApplicable"
+      },
+      "gpc": null
+    }
+  }
+]
