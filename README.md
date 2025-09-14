@@ -79,6 +79,7 @@ Legend:
 | US - New Hampshire           |   🧪    |    ❌    |
 | US - New Jersey              |   🧪    |    ❌    |
 | US - Tennessee               |   🧪    |    ❌    |
+| US - Minnesota               |    ❌    |    ❌    |
 
 ## Development status
 
