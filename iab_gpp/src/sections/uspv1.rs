@@ -1,13 +1,13 @@
 use crate::sections::{DecodableSection, SectionDecodeError, SectionId};
 #[cfg(feature = "serde")]
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::str::{Chars, FromStr};
 
 const USP_V1_VERSION: u8 = 1;
 const KIND: &str = "uspv1";
 
 #[derive(Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Flag {
     Yes,
     No,
@@ -27,7 +27,7 @@ impl Flag {
 
 // See https://github.com/InteractiveAdvertisingBureau/USPrivacy/blob/master/CCPA/US%20Privacy%20String.md#us-privacy-string-format
 #[derive(Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct UspV1 {
     pub opt_out_notice: Flag,
     pub opt_out_sale: Flag,

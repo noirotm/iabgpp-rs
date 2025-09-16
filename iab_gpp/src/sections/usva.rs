@@ -3,17 +3,17 @@ use crate::sections::us_common::{
 };
 use iab_gpp_derive::{FromBitStream, GPPSection};
 #[cfg(feature = "serde")]
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Eq, PartialEq, GPPSection)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[non_exhaustive]
 pub struct UsVa {
     pub core: Core,
 }
 
 #[derive(Debug, Eq, PartialEq, FromBitStream)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[non_exhaustive]
 #[gpp(section_version = 1)]
 pub struct Core {
@@ -31,7 +31,7 @@ pub struct Core {
 }
 
 #[derive(Debug, Eq, PartialEq, FromBitStream)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[non_exhaustive]
 pub struct SensitiveDataProcessing {
     pub racial_or_ethnic_origin: Consent,

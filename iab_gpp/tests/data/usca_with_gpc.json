@@ -1,0 +1,36 @@
+{
+  "gpp_string": "DBABBg~BVqqqqpY.YA",
+  "expected_sections": [
+    {
+      "UsCa": {
+        "core": {
+          "known_child_sensitive_data_consents": {
+            "sell_personal_information": "Consent",
+            "share_personal_information": "Consent"
+          },
+          "mspa_covered_transaction": true,
+          "mspa_opt_out_option_mode": "Yes",
+          "mspa_service_provider_mode": "No",
+          "personal_data_consent": "Consent",
+          "sale_opt_out": "DidNotOptOut",
+          "sale_opt_out_notice": "Provided",
+          "sensitive_data_limit_use_notice": "Provided",
+          "sensitive_data_processing": {
+            "biometric_unique_identification": "DidNotOptOut",
+            "financial_data": "DidNotOptOut",
+            "genetic_data": "DidNotOptOut",
+            "health_data": "DidNotOptOut",
+            "identification_documents": "DidNotOptOut",
+            "mail_email_or_text_messages": "DidNotOptOut",
+            "origin_beliefs_or_union": "DidNotOptOut",
+            "precise_geolocation": "DidNotOptOut",
+            "sex_life_or_sexual_orientation": "DidNotOptOut"
+          },
+          "sharing_opt_out": "DidNotOptOut",
+          "sharing_opt_out_notice": "Provided"
+        },
+        "gpc": true
+      }
+    }
+  ]
+}

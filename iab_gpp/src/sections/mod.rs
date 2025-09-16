@@ -44,7 +44,7 @@ use crate::sections::usva::UsVa;
 use bitstream_io::{BitRead, FromBitStream};
 use num_derive::{FromPrimitive, ToPrimitive};
 #[cfg(feature = "serde")]
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 use std::io;
 use std::str::FromStr;
@@ -141,7 +141,7 @@ pub enum SectionDecodeError {
 }
 
 #[derive(Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[non_exhaustive]
 pub enum Section {
     TcfEuV1(TcfEuV1),

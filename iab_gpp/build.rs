@@ -1,43 +1,55 @@
+use quote::__private::TokenStream;
+use quote::quote;
 use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::{env, fs};
 use walkdir::WalkDir;
 
 fn main() -> Result<(), Box<dyn Error>> {
+    generate_decode_tests()
+}
+
+fn generate_decode_tests() -> Result<(), Box<dyn Error>> {
+    let test_cases = test_cases();
+    let token_stream = quote! {
+        use test_case::test_case;
+
+        #(#test_cases)*
+        fn test_decode(filename: &str) {
+            crate::common::TestCase::load_from_file(filename).unwrap().assert_json_matches();
+        }
+    };
+
+    let syntax_tree = syn::parse2(token_stream)?;
+    let pretty = prettyplease::unparse(&syntax_tree);
+
     let out_dir = env::var("OUT_DIR")?;
     let dest_path = Path::new(&out_dir).join("decode_tests.rs");
-
-    let mut code = String::new();
-    code.push_str(
-        r#"use crate::common::TestCase;
-"#,
-    );
-
-    for entry in list_data_files() {
-        let name = entry.file_stem().unwrap().to_str().unwrap();
-        let filename = &entry.file_name().unwrap().to_str().unwrap();
-
-        code.push_str(&format!(
-            "
-#[test]
-fn {name}() {{
-    let test_case = TestCase::load_from_file(\"tests/data/{filename}\").unwrap();
-    test_case.assert_json_matches();
-}}
-"
-        ));
-    }
-
-    fs::write(dest_path, code)?;
+    fs::write(dest_path, pretty)?;
 
     Ok(())
 }
 
-fn list_data_files() -> Vec<PathBuf> {
+fn find_data_files() -> impl Iterator<Item = PathBuf> {
     WalkDir::new("tests/data")
         .into_iter()
         .flatten()
-        .filter(|entry| entry.file_type().is_file())
+        .filter(|entry| {
+            entry.file_type().is_file()
+                && entry
+                    .file_name()
+                    .to_str()
+                    .is_some_and(|s| s.ends_with(".json"))
+        })
         .map(|e| e.into_path())
-        .collect()
+}
+
+fn test_cases() -> impl Iterator<Item = TokenStream> {
+    find_data_files().filter_map(|entry| {
+        let path = format!("tests/data/{}", entry.file_name()?.display());
+        let name = entry.file_stem()?.to_str()?;
+        Some(quote! {
+            #[test_case(#path ; #name)]
+        })
+    })
 }

@@ -1,0 +1,32 @@
+{
+  "gpp_string": "DBABM~CPXxRfAPXxRfAAfKABENB-CgAAAAAAAAAAYgAAAAAAAA",
+  "expected_sections": [
+    {
+      "TcfEuV2": {
+        "allowed_vendors": null,
+        "core": {
+          "cmp_id": 31,
+          "cmp_version": 640,
+          "consent_language": "EN",
+          "consent_screen": 1,
+          "created": 1650492000,
+          "is_service_specific": true,
+          "last_updated": 1650492000,
+          "policy_version": 2,
+          "publisher_country_code": "DE",
+          "publisher_restrictions": [],
+          "purpose_consents": [],
+          "purpose_legitimate_interests": [],
+          "purpose_one_treatment": false,
+          "special_feature_optins": [],
+          "use_non_standard_stacks": false,
+          "vendor_consents": [],
+          "vendor_legitimate_interests": [],
+          "vendor_list_version": 126
+        },
+        "disclosed_vendors": null,
+        "publisher_purposes": null
+      }
+    }
+  ]
+}

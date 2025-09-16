@@ -1,28 +1,25 @@
 use assert_json_diff::assert_json_eq;
-use iab_gpp::sections::SectionDecodeError;
+use iab_gpp::sections::{Section, SectionDecodeError};
 use iab_gpp::v1::GPPString;
-use serde_json::Value;
+use serde::Deserialize;
+use std::fs::File;
+use std::io;
 use std::io::ErrorKind;
 use std::path::Path;
 use std::str::FromStr;
-use std::{fs, io};
 
+#[derive(Deserialize)]
 pub struct TestCase {
     gpp_string: String,
-    expected_json: String,
+    expected_sections: Vec<Section>,
 }
 
 impl TestCase {
     pub fn load_from_file<P: AsRef<Path>>(p: P) -> io::Result<Self> {
-        let s = fs::read_to_string(&p)?;
-        let (s, json) = s
-            .split_once(['\n', '\r'])
-            .ok_or(io::Error::new(ErrorKind::InvalidData, "invalid test data"))?;
-
-        Ok(Self {
-            gpp_string: s.to_string(),
-            expected_json: json.to_string(),
-        })
+        let f = File::open(p)?;
+        let tc: Self = serde_json::from_reader(&f)
+            .map_err(|e| io::Error::new(ErrorKind::InvalidData, e.to_string()))?;
+        Ok(tc)
     }
 
     pub fn assert_json_matches(&self) {
@@ -40,9 +37,6 @@ impl TestCase {
             );
         }
 
-        let expected_value: Value =
-            serde_json::from_str(&self.expected_json).expect("invalid JSON");
-
-        assert_json_eq!(sections.unwrap(), expected_value);
+        assert_json_eq!(sections.unwrap(), self.expected_sections);
     }
 }

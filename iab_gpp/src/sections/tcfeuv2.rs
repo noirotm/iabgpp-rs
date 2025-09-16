@@ -5,10 +5,10 @@ use iab_gpp_derive::{FromBitStream, GPPSection};
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
 #[cfg(feature = "serde")]
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Eq, PartialEq, GPPSection)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[non_exhaustive]
 #[gpp(with_optional_segments)]
 pub struct TcfEuV2 {
@@ -22,7 +22,7 @@ pub struct TcfEuV2 {
 }
 
 #[derive(Debug, Eq, PartialEq, FromBitStream)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[non_exhaustive]
 #[gpp(section_version = 2)]
 pub struct Core {
@@ -66,7 +66,7 @@ fn parse_publisher_restrictions<R: BitRead + ?Sized>(
 }
 
 #[derive(Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PublisherRestriction {
     pub purpose_id: u8,
     pub restriction_type: RestrictionType,
@@ -85,7 +85,7 @@ impl From<Range> for PublisherRestriction {
 }
 
 #[derive(Debug, Eq, PartialEq, FromPrimitive)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum RestrictionType {
     NotAllowed = 0,
     RequireConsent = 1,
@@ -94,7 +94,7 @@ pub enum RestrictionType {
 }
 
 #[derive(Debug, Eq, PartialEq, FromBitStream)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[non_exhaustive]
 pub struct PublisherPurposes {
     #[gpp(fixed_bitfield(24))]

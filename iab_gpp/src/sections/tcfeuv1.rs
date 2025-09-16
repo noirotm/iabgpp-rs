@@ -3,12 +3,12 @@ use crate::sections::{IdSet, SectionDecodeError};
 use bitstream_io::BitRead;
 use iab_gpp_derive::GPPSection;
 #[cfg(feature = "serde")]
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 
 // See https://github.com/InteractiveAdvertisingBureau/GDPR-Transparency-and-Consent-Framework/blob/master/Consent%20string%20and%20vendor%20list%20formats%20v1.1%20Final.md
 #[derive(Debug, Eq, PartialEq, GPPSection)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[gpp(section_version = 1)]
 pub struct TcfEuV1 {
     #[gpp(datetime_as_unix_timestamp)]

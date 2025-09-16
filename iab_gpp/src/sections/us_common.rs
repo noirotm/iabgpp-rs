@@ -3,11 +3,11 @@ use bitstream_io::{BitRead, FromBitStream};
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::FromPrimitive;
 #[cfg(feature = "serde")]
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::io;
 
 #[derive(Debug, Eq, PartialEq, FromPrimitive, ToPrimitive)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Notice {
     NotApplicable = 0,
     Provided = 1,
@@ -26,7 +26,7 @@ impl FromBitStream for Notice {
 }
 
 #[derive(Debug, Eq, PartialEq, FromPrimitive, ToPrimitive)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum OptOut {
     NotApplicable = 0,
     OptedOut = 1,
@@ -45,7 +45,7 @@ impl FromBitStream for OptOut {
 }
 
 #[derive(Debug, Eq, PartialEq, FromPrimitive, ToPrimitive)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Consent {
     NotApplicable = 0,
     NoConsent = 1,
@@ -64,7 +64,7 @@ impl FromBitStream for Consent {
 }
 
 #[derive(Debug, Eq, PartialEq, FromPrimitive, ToPrimitive)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum MspaMode {
     NotApplicable = 0,
     Yes = 1,

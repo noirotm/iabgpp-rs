@@ -33,6 +33,9 @@ assert-json-diff = "2.0.2"
 
 [build-dependencies]
 walkdir = "2.5.0"
+quote = "1.0.40"
+prettyplease = "0.2.37"
+syn = "2.0.106"
 
 [features]
 serde = ["dep:serde"]

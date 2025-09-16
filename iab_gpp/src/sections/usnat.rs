@@ -3,10 +3,10 @@ use crate::sections::us_common::{
 };
 use iab_gpp_derive::{FromBitStream, GPPSection};
 #[cfg(feature = "serde")]
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Eq, PartialEq, GPPSection)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[non_exhaustive]
 #[gpp(with_optional_segments(bits = 2))]
 pub struct UsNat {
@@ -16,7 +16,7 @@ pub struct UsNat {
 }
 
 #[derive(Debug, Eq, PartialEq, FromBitStream)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[non_exhaustive]
 pub enum Core {
     #[gpp(version = 1)]
@@ -26,7 +26,7 @@ pub enum Core {
 }
 
 #[derive(Debug, Eq, PartialEq, FromBitStream)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[non_exhaustive]
 pub struct CoreV1 {
     pub sharing_notice: Notice,
@@ -48,7 +48,7 @@ pub struct CoreV1 {
 }
 
 #[derive(Debug, Eq, PartialEq, FromBitStream)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[non_exhaustive]
 pub struct SensitiveDataProcessingV1 {
     pub racial_or_ethnic_origin: Consent,
@@ -66,7 +66,7 @@ pub struct SensitiveDataProcessingV1 {
 }
 
 #[derive(Debug, Eq, PartialEq, FromBitStream)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[non_exhaustive]
 pub struct KnownChildSensitiveDataConsentsV1 {
     pub from_13_to_16: Consent,
@@ -74,7 +74,7 @@ pub struct KnownChildSensitiveDataConsentsV1 {
 }
 
 #[derive(Debug, Eq, PartialEq, FromBitStream)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[non_exhaustive]
 pub struct CoreV2 {
     pub sharing_notice: Notice,
@@ -96,7 +96,7 @@ pub struct CoreV2 {
 }
 
 #[derive(Debug, Eq, PartialEq, FromBitStream)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[non_exhaustive]
 pub struct SensitiveDataProcessingV2 {
     pub racial_or_ethnic_origin: Consent,
@@ -118,7 +118,7 @@ pub struct SensitiveDataProcessingV2 {
 }
 
 #[derive(Debug, Eq, PartialEq, FromBitStream)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[non_exhaustive]
 pub struct KnownChildSensitiveDataConsentsV2 {
     pub process_sensitive_data_from_13_to_16: Consent,

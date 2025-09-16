@@ -1,0 +1,31 @@
+{
+  "gpp_string": "DBABFg~BVVVVVmA",
+  "expected_sections": [
+    {
+      "UsUt": {
+        "core": {
+          "known_child_sensitive_data_consents": "NoConsent",
+          "mspa_covered_transaction": false,
+          "mspa_opt_out_option_mode": "Yes",
+          "mspa_service_provider_mode": "No",
+          "sale_opt_out": "OptedOut",
+          "sale_opt_out_notice": "Provided",
+          "sensitive_data_processing": {
+            "biometric_unique_identification": "NoConsent",
+            "citizenship_or_immigration_status": "NoConsent",
+            "genetic_unique_identification": "NoConsent",
+            "health_data": "NoConsent",
+            "racial_or_ethnic_origin": "NoConsent",
+            "religious_beliefs": "NoConsent",
+            "sexual_orientation": "NoConsent",
+            "specific_geolocation_data": "NoConsent"
+          },
+          "sensitive_data_processing_opt_out_notice": "Provided",
+          "sharing_notice": "Provided",
+          "targeted_advertising_opt_out": "OptedOut",
+          "targeted_advertising_opt_out_notice": "Provided"
+        }
+      }
+    }
+  ]
+}
