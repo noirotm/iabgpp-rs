@@ -1,4 +1,4 @@
-use quote::__private::TokenStream;
+use proc_macro2::TokenStream;
 use quote::quote;
 use std::error::Error;
 use std::path::{Path, PathBuf};
@@ -10,16 +10,14 @@ fn main() -> Result<(), Box<dyn Error>> {
 }
 
 fn generate_decode_tests() -> Result<(), Box<dyn Error>> {
-    let test_cases = test_cases();
+    let test_cases = find_test_cases();
     let token_stream = quote! {
         use test_case::test_case;
-
         #(#test_cases)*
         fn test_decode(filename: &str) {
             crate::common::TestCase::load_from_file(filename).unwrap().assert_json_matches();
         }
     };
-
     let syntax_tree = syn::parse2(token_stream)?;
     let pretty = prettyplease::unparse(&syntax_tree);
 
@@ -44,9 +42,9 @@ fn find_data_files() -> impl Iterator<Item = PathBuf> {
         .map(|e| e.into_path())
 }
 
-fn test_cases() -> impl Iterator<Item = TokenStream> {
+fn find_test_cases() -> impl Iterator<Item = TokenStream> {
     find_data_files().filter_map(|entry| {
-        let path = format!("tests/data/{}", entry.file_name()?.display());
+        let path = entry.to_str()?;
         let name = entry.file_stem()?.to_str()?;
         Some(quote! {
             #[test_case(#path ; #name)]
