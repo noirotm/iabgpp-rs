@@ -2,6 +2,7 @@ use crate::sections::us_common::{
     parse_mspa_covered_transaction, Consent, MspaMode, Notice, OptOut,
 };
 use iab_gpp_derive::{FromBitStream, GPPSection};
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Eq, PartialEq, GPPSection)]
