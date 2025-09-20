@@ -1,5 +1,5 @@
 use crate::find_gpp_attr;
-use syn::{parse, Attribute, LitInt};
+use syn::{Attribute, LitInt, parse};
 
 pub struct GPPEnumVariantHelperAttribute {
     pub variant_version: Option<u8>,

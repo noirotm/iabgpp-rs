@@ -62,8 +62,8 @@
 //!
 //! If parsing fails, a [`GPPDecodeError`] is returned instead.
 //!
-use crate::core::{base64_bit_reader, DataRead};
-use crate::sections::{decode_section, DecodableSection, Section, SectionDecodeError, SectionId};
+use crate::core::{DataRead, base64_bit_reader};
+use crate::sections::{DecodableSection, Section, SectionDecodeError, SectionId, decode_section};
 use bitstream_io::BitRead;
 use fnv::FnvHashMap;
 use num_traits::FromPrimitive;
@@ -517,7 +517,9 @@ mod tests {
 
     #[test]
     fn truncated_string() {
-        let r = GPPString::from_str("DBACNY~CPytTYAPytTYABEACBENDXCoAP_AAH_AAAIwgoNf_X__b3_v-_7___t0eY1f9_7__-0zjhfdt-8N3f_X_L8X_2M7");
+        let r = GPPString::from_str(
+            "DBACNY~CPytTYAPytTYABEACBENDXCoAP_AAH_AAAIwgoNf_X__b3_v-_7___t0eY1f9_7__-0zjhfdt-8N3f_X_L8X_2M7",
+        );
         assert!(matches!(
             r,
             Err(GPPDecodeError::IdSectionMismatch {
@@ -529,7 +531,9 @@ mod tests {
 
     #[test]
     fn non_gpp_tcfeuv2_string() {
-        let r = GPPString::from_str("CP48G0AP48G0AEsACCPLAkEgAAAAAEPgAB5YAAAQaQD2F2K2kKFkPCmQWYAQBCijYEAhQAAAAkCBIAAgAUgQAgFIIAgAIFAAAAAAAAAQEgCQAAQABAAAIACgAAAAAAIAAAAAAAQQAAAAAIAAAAAAAAEAAAAAAAQAAAAIAABEhCAAQQAEAAAAAAAQAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAgAA");
+        let r = GPPString::from_str(
+            "CP48G0AP48G0AEsACCPLAkEgAAAAAEPgAB5YAAAQaQD2F2K2kKFkPCmQWYAQBCijYEAhQAAAAkCBIAAgAUgQAgFIIAgAIFAAAAAAAAAQEgCQAAQABAAAIACgAAAAAAIAAAAAAAQQAAAAAIAAAAAAAAEAAAAAAAQAAAAIAABEhCAAQQAEAAAAAAAQAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAgAA",
+        );
         assert!(matches!(
             r,
             Err(GPPDecodeError::InvalidHeaderType { found: 2 })

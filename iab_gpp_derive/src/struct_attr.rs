@@ -1,5 +1,5 @@
 use crate::find_gpp_attr;
-use syn::{parse, token, Attribute, LitInt};
+use syn::{Attribute, LitInt, parse, token};
 
 pub enum GPPStructKind {
     Base64Data,

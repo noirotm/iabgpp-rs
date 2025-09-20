@@ -3,8 +3,8 @@ use crate::optional_segment_parser::derive_optional_segment_parser;
 use crate::struct_attr::{GPPStructHelperAttribute, GPPStructKind};
 use proc_macro::TokenStream;
 use proc_macro2::Ident;
-use quote::{quote, TokenStreamExt};
-use syn::{parse_macro_input, Attribute, Data, DataStruct, DeriveInput};
+use quote::{TokenStreamExt, quote};
+use syn::{Attribute, Data, DataStruct, DeriveInput, parse_macro_input};
 
 mod enum_variant_attr;
 mod field_attr;

@@ -1,5 +1,5 @@
 use crate::sections::us_common::{
-    parse_mspa_covered_transaction, Consent, MspaMode, Notice, OptOut,
+    Consent, MspaMode, Notice, OptOut, parse_mspa_covered_transaction,
 };
 use iab_gpp_derive::{FromBitStream, GPPSection};
 #[cfg(feature = "serde")]

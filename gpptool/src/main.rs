@@ -2,8 +2,8 @@ use clap::{Parser, Subcommand};
 use colored_json::{Color, ColorMode, Output, Styler, ToColoredJson};
 use iab_gpp::sections::SectionId;
 use iab_gpp::v1::GPPString;
-use num_traits::cast::FromPrimitive;
 use num_traits::ToPrimitive;
+use num_traits::cast::FromPrimitive;
 use std::str::FromStr;
 
 #[derive(Parser)]

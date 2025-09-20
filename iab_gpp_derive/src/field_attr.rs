@@ -5,8 +5,8 @@ use syn::meta::ParseNestedMeta;
 use syn::parse::ParseStream;
 use syn::punctuated::Punctuated;
 use syn::{
-    parenthesized, parse, token, Attribute, Expr, ExprCall, GenericArgument, LitInt, PathArguments,
-    Type,
+    Attribute, Expr, ExprCall, GenericArgument, LitInt, PathArguments, Type, parenthesized, parse,
+    token,
 };
 
 pub enum GPPFieldParser {
