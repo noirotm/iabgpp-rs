@@ -19,8 +19,6 @@ pub struct UsCa {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[non_exhaustive]
 #[gpp(section_version = 1)]
-/// The core sub-section must always be present. Where terms are capitalized in the ‘description’
-/// field they are defined terms in Cal. Civ. Code 1798.140.
 pub struct Core {
     pub sale_opt_out_notice: Notice,
     pub sharing_opt_out_notice: Notice,
@@ -40,14 +38,7 @@ pub struct Core {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[non_exhaustive]
 pub struct SensitiveDataProcessing {
-    /// Opt-Out of the Use or Disclosure of the Consumer's Sensitive Personal Information Which
-    /// Reveals a Consumer's Social Security, Driver's License, State Identification Card, or
-    /// Passport Number.
     pub identification_documents: OptOut,
-    /// Opt-Out of the Use or Disclosure of the Consumer's Sensitive Personal Information Which
-    /// Reveals a Consumer's Account Log-In, Financial Account, Debit Card, or Credit Card Number in
-    /// Combination with Any Required Security or Access Code, Password, or Credentials Allowing
-    /// Access to an Account.
     pub financial_data: OptOut,
     pub precise_geolocation: OptOut,
     pub origin_beliefs_or_union: OptOut,
