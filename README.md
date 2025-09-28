@@ -1,5 +1,9 @@
 # iabgpp-rs
 
+[![Build](https://github.com/noirotm/iabgpp-rs/actions/workflows/rust.yml/badge.svg)](https://github.com/noirotm/iabgpp-rs/actions/workflows/rust.yml)
+[![docs.rs](https://img.shields.io/docsrs/iab_gpp)](https://docs.rs/iab_gpp/latest/iab_gpp/)
+[![Latest Version](https://img.shields.io/crates/v/iab_gpp.svg)](https://crates.io/crates/iab_gpp)
+
 Rust implementation of the IAB Global Privacy Platform (GPP)
 [consent string specification](https://github.com/InteractiveAdvertisingBureau/Global-Privacy-Platform/blob/main/Core/Consent%20String%20Specification.md).
 
@@ -51,7 +55,8 @@ incompatibilities.
 Legend:
 
 - ✅ complete support
-- 🧪 experimental or partial support
+- ➖ partial support
+- 🧪 experimental support
 - ❌ no support
 
 | Section                      | Reading | Writing |

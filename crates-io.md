@@ -1,4 +1,4 @@
-# iabgpp-rs
+# iab_gpp
 
 Rust implementation of the IAB Global Privacy Platform (GPP)
 [consent string specification](https://github.com/InteractiveAdvertisingBureau/Global-Privacy-Platform/blob/main/Core/Consent%20String%20Specification.md).
@@ -7,7 +7,6 @@ Rust implementation of the IAB Global Privacy Platform (GPP)
 
 - Eager or lazy decoding of GPP sections
 - Owning type (GPPString)
-- Reference type (GPPStr)
 - Read support for all current GPP sections
 
 ## Usage example
