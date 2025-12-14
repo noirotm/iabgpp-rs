@@ -85,6 +85,7 @@ Legend:
 | US - New Jersey              |   🧪    |    ❌    |
 | US - Tennessee               |   🧪    |    ❌    |
 | US - Minnesota               |   🧪    |    ❌    |
+| US - Maryland                |   🧪    |    ❌    |
 
 ## Development status
 
