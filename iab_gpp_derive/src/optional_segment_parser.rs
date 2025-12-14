@@ -9,33 +9,7 @@ pub fn derive_optional_segment_parser(
     ident: &Ident,
     struct_attr: &GPPStructHelperAttribute,
 ) -> proc_macro2::TokenStream {
-    let mut parse_match_arms = vec![];
-
-    for field in &input.fields {
-        let name = field.ident.clone();
-
-        // ignore nameless fields
-        if name.is_none() {
-            continue;
-        }
-        // ignore non-public fields
-        if !matches!(field.vis, Visibility::Public(_)) {
-            continue;
-        }
-        let name = name.unwrap();
-
-        let attr = GPPFieldHelperAttribute::new(&field.attrs, &field.ty)
-            .expect("attribute parsing failed");
-
-        if let Some(segment_type) = attr.optional_segment_type {
-            let expr = attr.parser.to_token_stream();
-            parse_match_arms.push(quote! {
-                #segment_type => {
-                    into.#name = Some(#expr?);
-                }
-            });
-        }
-    }
+    let parse_match_arms = build_parse_match_arms(input);
 
     let read_segment_type_override = match struct_attr.kind {
         GPPStructKind::WithOptionalSegments(3) => None,
@@ -66,4 +40,61 @@ pub fn derive_optional_segment_parser(
             }
         }
     }
+}
+
+pub fn derive_optional_sub_section_parser(
+    input: &DataStruct,
+    ident: &Ident,
+) -> proc_macro2::TokenStream {
+    let parse_match_arms = build_parse_match_arms(input);
+
+    quote! {
+        impl crate::sections::OptionalSubSectionParser for #ident {
+            fn parse_optional_sub_section<R: bitstream_io::read::BitRead>(
+                segment_type: u8,
+                r: &mut R,
+                into: &mut Self,
+            ) -> Result<(), crate::sections::SectionDecodeError> {
+                match segment_type {
+                    #(#parse_match_arms)*
+                    n => {
+                        return Err(crate::sections::SectionDecodeError::UnknownSegmentType { segment_type: n });
+                    }
+                }
+                Ok(())
+            }
+        }
+    }
+}
+
+fn build_parse_match_arms(input: &DataStruct) -> Vec<proc_macro2::TokenStream> {
+    let mut parse_match_arms = vec![];
+
+    for field in &input.fields {
+        let name = field.ident.clone();
+
+        // ignore nameless fields
+        if name.is_none() {
+            continue;
+        }
+        // ignore non-public fields
+        if !matches!(field.vis, Visibility::Public(_)) {
+            continue;
+        }
+        let name = name.unwrap();
+
+        let attr = GPPFieldHelperAttribute::new(&field.attrs, &field.ty)
+            .expect("attribute parsing failed");
+
+        if let Some(segment_type) = attr.optional_segment_type {
+            let expr = attr.parser.to_token_stream();
+            parse_match_arms.push(quote! {
+                #segment_type => {
+                    into.#name = Some(#expr?);
+                }
+            });
+        }
+    }
+
+    parse_match_arms
 }

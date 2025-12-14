@@ -1,9 +1,10 @@
 use crate::find_gpp_attr;
-use syn::{Attribute, LitInt, parse, token};
+use syn::{parse, token, Attribute, LitInt};
 
 pub enum GPPStructKind {
     Base64Data,
     WithOptionalSegments(u32),
+    WithHeader,
 }
 
 pub struct GPPStructHelperAttribute {
@@ -41,6 +42,16 @@ impl GPPStructHelperAttribute {
                     }
 
                     gpp_attr.kind = GPPStructKind::WithOptionalSegments(bits);
+
+                    return Ok(());
+                }
+
+                // #[gpp(with_header)]
+                if meta.path.is_ident("with_header") {
+                    // new structure for US States sections:
+                    // a header containing the section ID and the list
+                    // of sub-section IDs
+                    gpp_attr.kind = GPPStructKind::WithHeader;
 
                     return Ok(());
                 }

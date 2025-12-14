@@ -19,7 +19,7 @@
 //! section types are marked with the `#[non_exhaustive]` attribute to preserve minor version
 //! compatibility.
 //!
-use crate::core::base64_bit_reader;
+use crate::core::{base64_bit_reader, DataRead};
 use crate::sections::tcfcav1::TcfCaV1;
 use crate::sections::tcfeuv1::TcfEuV1;
 use crate::sections::tcfeuv2::TcfEuV2;
@@ -138,6 +138,10 @@ pub enum SectionDecodeError {
     DuplicateSegmentType { segment_type: u8 },
     #[error("invalid field value (expected {expected}, found {found})")]
     InvalidFieldValue { expected: String, found: String },
+    #[error("missing core in header")]
+    MissingCoreInHeader,
+    #[error("mismatched sub-sections (expected {expected}, found {found})")]
+    SubSectionMismatch { expected: u8, found: u8 },
 }
 
 #[derive(Debug, Eq, PartialEq)]
@@ -245,9 +249,9 @@ where
 
         let mut r = base64_bit_reader(core.as_bytes());
         let mut output = r.parse()?;
-        let mut segments = BTreeSet::new();
 
         // parse each optional segment and fill the output
+        let mut segments = BTreeSet::new();
         for s in sections_iter {
             let mut r = base64_bit_reader(s.as_bytes());
 
@@ -273,6 +277,86 @@ pub(crate) trait OptionalSegmentParser:
     }
 
     fn parse_optional_segment<R: BitRead>(
+        segment_type: u8,
+        r: &mut R,
+        into: &mut Self,
+    ) -> Result<(), SectionDecodeError>;
+}
+
+/// A trait representing an operation to parse sub-sections for a Base64-URL encoded string
+/// using '.' as separators into a type composed of a header, a mandatory core segment and
+/// an arbitrary number of optional segments.
+///
+/// This guarantees a given segment cannot appear twice and that proper order is respected.
+pub(crate) trait SegmentedStrWithHeader<T> {
+    fn parse_segmented_str(&self) -> Result<T, SectionDecodeError>;
+}
+
+impl<T> SegmentedStrWithHeader<T> for str
+where
+    T: OptionalSubSectionParser,
+{
+    fn parse_segmented_str(&self) -> Result<T, SectionDecodeError> {
+        let mut sections_iter = self.split('.');
+
+        // first comes the header
+        let header = sections_iter
+            .next()
+            .ok_or_else(|| SectionDecodeError::UnexpectedEndOfString(self.to_string()))?;
+
+        let mut r = base64_bit_reader(header.as_bytes());
+        let _section_id = r.read_unsigned::<6, u8>()?; // not used at the time, as we don't have a reference to our own ID
+        let _version = r.read_unsigned::<6, u8>()?; // not used at the time, will be improved to handle multiple versions
+        let sub_sections = r.read_fibonacci_range::<u8>()?;
+
+        // validate we have at least the core with ID == 0 as first ID
+        if sub_sections.first() != Some(&0) {
+            return Err(SectionDecodeError::MissingCoreInHeader);
+        }
+
+        // first mandatory section is the core segment
+        let core = sections_iter
+            .next()
+            .ok_or_else(|| SectionDecodeError::UnexpectedEndOfString(self.to_string()))?;
+
+        let mut r = base64_bit_reader(core.as_bytes());
+        let mut output = r.parse()?;
+
+        // parse each optional segment and fill the output
+        let mut segments = BTreeSet::new();
+        for (s, &id) in sections_iter.zip(sub_sections[..sub_sections.len() - 1].iter()) {
+            let mut r = base64_bit_reader(s.as_bytes());
+
+            let sub_section_id = r.read_unsigned::<2, u8>()?;
+            if sub_section_id != id {
+                return Err(SectionDecodeError::SubSectionMismatch {
+                    expected: id,
+                    found: sub_section_id,
+                });
+            }
+
+            T::parse_optional_sub_section(sub_section_id, &mut r, &mut output)?;
+
+            // already present, duplicate segments is an error
+            if !segments.insert(sub_section_id) {
+                return Err(SectionDecodeError::DuplicateSegmentType {
+                    segment_type: sub_section_id,
+                });
+            }
+        }
+
+        Ok(output)
+    }
+}
+
+/// A trait representing an operation to parse optional sub-sections for a Base64-URL encoded
+/// string.
+/// This trait is used for the new style of GPP sections introduced for US States starting with
+/// Maryland.
+pub(crate) trait OptionalSubSectionParser:
+    FromBitStream<Error = SectionDecodeError> + Sized
+{
+    fn parse_optional_sub_section<R: BitRead>(
         segment_type: u8,
         r: &mut R,
         into: &mut Self,

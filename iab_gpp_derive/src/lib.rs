@@ -1,10 +1,12 @@
 use crate::from_bit_stream::{derive_enum_from_bit_stream, derive_struct_from_bit_stream};
-use crate::optional_segment_parser::derive_optional_segment_parser;
+use crate::optional_segment_parser::{
+    derive_optional_segment_parser, derive_optional_sub_section_parser,
+};
 use crate::struct_attr::{GPPStructHelperAttribute, GPPStructKind};
 use proc_macro::TokenStream;
 use proc_macro2::Ident;
-use quote::{TokenStreamExt, quote};
-use syn::{Attribute, Data, DataStruct, DeriveInput, parse_macro_input};
+use quote::{quote, TokenStreamExt};
+use syn::{parse_macro_input, Attribute, Data, DataStruct, DeriveInput};
 
 mod enum_variant_attr;
 mod field_attr;
@@ -59,6 +61,11 @@ pub fn derive_gpp_section(input: TokenStream) -> TokenStream {
                 // we then add a OptionalSegmentParser impl which reads the rest.
                 impl_segmented_gpp_section(ident, s, &attr, stream)
             }
+            GPPStructKind::WithHeader => {
+                // FromBitStream impl is altered, we have a header
+                // followed by a mandatory core section and optional subsections.
+                impl_header_based_gpp_section(ident, s, &attr, stream)
+            }
         }
     } else {
         // just ignore attempts to derive things that are not structs or enums
@@ -112,6 +119,32 @@ fn impl_segmented_gpp_section(
 
     // OptionalSegmentParser impl
     stream.append_all(derive_optional_segment_parser(&s, &ident, attr));
+
+    stream.into()
+}
+
+fn impl_header_based_gpp_section(
+    ident: Ident,
+    s: DataStruct,
+    attr: &GPPStructHelperAttribute,
+    mut stream: proc_macro2::TokenStream,
+) -> TokenStream {
+    // FromStr impl which parses the given string as a sequence of sub-sections
+    stream.append_all(quote! {
+        impl ::std::str::FromStr for #ident {
+            type Err = crate::sections::SectionDecodeError;
+
+            fn from_str(s: &str) -> Result<Self, Self::Err> {
+                use crate::sections::SegmentedStrWithHeader;
+                s.parse_segmented_str()
+            }
+        }
+    });
+
+    stream.append_all(derive_struct_from_bit_stream(&s, &ident, attr));
+
+    // OptionalSegmentParser impl
+    stream.append_all(derive_optional_sub_section_parser(&s, &ident));
 
     stream.into()
 }

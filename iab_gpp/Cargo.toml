@@ -17,7 +17,7 @@ build = "build.rs"
 [dependencies]
 bitstream-io = "4.3.0"
 fnv = "1.0.7"
-iab_gpp_derive = { version = "0", path = "../iab_gpp_derive" }
+iab_gpp_derive = { version = "0.2", path = "../iab_gpp_derive" }
 num-derive = "0.4.0"
 num-iter = "0.1.43"
 num-traits = "0.2.16"
