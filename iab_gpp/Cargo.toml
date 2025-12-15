@@ -1,6 +1,6 @@
 [package]
 name = "iab_gpp"
-version = "0.1.1"
+version = "0.1.2"
 rust-version = "1.89.0"
 edition = "2024"
 authors = ["Marc Noirot <marc.noirot@gmail.com>"]
