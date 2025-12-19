@@ -95,3 +95,22 @@ pub(crate) fn parse_mspa_covered_transaction<R: BitRead + ?Sized>(
         }),
     }
 }
+
+#[derive(Debug, Eq, PartialEq, FromPrimitive, ToPrimitive)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum MspaMode {
+    NotApplicable = 0,
+    OptOutOption = 1,
+    ServiceProvider = 2,
+}
+
+impl FromBitStream for MspaMode {
+    type Error = io::Error;
+
+    fn from_reader<R: BitRead + ?Sized>(r: &mut R) -> Result<Self, Self::Error>
+    where
+        Self: Sized,
+    {
+        Ok(Self::from_u8(r.read_unsigned::<2, u8>()?).unwrap_or(Self::NotApplicable))
+    }
+}
