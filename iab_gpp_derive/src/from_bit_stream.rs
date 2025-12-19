@@ -115,6 +115,25 @@ pub fn derive_enum_from_bit_stream(input: &DataEnum, ident: &Ident) -> proc_macr
         }
     }
 
+    // if we don't have any version for this enum, assume a FromPrimitive impl using u8 over 2 bits
+    if versions.is_empty() {
+        return quote! {
+            impl bitstream_io::read::FromBitStream for #ident {
+                type Error = std::io::Error;
+
+                fn from_reader<R: bitstream_io::read::BitRead + ?core::marker::Sized>(
+                    mut r: &mut R,
+                ) -> Result<Self, Self::Error>
+                where
+                    Self: core::default::Default
+                {
+                    Ok(Self::from_u8(r.read_unsigned::<2, u8>()?).unwrap_or(Self::default()))
+                }
+            }
+        };
+    }
+
+    // otherwise, match on all variants to decode the proper version of the payload
     quote! {
         impl bitstream_io::read::FromBitStream for #ident {
             type Error = crate::sections::SectionDecodeError;
