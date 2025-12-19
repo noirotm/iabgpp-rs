@@ -87,6 +87,7 @@ Legend:
 | US - Minnesota               |   🧪    |    ❌    |
 | US - Maryland                |   🧪    |    ❌    |
 | US - Indiana                 |   🧪    |    ❌    |
+| US - Kentucky                |   🧪    |    ❌    |
 
 ## Development status
 
