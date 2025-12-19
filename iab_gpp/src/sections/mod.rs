@@ -19,7 +19,7 @@
 //! section types are marked with the `#[non_exhaustive]` attribute to preserve minor version
 //! compatibility.
 //!
-use crate::core::{base64_bit_reader, DataRead};
+use crate::core::{DataRead, base64_bit_reader};
 use crate::sections::tcfcav1::TcfCaV1;
 use crate::sections::tcfeuv1::TcfEuV1;
 use crate::sections::tcfeuv2::TcfEuV2;
@@ -29,6 +29,7 @@ use crate::sections::usct::UsCt;
 use crate::sections::usde::UsDe;
 use crate::sections::usfl::UsFl;
 use crate::sections::usia::UsIa;
+use crate::sections::usin::UsIn;
 use crate::sections::usmd::UsMd;
 use crate::sections::usmn::UsMn;
 use crate::sections::usmt::UsMt;
@@ -62,6 +63,7 @@ pub mod usct;
 pub mod usde;
 pub mod usfl;
 pub mod usia;
+pub mod usin;
 pub mod usmd;
 pub mod usmn;
 pub mod usmt;
@@ -103,6 +105,7 @@ pub enum SectionId {
     UsTn = 22,
     UsMn = 23,
     UsMd = 24,
+    UsIn = 25,
 }
 
 pub trait DecodableSection: FromStr<Err = SectionDecodeError> {
@@ -173,6 +176,7 @@ pub enum Section {
     UsTn(UsTn),
     UsMn(UsMn),
     UsMd(UsMd),
+    UsIn(UsIn),
 }
 
 impl Section {
@@ -200,6 +204,7 @@ impl Section {
             Section::UsTn(_) => SectionId::UsTn,
             Section::UsMn(_) => SectionId::UsMn,
             Section::UsMd(_) => SectionId::UsMd,
+            Section::UsIn(_) => SectionId::UsIn,
         }
     }
 }
@@ -228,6 +233,7 @@ pub(crate) fn decode_section(id: SectionId, s: &str) -> Result<Section, SectionD
         SectionId::UsTn => Section::UsTn(s.parse()?),
         SectionId::UsMn => Section::UsMn(s.parse()?),
         SectionId::UsMd => Section::UsMd(s.parse()?),
+        SectionId::UsIn => Section::UsIn(s.parse()?),
         id => Err(SectionDecodeError::UnsupportedSectionId(id))?,
     })
 }
