@@ -1,5 +1,5 @@
 use crate::sections::us_common::{
-    Consent, MspaMode, Notice, OptOut, parse_mspa_covered_transaction,
+    Consent, MspaSupport, Notice, OptOut, parse_mspa_covered_transaction,
 };
 use iab_gpp_derive::{FromBitStream, GPPSection};
 #[cfg(feature = "serde")]
@@ -43,8 +43,8 @@ pub struct CoreV1 {
     pub personal_data_consent: Consent,
     #[gpp(parse_with = parse_mspa_covered_transaction)]
     pub mspa_covered_transaction: bool,
-    pub mspa_opt_out_option_mode: MspaMode,
-    pub mspa_service_provider_mode: MspaMode,
+    pub mspa_opt_out_option_mode: MspaSupport,
+    pub mspa_service_provider_mode: MspaSupport,
 }
 
 #[derive(Debug, Eq, PartialEq, FromBitStream)]
@@ -91,8 +91,8 @@ pub struct CoreV2 {
     pub personal_data_consent: Consent,
     #[gpp(parse_with = parse_mspa_covered_transaction)]
     pub mspa_covered_transaction: bool,
-    pub mspa_opt_out_option_mode: MspaMode,
-    pub mspa_service_provider_mode: MspaMode,
+    pub mspa_opt_out_option_mode: MspaSupport,
+    pub mspa_service_provider_mode: MspaSupport,
 }
 
 #[derive(Debug, Eq, PartialEq, FromBitStream)]

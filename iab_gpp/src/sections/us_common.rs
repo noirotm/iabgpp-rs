@@ -65,13 +65,13 @@ impl FromBitStream for Consent {
 
 #[derive(Debug, Eq, PartialEq, FromPrimitive, ToPrimitive)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum MspaMode {
+pub enum MspaSupport {
     NotApplicable = 0,
     Yes = 1,
     No = 2,
 }
 
-impl FromBitStream for MspaMode {
+impl FromBitStream for MspaSupport {
     type Error = io::Error;
 
     fn from_reader<R: BitRead + ?Sized>(r: &mut R) -> Result<Self, Self::Error>
