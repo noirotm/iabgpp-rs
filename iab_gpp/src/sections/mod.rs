@@ -150,8 +150,6 @@ pub enum SectionDecodeError {
     DuplicateSegmentType { segment_type: u8 },
     #[error("invalid field value (expected {expected}, found {found})")]
     InvalidFieldValue { expected: String, found: String },
-    #[error("missing core in header")]
-    MissingCoreInHeader,
     #[error("mismatched sub-sections (expected {expected}, found {found})")]
     SubSectionMismatch { expected: u8, found: u8 },
 }
@@ -333,11 +331,6 @@ where
         let _version = r.read_unsigned::<6, u8>()?; // not used at the time, will be improved to handle multiple versions
         let sub_sections = r.read_fibonacci_range::<u8>()?;
 
-        // validate we have at least the core with ID == 0 as first ID
-        if sub_sections.first() != Some(&0) {
-            return Err(SectionDecodeError::MissingCoreInHeader);
-        }
-
         // first mandatory section is the core segment
         let core = sections_iter
             .next()
@@ -348,7 +341,7 @@ where
 
         // parse each optional segment and fill the output
         let mut segments = BTreeSet::new();
-        for (s, &id) in sections_iter.zip(sub_sections.iter().skip(1)) {
+        for (s, &id) in sections_iter.zip(sub_sections.iter()) {
             let mut r = base64_bit_reader(s.as_bytes());
 
             let sub_section_id = r.read_unsigned::<2, u8>()?;
