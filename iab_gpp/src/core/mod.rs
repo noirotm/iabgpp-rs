@@ -35,9 +35,9 @@ pub trait DataRead {
 
     fn read_integer_range(&mut self) -> io::Result<Vec<u16>>;
 
-    fn read_fibonacci_range<T>(&mut self) -> io::Result<Vec<T>>
+    fn read_fibonacci_range<T>(&mut self) -> io::Result<BTreeSet<T>>
     where
-        T: CheckedAdd + Copy + Num + NumAssignOps + PartialOrd + ToPrimitive;
+        T: CheckedAdd + Copy + Num + NumAssignOps + Ord + PartialOrd + ToPrimitive;
 
     fn read_optimized_range(&mut self) -> io::Result<BTreeSet<u16>>;
 
@@ -136,12 +136,12 @@ where
         Ok(range)
     }
 
-    fn read_fibonacci_range<N>(&mut self) -> io::Result<Vec<N>>
+    fn read_fibonacci_range<N>(&mut self) -> io::Result<BTreeSet<N>>
     where
-        N: CheckedAdd + Copy + Num + NumAssignOps + PartialOrd + ToPrimitive,
+        N: CheckedAdd + Copy + Num + NumAssignOps + Ord + PartialOrd + ToPrimitive,
     {
         let n = self.read_unsigned::<12, u16>()?;
-        let mut range = vec![];
+        let mut range = BTreeSet::new();
         let mut last_id = N::zero();
 
         for _ in 0..n {
@@ -151,12 +151,12 @@ where
                 let count = self.read_fibonacci_integer()?;
 
                 for id in range_inclusive(last_id + offset, last_id + offset + count) {
-                    range.push(id);
+                    range.insert(id);
                     last_id = id;
                 }
             } else {
                 let id = self.read_fibonacci_integer::<N>()?;
-                range.push(last_id + id);
+                range.insert(last_id + id);
                 last_id += id;
             }
         }
@@ -167,7 +167,7 @@ where
     fn read_optimized_range(&mut self) -> io::Result<BTreeSet<u16>> {
         let is_fibo = self.read_bit()?;
         if is_fibo {
-            Ok(self.read_fibonacci_range::<u16>()?.into_iter().collect())
+            self.read_fibonacci_range::<u16>()
         } else {
             self.read_variable_bitfield()
         }
@@ -311,7 +311,12 @@ mod tests {
     #[test_case("000000000100 0 11 0 11 0 11 0 11" => vec![1, 2, 3, 4] ; "four consecutive non-group unit deltas")]
     #[test_case("000000000010 1 011 0011 0 1011" => vec![2, 3, 4, 5, 9] ; "group then non-group")]
     fn read_fibonacci_range(s: &str) -> Vec<u8> {
-        r(Cursor::new(b(s))).read_fibonacci_range().unwrap()
+        r(Cursor::new(b(s)))
+            .read_fibonacci_range()
+            .unwrap()
+            .iter()
+            .cloned()
+            .collect()
     }
 
     #[test_case("1 000000000010 0 0011 1 011 0011" => BTreeSet::from_iter([3, 5, 6, 7, 8]) ; "fibonacci range")]

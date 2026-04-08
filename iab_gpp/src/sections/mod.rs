@@ -348,7 +348,7 @@ where
 
         // parse each optional segment and fill the output
         let mut segments = BTreeSet::new();
-        for (s, &id) in sections_iter.zip(sub_sections[..sub_sections.len() - 1].iter()) {
+        for (s, &id) in sections_iter.zip(sub_sections.iter().skip(1)) {
             let mut r = base64_bit_reader(s.as_bytes());
 
             let sub_section_id = r.read_unsigned::<2, u8>()?;
