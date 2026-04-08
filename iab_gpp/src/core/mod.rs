@@ -157,7 +157,7 @@ where
             } else {
                 let id = self.read_fibonacci_integer::<N>()?;
                 range.push(last_id + id);
-                last_id = id;
+                last_id += id;
             }
         }
 
@@ -302,14 +302,21 @@ mod tests {
         r(Cursor::new(b(s))).read_integer_range().unwrap()
     }
 
-    #[test_case("000000000010 0 0011 1 011 0011" => vec![3, 5, 6, 7, 8])]
-    #[test_case("000000000010 0 011 0 1011" => vec![2, 6])]
+    #[test_case("000000000000" => Vec::<u8>::new() ; "empty")]
+    #[test_case("000000000001 0 0011" => vec![3] ; "single non-group")]
+    #[test_case("000000000001 1 0011 011" => vec![3, 4, 5] ; "single group")]
+    #[test_case("000000000010 0 0011 1 011 0011" => vec![3, 5, 6, 7, 8] ; "non-group then group")]
+    #[test_case("000000000010 0 011 0 1011" => vec![2, 6] ; "two non-group")]
+    #[test_case("000000000011 0 011 0 1011 0 1011" => vec![2, 6, 10] ; "three non-group with larger deltas")]
+    #[test_case("000000000100 0 11 0 11 0 11 0 11" => vec![1, 2, 3, 4] ; "four consecutive non-group unit deltas")]
+    #[test_case("000000000010 1 011 0011 0 1011" => vec![2, 3, 4, 5, 9] ; "group then non-group")]
     fn read_fibonacci_range(s: &str) -> Vec<u8> {
         r(Cursor::new(b(s))).read_fibonacci_range().unwrap()
     }
 
-    #[test_case("1 000000000010 0 0011 1 011 0011" => BTreeSet::from_iter([3, 5, 6, 7, 8]))]
-    #[test_case("0 0000000000000101 10101" => BTreeSet::from_iter([1, 3, 5]))]
+    #[test_case("1 000000000010 0 0011 1 011 0011" => BTreeSet::from_iter([3, 5, 6, 7, 8]) ; "fibonacci range")]
+    #[test_case("0 0000000000000101 10101" => BTreeSet::from_iter([1, 3, 5]) ; "bitfield")]
+    #[test_case("1 000000000100 0 11 0 11 0 11 0 11" => BTreeSet::from_iter([1, 2, 3, 4]) ; "fibonacci path multi non-group")]
     fn read_optimized_range(s: &str) -> BTreeSet<u16> {
         r(Cursor::new(b(s))).read_optimized_range().unwrap()
     }
