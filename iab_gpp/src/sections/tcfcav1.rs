@@ -42,10 +42,11 @@ pub struct Core {
     pub purpose_express_consents: IdSet,
     #[gpp(fixed_bitfield(24))]
     pub purpose_implied_consents: IdSet,
-    // BUG: specification says optimized_range
+    // Note: the spec incorrectly says optimized_range for both vendor consent
+    // fields; the reference implementation and real-world strings use
+    // optimized_integer_range.
     #[gpp(optimized_integer_range)]
     pub vendor_express_consents: IdSet,
-    // BUG: specification says optimized_range
     #[gpp(optimized_integer_range)]
     pub vendor_implied_consents: IdSet,
     /// Introduced in TCF CA v1.1
