@@ -409,7 +409,7 @@ impl<'a> Iterator for Sections<'a> {
 
 impl<'a> ExactSizeIterator for Sections<'a> {
     fn len(&self) -> usize {
-        self.gpp_str.section_ids.len()
+        self.gpp_str.section_ids.len() - self.idx
     }
 }
 
